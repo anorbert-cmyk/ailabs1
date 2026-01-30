@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deep Research Whitepaper | Project X-01</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0047AB",
+              "charcoal": "#1A1A1A",
+              "charcoal-muted": "#4A4A4A",
+              "off-white": "#F9F9F7",
+              "paper": "#FFFFFF",
+              "border-hairline": "#E0E0E0",
+              "technical-blue": "#E6F0FF"
+            },
+            fontFamily: {
+              "sans": ["Epilogue", "sans-serif"],
+              "mono": ["IBM Plex Mono", "monospace"],
+            },
+            boxShadow: {
+              'sharp': '4px 4px 0px 0px rgba(0,0,0,0.05)',
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      html {
+        scroll-behavior: smooth;
+        /* Ensure sticky header doesn't cover content when jumping to anchors */
+        scroll-padding-top: 6rem;
+      }
+      body {
+        font-family: 'Epilogue', sans-serif;
+        background-color: #F9F9F7;
+        color: #1A1A1A;
+      }
+      /* Custom scrollbar for webkit */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #E0E0E0;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #1A1A1A;
+      }
+      /* Selection color */
+      ::selection {
+        background-color: #E6F0FF; 
+        color: #0047AB;
+      }
+      /* Vertical writing mode utility */
+      .writing-vertical-rl {
+        writing-mode: vertical-rl;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "recharts": "https://esm.sh/recharts@2.12.3?external=react,react-dom",
+    "prop-types": "https://esm.sh/prop-types@15.8.1"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
