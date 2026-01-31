@@ -18,6 +18,7 @@ import {
   DSVisualTimeline,
   DSRiskDossierHeader,
   DSROIAnalysis,
+  DSTaskList,
   MetricRow,
   BlueprintItem,
   CompetitorData,
@@ -28,7 +29,8 @@ import {
   ErrorPathData,
   VisualTimelineData,
   RiskData,
-  ROIScenario
+  ROIScenario,
+  TaskItem
 } from './DesignLibrary';
 
 // Types for the AI Generated Data Structure
@@ -36,9 +38,9 @@ interface SectionData {
   id: string;
   title: string;
   content: string;
-  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'phase_card' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis';
+  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'phase_card' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis' | 'task_list';
   // Flexible data union
-  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseCardData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | any; 
+  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseCardData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | TaskItem[] | any; 
   columns?: { header: string; key: string; width?: string }[]; // For tables
 }
 
@@ -260,6 +262,15 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                      <DSParagraph>{section.content}</DSParagraph>
                    </div>
                    <DSROIAnalysis scenarios={section.data as ROIScenario[]} />
+                 </>
+              )}
+
+              {section.type === 'task_list' && section.data && (
+                 <>
+                   <div className="max-w-4xl">
+                     <DSParagraph>{section.content}</DSParagraph>
+                   </div>
+                   <DSTaskList initialTasks={section.data as TaskItem[]} />
                  </>
               )}
 

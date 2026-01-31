@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 // --- 01. Typography ---
 
@@ -1046,3 +1046,81 @@ export const DSROIAnalysis: React.FC<{ scenarios: ROIScenario[] }> = ({ scenario
     </div>
   </div>
 );
+
+// --- 15. Drag & Drop Task List (New) ---
+
+export interface TaskItem {
+  id: string;
+  content: string;
+  priority: 'High' | 'Medium' | 'Low';
+}
+
+export const DSTaskList: React.FC<{ initialTasks: TaskItem[] }> = ({ initialTasks }) => {
+  const [tasks, setTasks] = useState(initialTasks);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent<HTMLLIElement>, position: number) => {
+    dragItem.current = position;
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLLIElement>, position: number) => {
+    e.preventDefault();
+    dragOverItem.current = position;
+    
+    if (dragItem.current !== null && dragItem.current !== position) {
+        const copyListItems = [...tasks];
+        const dragItemContent = copyListItems[dragItem.current];
+        copyListItems.splice(dragItem.current, 1);
+        copyListItems.splice(position, 0, dragItemContent);
+        dragItem.current = position;
+        setTasks(copyListItems);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+      e.preventDefault();
+  }
+
+  const handleDragEnd = () => {
+      dragItem.current = null;
+      dragOverItem.current = null;
+  }
+
+  return (
+    <div className="my-12 border border-charcoal/10 bg-white shadow-sharp">
+       <div className="bg-off-white px-6 py-4 border-b border-charcoal/10 flex justify-between items-center">
+          <h4 className="font-mono text-xs font-bold uppercase tracking-widest text-charcoal">Priority Queue (Interactive)</h4>
+          <span className="text-[10px] font-mono text-charcoal-muted hidden sm:inline-block">Drag items to reorder</span>
+       </div>
+       <ul className="divide-y divide-charcoal/5">
+         {tasks.map((item, index) => (
+           <li 
+             key={item.id}
+             draggable
+             onDragStart={(e) => handleDragStart(e, index)}
+             onDragEnter={(e) => handleDragEnter(e, index)}
+             onDragOver={handleDragOver}
+             onDragEnd={handleDragEnd}
+             className="p-4 flex items-center justify-between hover:bg-off-white/50 cursor-move group transition-colors active:bg-off-white"
+           >
+             <div className="flex items-center gap-4">
+               <div className="p-1 rounded hover:bg-charcoal/5 text-charcoal/20 group-hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
+               </div>
+               <span className="font-serif text-sm text-charcoal">{item.content}</span>
+             </div>
+             <span className={`text-[9px] font-mono font-bold uppercase tracking-widest px-2 py-1 rounded-sm border w-20 text-center ${
+               item.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
+               item.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+               'bg-blue-50 text-blue-600 border-blue-100'
+             }`}>
+               {item.priority}
+             </span>
+           </li>
+         ))}
+       </ul>
+    </div>
+  );
+}

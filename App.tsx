@@ -39,6 +39,10 @@ import { RightPanel, SourceItem } from './components/RightPanel';
      type: 'cards'
      data: { title: string, text: string, icon: string, subLabel?: string }[]
 
+  7. TASK LIST (Drag & Drop)
+     type: 'task_list'
+     data: { id: string, content: string, priority: 'High' | 'Medium' | 'Low' }[]
+
   =============================================================================
 */
 
@@ -867,6 +871,20 @@ TYPE D: BADGES
 - Notification Bell: Red dot with number count.
 - Status Badges: "Active" (Green), "Draft" (Gray), "Error" (Red).`
           }]
+        },
+        // PROMPT 10: Task List (Drag & Drop)
+        {
+          id: "section-05-task-list",
+          title: "Prompt 10: Interactive Lists",
+          type: "task_list",
+          content: "Drag-and-drop functionality for prioritizing backlog items.",
+          data: [
+            { id: "t1", content: "Implement Auth0 Integration", priority: "High" },
+            { id: "t2", content: "Design System Audit", priority: "Medium" },
+            { id: "t3", content: "Update API Documentation", priority: "Low" },
+            { id: "t4", content: "Accessibility Testing (WCAG)", priority: "High" },
+            { id: "t5", content: "Refactor Navigation Component", priority: "Medium" }
+          ]
         },
          {
            id: "section-end-p5",
