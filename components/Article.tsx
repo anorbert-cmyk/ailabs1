@@ -15,6 +15,9 @@ import {
   DSResourceSplit,
   DSErrorPathGrid,
   DSVisualTimeline,
+  DSRiskDossierHeader,
+  DSRiskTable,
+  DSROIAnalysis,
   MetricRow,
   BlueprintItem,
   CompetitorData,
@@ -22,7 +25,10 @@ import {
   PhaseDetail,
   ResourceData,
   ErrorPathData,
-  VisualTimelineData
+  VisualTimelineData,
+  RiskData,
+  RiskItem,
+  ROIScenario
 } from './DesignLibrary';
 
 // Types for the AI Generated Data Structure
@@ -30,9 +36,9 @@ interface SectionData {
   id: string;
   title: string;
   content: string;
-  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'strategy_grid' | 'resource_split' | 'error_path_grid';
+  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis';
   // Flexible data union
-  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseDetail[] | ResourceData | ErrorPathData[] | any; 
+  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | any; 
   columns?: { header: string; key: string; width?: string }[]; // For tables
 }
 
@@ -54,6 +60,8 @@ interface ArticleProps {
 export const Article: React.FC<ArticleProps> = ({ data }) => {
   // Phase 3 uses a custom layout where the "Header" is part of the first visual section
   const isRoadmapLayout = data.id === 'phase-03';
+  // Phase 6 (Risk) uses a custom layout
+  const isRiskLayout = data.id === 'phase-06';
   
   // State for the Strategy Grid Layout Toggle
   const [strategyLayoutMode, setStrategyLayoutMode] = useState<'grid' | 'list'>('grid');
@@ -63,13 +71,15 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
       
       {/* Visual Timeline Header (For Phase 3) */}
       {isRoadmapLayout && data.visualTimeline && (
-          <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-16 lg:pt-24 pb-12">
-            <DSVisualTimeline {...data.visualTimeline} />
+          <div className="w-full bg-[#F3F3F1] mb-24 border-b border-charcoal/5">
+            <div className="max-w-[1100px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
+              <DSVisualTimeline {...data.visualTimeline} />
+            </div>
           </div>
       )}
 
-      {/* Standard Layout Header (Hidden for Phase 3) */}
-      {!isRoadmapLayout && (
+      {/* Standard Layout Header (Hidden for Phase 3 & 6) */}
+      {!isRoadmapLayout && !isRiskLayout && (
         <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-16 lg:pt-24 pb-12">
           <DSHeader 
             title={data.title}
@@ -91,6 +101,37 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
       <div className="prose prose-slate prose-lg max-w-none font-serif text-charcoal-muted leading-loose">
         {data.sections.map((section, idx) => {
           
+          // --- FULL WIDTH SECTIONS ---
+          if (section.type === 'risk_dossier_header') {
+             return (
+               <section key={section.id} id={section.id} className="scroll-mt-32">
+                 <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-16 lg:pt-24 mb-16">
+                    <DSRiskDossierHeader {...(section.data as RiskData)} />
+                    
+                    {/* Render Risk Clusters immediately after header in this layout */}
+                    <DSRiskTable 
+                      number="01" 
+                      title="Strategic Risk Cluster" 
+                      rows={(section.data as RiskData).strategic} 
+                      colorTheme="red"
+                    />
+                    <DSRiskTable 
+                      number="02" 
+                      title="Operational Risk Cluster" 
+                      rows={(section.data as RiskData).operational} 
+                      colorTheme="amber"
+                    />
+                     <DSRiskTable 
+                      number="03" 
+                      title="Financial Risk Cluster" 
+                      rows={(section.data as RiskData).financial} 
+                      colorTheme="emerald"
+                    />
+                 </div>
+               </section>
+             )
+          }
+
           // --- CONSTRAINED WIDTH SECTIONS (1100px) ---
           return (
             <section key={section.id} id={section.id} className="max-w-[1100px] mx-auto px-6 lg:px-12 mb-16 scroll-mt-32">
@@ -229,6 +270,15 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               
               {section.type === 'roadmap_phase' && section.data && (
                 <DSRoadmapPhase {...(section.data as RoadmapPhaseData)} />
+              )}
+
+              {section.type === 'roi_analysis' && section.data && (
+                 <>
+                   <div className="max-w-4xl">
+                     <DSParagraph>{section.content}</DSParagraph>
+                   </div>
+                   <DSROIAnalysis scenarios={section.data as ROIScenario[]} />
+                 </>
               )}
 
               {/* Occasional Blockquote */}

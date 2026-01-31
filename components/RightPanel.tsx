@@ -13,8 +13,9 @@ interface RightPanelProps {
 
 export const RightPanel: React.FC<RightPanelProps> = ({ sources = [] }) => {
   return (
-    <aside className="w-full lg:w-80 bg-off-white flex-shrink-0 border-l border-border-hairline hidden lg:block">
-      <div className="sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto p-8 custom-scrollbar">
+    // Changed: No longer hidden on mobile. Now displays as block everywhere, layout handled by parent flex container.
+    <aside className="w-full lg:w-80 bg-off-white flex-shrink-0 lg:border-l border-t lg:border-t-0 border-border-hairline">
+      <div className="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto p-8 custom-scrollbar">
         
         {/* Cited Sources */}
         <div className="mb-12">

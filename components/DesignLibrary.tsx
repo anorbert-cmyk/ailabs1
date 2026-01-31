@@ -21,11 +21,11 @@ export const DSHeader: React.FC<{
         {badge}
       </span>
     )}
-    <h1 className="text-4xl lg:text-6xl font-light tracking-tighter text-charcoal mb-6 leading-[1.1]">
+    <h1 className="text-4xl lg:text-6xl font-light tracking-tighter text-charcoal mb-6 leading-[1.1] break-words">
       {title}
     </h1>
     {subtitle && (
-      <div className="text-xl font-serif italic text-charcoal-muted font-medium max-w-3xl">
+      <div className="text-lg lg:text-xl font-serif italic text-charcoal-muted font-medium max-w-3xl">
         {subtitle}
       </div>
     )}
@@ -46,7 +46,7 @@ export const DSParagraph: React.FC<{
   children: React.ReactNode; 
   isLead?: boolean 
 }> = ({ children, isLead }) => (
-  <p className={`mb-6 text-charcoal-muted leading-8 text-[17px] font-serif ${
+  <p className={`mb-6 text-charcoal-muted leading-8 text-[16px] lg:text-[17px] font-serif ${
     isLead 
       ? "first-letter:text-5xl first-letter:font-light first-letter:text-charcoal first-letter:float-left first-letter:mr-3 first-letter:mt-[-8px]" 
       : ""
@@ -336,11 +336,11 @@ export interface VisualTimelineData {
 
 export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle, quarters, context }) => {
   return (
-    <div className="mb-24 animate-in fade-in duration-700">
+    <div className="animate-in fade-in duration-700">
         <div className="mb-12 border-l-4 border-red-500 pl-6">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-red-500 mb-2 block">/// Fiscal Timeline</span>
-            <h1 className="text-5xl lg:text-7xl font-light tracking-tighter text-charcoal mb-4 leading-[1.1]">{title}</h1>
-            <p className="text-sm font-mono text-charcoal-muted max-w-2xl text-right ml-auto">{subtitle}</p>
+            <h1 className="text-4xl lg:text-7xl font-light tracking-tighter text-charcoal mb-4 leading-[1.1]">{title}</h1>
+            <p className="text-xs lg:text-sm font-mono text-charcoal-muted max-w-2xl lg:text-right lg:ml-auto">{subtitle}</p>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-12 items-start">
@@ -371,27 +371,30 @@ export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle
             )}
 
             {/* Timeline Visualization (Right) */}
-            <div className="lg:col-span-9 flex flex-col justify-center h-full min-h-[300px] bg-[#F3F3F1] p-8 lg:p-12">
-                <div className="grid grid-cols-3 w-full">
-                     {quarters.map((q, i) => (
-                         <div key={i} className={`relative border-l ${i === 0 ? 'border-charcoal' : 'border-charcoal/20'} ${i === 2 ? 'border-r border-charcoal/20' : ''} h-48`}>
-                            {/* Quarter Header */}
-                            <div className="absolute top-0 left-0 p-4 flex items-baseline gap-3">
-                                <span className="bg-charcoal text-white font-mono font-bold text-sm px-2 py-1">{q.id}</span>
-                                <span className="font-serif italic text-xl text-charcoal">{q.title}</span>
-                            </div>
+            <div className="lg:col-span-9 flex flex-col justify-center h-full min-h-[300px]">
+                {/* Mobile: Scrollable container */}
+                <div className="w-full overflow-x-auto pb-4 lg:pb-0">
+                    <div className="grid grid-cols-3 w-full min-w-[600px] lg:min-w-0">
+                         {quarters.map((q, i) => (
+                             <div key={i} className={`relative border-l ${i === 0 ? 'border-charcoal' : 'border-charcoal/20'} ${i === 2 ? 'border-r border-charcoal/20' : ''} h-48`}>
+                                {/* Quarter Header */}
+                                <div className="absolute top-0 left-0 p-4 flex items-baseline gap-3">
+                                    <span className="bg-charcoal text-white font-mono font-bold text-sm px-2 py-1">{q.id}</span>
+                                    <span className="font-serif italic text-xl text-charcoal">{q.title}</span>
+                                </div>
 
-                            {/* Timeline Line */}
-                            <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal flex items-center justify-around">
-                                {q.months.map((m, mi) => (
-                                    <div key={mi} className="relative group">
-                                        <div className={`size-3 rounded-full border-2 border-charcoal bg-white z-10 hover:bg-red-500 hover:border-red-500 transition-colors cursor-pointer ${mi === 2 && q.id === 'Q2' ? 'bg-red-500 border-red-500 animate-pulse' : ''}`}></div>
-                                        <span className="absolute top-6 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted whitespace-nowrap opacity-60 group-hover:opacity-100 group-hover:text-red-500 transition-all">{m}</span>
-                                    </div>
-                                ))}
-                            </div>
-                         </div>
-                     ))}
+                                {/* Timeline Line */}
+                                <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal flex items-center justify-around">
+                                    {q.months.map((m, mi) => (
+                                        <div key={mi} className="relative group">
+                                            <div className={`size-3 rounded-full border-2 border-charcoal bg-white z-10 hover:bg-red-500 hover:border-red-500 transition-colors cursor-pointer ${mi === 2 && q.id === 'Q2' ? 'bg-red-500 border-red-500 animate-pulse' : ''}`}></div>
+                                            <span className="absolute top-6 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted whitespace-nowrap opacity-60 group-hover:opacity-100 group-hover:text-red-500 transition-all">{m}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                             </div>
+                         ))}
+                    </div>
                 </div>
             </div>
         </div>
@@ -937,3 +940,273 @@ export const DSBlueprintCard: React.FC<BlueprintItem> = ({ id, title, descriptio
     </div>
   );
 };
+
+// --- 13. Risk Assessment Dossier (Phase 6 Specific) ---
+
+export interface RiskItem {
+  id: string;
+  vector: string;
+  mitigation: string;
+  owner: string;
+  prob: string;
+  impact: string;
+  contingency: string; // Add contingency
+}
+
+export interface RiskData {
+  title: string;
+  description: string;
+  score: string;
+  strategic: RiskItem[];
+  operational: RiskItem[];
+  financial: RiskItem[];
+}
+
+export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, score }) => (
+  <div className="mb-24 bg-white">
+    {/* Header Top Bar */}
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-charcoal/10 pb-6 mb-12 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <h2 className="text-xl font-sans font-medium text-charcoal">Risk Assessment Dossier</h2>
+        <div className="hidden sm:block h-4 w-px bg-charcoal/20"></div>
+        <span className="font-mono text-[10px] text-charcoal-muted uppercase tracking-widest">Project X-01 Validation</span>
+      </div>
+      <div className="flex items-center gap-4">
+        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200 text-[9px] font-mono font-bold uppercase tracking-widest rounded-sm">
+          Status: Review Pending
+        </span>
+        <div className="flex gap-2 text-charcoal-muted">
+           <span className="material-symbols-outlined text-lg">download</span>
+           <span className="material-symbols-outlined text-lg">share</span>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid lg:grid-cols-12 gap-12">
+      {/* Left: Text Content */}
+      <div className="lg:col-span-5">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary block mb-3">/// Risk Matrix Visualization</span>
+        <h1 className="text-4xl lg:text-6xl font-light tracking-tighter text-charcoal mb-6 leading-tight">
+          {title}
+        </h1>
+        <p className="text-sm font-serif text-charcoal-muted leading-relaxed mb-12 max-w-md">
+          {description}
+        </p>
+
+        {/* Composite Score */}
+        <div className="border-t border-charcoal/10 pt-6">
+          <div className="flex justify-between items-end mb-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-charcoal-muted">Composite Risk Score</span>
+            <span className="font-mono text-xl font-bold text-charcoal">{score}</span>
+          </div>
+          <div className="h-1.5 w-full bg-charcoal/10 rounded-full overflow-hidden mb-6">
+            <div className="h-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500 w-[72%]"></div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="size-2 rounded-full bg-red-500"></div>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-charcoal-muted">Strategic (Critical)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="size-2 rounded-full bg-amber-400"></div>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-charcoal-muted">Operational (Moderate)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="size-2 rounded-full bg-emerald-400"></div>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-charcoal-muted">Financial (Low)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Scatter Plot Visualization (CSS Grid) */}
+      <div className="lg:col-span-7 relative h-[300px] lg:h-[400px] bg-off-white border border-charcoal/10 p-8 flex items-center justify-center">
+         {/* Grid Lines */}
+         <div className="absolute inset-8 grid grid-cols-4 grid-rows-4 divide-x divide-y divide-charcoal/5 border border-charcoal/10">
+             {/* Cells generated by grid */}
+             {[...Array(16)].map((_, i) => <div key={i} className=""></div>)}
+         </div>
+         
+         {/* Axis Labels */}
+         <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted">Probability of Occurrence</span>
+         <span className="absolute left-3 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted">Impact Severity</span>
+
+         {/* Plot Points (Hardcoded relative positions based on mockup for specific effect) */}
+         <div className="absolute top-[20%] right-[15%] group cursor-pointer">
+            <div className="size-4 rounded-full border-2 border-red-500 bg-red-500/20 shadow-sm animate-pulse"></div>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-charcoal text-white text-[8px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">R1: AI Visibility</div>
+         </div>
+         <div className="absolute top-[35%] right-[35%] group cursor-pointer">
+            <div className="size-4 rounded-full border-2 border-amber-400 bg-amber-400/20 shadow-sm"></div>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-charcoal text-white text-[8px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">R2: Dashboard Delay</div>
+         </div>
+         <div className="absolute bottom-[25%] left-[30%] group cursor-pointer">
+            <div className="size-4 rounded-full border-2 border-emerald-400 bg-emerald-400/20 shadow-sm"></div>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-charcoal text-white text-[8px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">R7: Competitors</div>
+         </div>
+          <div className="absolute top-[50%] right-[25%] group cursor-pointer">
+            <div className="size-4 rounded-full border-2 border-amber-400 bg-amber-400/20 shadow-sm"></div>
+             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-charcoal text-white text-[8px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">R5: Case Studies</div>
+         </div>
+      </div>
+    </div>
+  </div>
+);
+
+export const DSRiskTable: React.FC<{ 
+  number: string; 
+  title: string; 
+  rows: RiskItem[];
+  colorTheme: 'red' | 'amber' | 'emerald';
+}> = ({ number, title, rows, colorTheme }) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const colors = {
+    red: "text-red-500 bg-red-50 border-red-200",
+    amber: "text-amber-600 bg-amber-50 border-amber-200",
+    emerald: "text-emerald-600 bg-emerald-50 border-emerald-200"
+  };
+
+  const idColors = {
+     red: "text-red-500",
+     amber: "text-amber-600",
+     emerald: "text-emerald-600"
+  }
+
+  return (
+    <div className="mb-8 border-t border-charcoal/10 pt-8">
+      {/* Cluster Header */}
+      <div className="flex justify-between items-baseline mb-6 px-4">
+        <h3 className="font-sans text-sm font-bold uppercase tracking-widest text-charcoal">
+          <span className="text-charcoal-muted opacity-50 font-mono mr-2">{number}</span>
+          {title}
+        </h3>
+        <div className="text-[9px] font-mono text-charcoal-muted uppercase tracking-widest">
+          Entries: {rows.length}
+        </div>
+      </div>
+
+      {/* Grid Header (Desktop) */}
+      <div className="hidden lg:grid grid-cols-12 gap-4 px-4 pb-2 border-b border-charcoal/10 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted">
+        <div className="col-span-1">ID</div>
+        <div className="col-span-3">Risk Vector</div>
+        <div className="col-span-4">Mitigation Strategy</div>
+        <div className="col-span-2">Owner</div>
+        <div className="col-span-1">Prob %</div>
+        <div className="col-span-1 text-right">Impact</div>
+      </div>
+
+      {/* Rows */}
+      <div className="divide-y divide-charcoal/5">
+        {rows.map((row) => {
+          const isExpanded = expandedId === row.id;
+          return (
+            <div 
+              key={row.id} 
+              className={`group bg-white hover:bg-off-white transition-colors cursor-pointer ${isExpanded ? 'bg-off-white' : ''}`}
+              onClick={() => setExpandedId(isExpanded ? null : row.id)}
+            >
+              <div className="lg:grid lg:grid-cols-12 gap-4 p-4 items-start">
+                
+                {/* ID */}
+                <div className={`col-span-1 font-mono text-xs font-bold mb-2 lg:mb-0 ${idColors[colorTheme]}`}>
+                  {row.id}
+                </div>
+
+                {/* Risk Vector */}
+                <div className="col-span-3 mb-2 lg:mb-0 pr-4">
+                  <h4 className="font-sans font-bold text-sm text-charcoal mb-1 leading-tight">{row.vector.split(':')[0]}</h4>
+                  <p className={`text-xs text-charcoal-muted leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                    {row.vector.split(':').slice(1).join(':').trim() || row.vector}
+                  </p>
+                </div>
+
+                {/* Mitigation */}
+                <div className="col-span-4 mb-2 lg:mb-0 pr-4">
+                   <h4 className="font-mono text-[10px] font-bold text-charcoal uppercase mb-1 lg:hidden">Strategy</h4>
+                   <p className={`text-xs text-charcoal-muted leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                     {row.mitigation}
+                   </p>
+                </div>
+
+                {/* Owner */}
+                <div className="col-span-2 text-xs font-mono text-charcoal mb-2 lg:mb-0 flex items-center gap-2 lg:block">
+                  <span className="lg:hidden text-[9px] text-charcoal-muted uppercase font-bold mr-2">Owner:</span>
+                  {row.owner}
+                </div>
+
+                {/* Prob */}
+                <div className="col-span-1 text-xs font-mono font-bold text-charcoal mb-2 lg:mb-0 flex items-center gap-2 lg:block">
+                  <span className="lg:hidden text-[9px] text-charcoal-muted uppercase font-bold mr-2">Prob:</span>
+                  {row.prob}
+                </div>
+
+                 {/* Impact */}
+                <div className="col-span-1 text-xs font-mono font-bold text-charcoal text-left lg:text-right flex items-center gap-2 lg:block">
+                  <span className="lg:hidden text-[9px] text-charcoal-muted uppercase font-bold mr-2">Impact:</span>
+                  {row.impact}
+                </div>
+              </div>
+
+              {/* Expanded Details (Contingency) */}
+              <div className={`overflow-hidden transition-all duration-300 bg-off-white/50 border-l-2 ${idColors[colorTheme]} ${isExpanded ? 'max-h-96 opacity-100 py-4 px-4 lg:ml-16 mr-4 mb-4' : 'max-h-0 opacity-0'}`}>
+                 <div className="grid lg:grid-cols-2 gap-8">
+                    <div>
+                       <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-2">Contingency Plan</span>
+                       <p className="text-xs font-serif text-charcoal leading-relaxed">{row.contingency}</p>
+                    </div>
+                    <div>
+                       <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-2">Detailed Context</span>
+                       <p className="text-xs font-serif text-charcoal leading-relaxed opacity-80">Full analysis of {row.vector} requires constant monitoring. Owner {row.owner} is responsible for weekly checks.</p>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  )
+}
+
+// --- 14. ROI Analysis ---
+
+export interface ROIScenario {
+  title: string;
+  investment: string;
+  mrr: string;
+  roi: string;
+  payback: string;
+}
+
+export const DSROIAnalysis: React.FC<{ scenarios: ROIScenario[] }> = ({ scenarios }) => (
+  <div className="mb-16">
+    <div className="grid md:grid-cols-2 gap-8">
+      {scenarios.map((s, i) => (
+        <div key={i} className="border border-charcoal/10 bg-white p-6 hover:shadow-sharp transition-shadow">
+          <h4 className="font-sans font-bold text-sm text-charcoal uppercase tracking-wide mb-6 border-b border-charcoal/10 pb-4">{s.title}</h4>
+          
+          <div className="space-y-4">
+             <div className="flex justify-between items-center">
+                <span className="text-xs font-mono text-charcoal-muted">Investment</span>
+                <span className="text-sm font-bold text-charcoal">{s.investment}</span>
+             </div>
+             <div className="flex justify-between items-center">
+                <span className="text-xs font-mono text-charcoal-muted">Month 9 MRR</span>
+                <span className="text-sm font-bold text-charcoal">{s.mrr}</span>
+             </div>
+             <div className="flex justify-between items-center p-2 bg-emerald-50 rounded-sm">
+                <span className="text-xs font-mono text-emerald-800 font-bold uppercase">12-Month ROI</span>
+                <span className="text-lg font-bold text-emerald-600">{s.roi}</span>
+             </div>
+             <div className="flex justify-between items-center">
+                <span className="text-xs font-mono text-charcoal-muted">Payback Period</span>
+                <span className="text-xs font-mono font-bold text-charcoal">{s.payback}</span>
+             </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
