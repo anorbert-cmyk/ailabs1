@@ -60,8 +60,6 @@ interface ArticleProps {
 export const Article: React.FC<ArticleProps> = ({ data }) => {
   // Phase 3 uses a custom layout where the "Header" is part of the first visual section
   const isRoadmapLayout = data.id === 'phase-03';
-  // Phase 6 (Risk) uses a custom layout
-  const isRiskLayout = data.id === 'phase-06';
   
   // State for the Strategy Grid Layout Toggle
   const [strategyLayoutMode, setStrategyLayoutMode] = useState<'grid' | 'list'>('grid');
@@ -78,8 +76,8 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
           </div>
       )}
 
-      {/* Standard Layout Header (Hidden for Phase 3 & 6) */}
-      {!isRoadmapLayout && !isRiskLayout && (
+      {/* Standard Layout Header (Hidden for Phase 3) */}
+      {!isRoadmapLayout && (
         <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-16 lg:pt-24 pb-12">
           <DSHeader 
             title={data.title}

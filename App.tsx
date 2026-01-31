@@ -844,118 +844,60 @@ TYPE D: BADGES
     return {
       id: "phase-06",
       badge: "Strategic Analysis",
-      title: "Risk Assessment, Metrics & ROI",
-      subtitle: "Critical exposure analysis, success metrics, and financial justification for the 9-month execution plan.",
+      title: titles[5],
+      subtitle: subtitles[5],
       metadata: ["Input: Syndicate Part 6", "Status: Review Pending", "Scope: Validation & Finance"],
       sources: [
         { source: 'Perplexity', title: 'Syndicate Part 6', icon: 'description' }
       ],
       sections: [
         {
-          id: "section-risk-matrix",
-          title: "Risk Assessment Dossier",
-          type: "risk_dossier_header" as const,
-          content: "",
-          data: {
-             title: "Critical Exposure Analysis",
-             description: "The current architectural posture exhibits a high dependency on single-vendor APIs (OpenAI), creating a critical operational bottleneck. Financial exposure is moderate but correlates strongly with compute cost volatility.",
-             score: "72/100 (High)",
-             strategic: [], // Data moved to cards
-             operational: [], 
-             financial: []
-          }
+          id: "section-risk-overview",
+          title: "Executive Risk Summary",
+          type: "text" as const,
+          content: "The current architectural posture exhibits a high dependency on single-vendor APIs (OpenAI), creating a critical operational bottleneck. Financial exposure is moderate but correlates strongly with compute cost volatility. The composite risk score is evaluated at 72/100 (High), necessitating a focus on rapid validation of the AI value proposition."
         },
         {
-          id: "section-risk-strategic",
-          title: "", // Title handled by card
-          type: "phase_card" as const,
-          content: "",
-          data: {
-            id: "CLUSTER 01",
-            title: "Strategic Risks",
-            subtitle: "Market positioning, competitive erosion, and core value proposition failure.",
-            timeline: "High Impact",
-            focus: "Market Fit",
-            status: "CRITICAL",
-            deliverables: [
-              "R1: AI visibility (SEO/GEO) fails to drive meaningful traffic in 30-60 days.",
-              "R6: Web3 market downturn reduces client budgets significantly.",
-              "R7: Competitors launch copycat AI-native dashboards."
-            ],
-            criteria: [
-              "Run 2 pilot case studies with explicit KPIs to validate AI value.",
-              "Adopt dual positioning (Web2/Web3) to diversify client base.",
-              "Accelerate launch timeline to establish 'first mover' brand authority."
-            ],
-            dependencies: "Founder execution speed. Market conditions.",
-            touchpoints: "High likelihood (30%)",
-            risk: {
-              name: "AI Value Proposition Failure",
-              mitigation: "Pivot to traditional SEO + Dashboard positioning if AI metrics fail."
+          id: "section-risk-clusters",
+          title: "Risk Clusters",
+          type: "cards" as const,
+          content: "Categorization of primary risk vectors impacting the 9-month roadmap.",
+          data: [
+            { 
+              title: "Strategic Risks", 
+              text: "Focus: Market Fit (Critical). Primary risks include AI visibility failing to drive traffic and competitors launching copycat dashboards. Mitigation: Run 2 pilot case studies with explicit KPIs and adopt dual positioning.", 
+              icon: "flag",
+              subLabel: "High Impact"
+            },
+            { 
+              title: "Operational Risks", 
+              text: "Focus: Execution (Critical). Primary risks include Client Cockpit delays and founder burnout. Mitigation: Leverage no-code tools (Retool) and hire a contractor by Week 4.", 
+              icon: "engineering",
+              subLabel: "High Impact"
+            },
+            { 
+              title: "Financial Risks", 
+              text: "Focus: Viability (Moderate). Primary risks include integration cost blowouts and GDPR compliance gaps. Mitigation: Start with manual reporting and conduct legal review by Week 12.", 
+              icon: "payments",
+              subLabel: "Moderate"
             }
-          }
+          ]
         },
         {
-          id: "section-risk-operational",
-          title: "",
-          type: "phase_card" as const,
-          content: "",
-          data: {
-            id: "CLUSTER 02",
-            title: "Operational Risks",
-            subtitle: "Execution bottlenecks, resource constraints, and delivery failures.",
-            timeline: "High Impact",
-            focus: "Execution",
-            status: "CRITICAL",
-            deliverables: [
-              "R2: Client Cockpit v1 delayed beyond Week 18.",
-              "R3: Founder bandwidth bottleneck (sales vs delivery).",
-              "R5: Case studies underperform or clients refuse testimonials.",
-              "R10: Support scalability issues with 8+ clients."
-            ],
-            criteria: [
-              "Use no-code tools (Retool) to ensure delivery speed.",
-              "Hire part-time contractor by Week 4 to offload execution.",
-              "Incentivize case studies ($500 credit) in pilot contracts.",
-              "Productize services to reduce founder hours per client."
-            ],
-            dependencies: "Contractor availability. Tool reliability.",
-            touchpoints: "High likelihood (40%)",
-            risk: {
-              name: "Founder Burnout",
-              mitigation: "Extend timeline by 4-8 weeks and reduce pilot scope to 1 client."
-            }
-          }
-        },
-        {
-          id: "section-risk-financial",
-          title: "",
-          type: "phase_card" as const,
-          content: "",
-          data: {
-            id: "CLUSTER 03",
-            title: "Financial & Legal Risks",
-            subtitle: "Cash flow, compliance, and technical integration costs.",
-            timeline: "Medium Impact",
-            focus: "Viability",
-            status: "MODERATE",
-            deliverables: [
-              "R4: On-chain analytics integration complexity exceeds budget.",
-              "R8: GDPR/CCPA compliance gaps in dashboard handling wallet data.",
-              "R9: Early client churn due to unrealistic expectations."
-            ],
-            criteria: [
-              "Start with manual reporting before automating complex queries.",
-              "Conduct legal review by Week 12; implement consent flows.",
-              "Set explicit '90-Day Roadmap' expectations during sales."
-            ],
-            dependencies: "Legal counsel. 3rd party API pricing.",
-            touchpoints: "Medium likelihood (30%)",
-            risk: {
-              name: "Integration Cost Blowout",
-              mitigation: "Offer 'consultation' instead of automated dashboard for complex metrics."
-            }
-          }
+          id: "section-contingencies",
+          title: "Key Contingencies",
+          type: "table" as const,
+          content: "Specific triggers and pre-planned mitigation responses.",
+          columns: [
+             { header: "Risk Vector", key: "risk", width: "w-1/3" },
+             { header: "Trigger / Probability", key: "trigger", width: "w-1/4" },
+             { header: "Mitigation Plan", key: "plan", width: "w-1/3" }
+          ],
+          data: [
+            { risk: "AI Value Prop Failure", trigger: "Low traffic (30%)", plan: "Pivot to traditional SEO + Dashboard positioning." },
+            { risk: "Founder Burnout", trigger: "Overwork (40%)", plan: "Extend timeline by 4-8 weeks; reduce pilot scope." },
+            { risk: "Integration Cost Blowout", trigger: "API limits (30%)", plan: "Offer 'consultation' instead of automated dashboard." }
+          ]
         },
         {
           id: "section-metrics-primary",
@@ -1129,7 +1071,7 @@ TYPE D: BADGES
           id: "section-strategic-notes",
           title: "Strategic Notes: Behind the Decision",
           type: "text" as const,
-          content: "Choice 1: Hybrid Positioning (Web2/Web3) vs. Web3-Only. Chosen to mitigate market risk (Web3 volatility) and access larger TAM ($50B+ vs $5B). Competitive analysis shows incumbents struggling to scale. Reversibility is high. Choice 2: Dashboard-Centric UX (Build vs. Buy). Chosen for competitive differentiation (Coinbound hides theirs) and cost efficiency ($3K-$5K no-code vs $50K custom). Choice 3: Lean Validation (Pilots First). Chosen to validate assumptions before hiring. Choice 4: AI Visibility as Primary Differentiator. Blue ocean opportunity vs commoditized SEO. Choice 5: Transparent Pricing. Chosen to reduce sales friction and align with 'innovative' brand positioning."
+          content: "Choice 1: Hybrid Positioning (Web2/Web3) vs. Web3-Only. Chosen to mitigate market risk (Web3 volatility) and access larger TAM ($50B+ vs $5B). Competitive analysis shows incumbents struggling to scale. Reversibility is high. Choice 2: Dashboard-Centric UX (Build vs. Buy). Chosen to differentiate from competitors who hide analytics. Choice 3: Lean Validation (Pilots First). Chosen to validate assumptions before hiring. Choice 4: AI Visibility as Primary Differentiator. Blue ocean opportunity vs commoditized SEO. Choice 5: Transparent Pricing. Chosen to reduce sales friction and align with 'innovative' brand positioning."
         },
         {
           id: "section-assumptions",
