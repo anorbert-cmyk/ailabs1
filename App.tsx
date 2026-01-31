@@ -19,7 +19,7 @@ const generatePhaseData = (phaseIndex: number) => {
     "Competitor Deep-Dive",
     "Phase-by-Phase Roadmap",
     "Core Design",
-    "Scaling Infrastructure",
+    "Advanced Screens & Edge Cases",
     "Design System Blueprints"
   ];
 
@@ -28,7 +28,7 @@ const generatePhaseData = (phaseIndex: number) => {
     "Landscape analysis and strategic gaps",
     "Visualizing the 9-month execution path from foundational architecture to market optimization.",
     "Architectural directives for the core application flows, defined as generative prompts",
-    "Load balancing and sharding",
+    "Comprehensive system states including error handling, empty states, and loading patterns",
     "Generative UI Directives & Tokens"
   ];
 
@@ -413,10 +413,426 @@ const generatePhaseData = (phaseIndex: number) => {
             id: "PROMPT-01",
             title: "Web3 Growth Score Assessment",
             description: "Multi-Step Lead Capture Flow",
-            prompt: `Design a modern, high-conversion 4-step assessment flow...` // (Content preserved but shortened for brevity in this response)
+            prompt: `Design a modern, high-conversion 4-step assessment flow for a Web3 marketing agency's lead magnet.
+
+LAYOUT SPECIFICATION:
+- Container: 800px max-width, centered horizontally, 64px horizontal padding
+- Progress indicator: Horizontal step tracker, fixed to top, 80px height, background: linear-gradient(to right, #F9FAFB, #FFFFFF)
+- Content area: 720px max-width, 48px vertical padding between sections
+
+VISUAL DESIGN SYSTEM:
+Color Palette:
+- Primary: #6366F1 (Indigo-500, used for CTAs and active states)
+- Secondary: #8B5CF6 (Purple-500, used for accents and data viz)
+- Success: #10B981 (Emerald-500)
+- Warning: #F59E0B (Amber-500)
+- Error: #EF4444 (Red-500)
+- Background-Dark: #0A0E27 (Deep navy, main background)
+- Background-Card: #1A1F3A (Lighter navy, card backgrounds)
+- Text-Primary: #F9FAFB (Gray-50, main text)
+- Text-Secondary: #9CA3AF (Gray-400, secondary text)
+- Border: #374151 (Gray-700, subtle borders)
+
+STEP-BY-STEP CONTENT:
+
+STEP 1 - WELCOME:
+Header Section:
+- Logo: Top-left, 40px height, link to homepage
+- Progress: "Step 1 of 4" in Text-Secondary, top-right
+Hero Content (centered):
+- Icon: Gradient chart icon (100px × 100px), gradient from Primary to Secondary
+- Headline: "What's Your Web3 Growth Score?" (H1, Text-Primary)
+- Subheadline: "Get a free, personalized analysis of your marketing maturity—plus a custom roadmap."
+- Trust Signals (horizontal row, 32px margin-top):
+  • "💳 No credit card required" (Caption, Text-Secondary)
+  • "⚡ Results in 60 seconds" (Caption, Text-Secondary)
+  • "🏢 Used by 200+ Web3 projects" (Caption, Text-Secondary)
+Primary CTA:
+- Button: "Start Assessment →" (Background: Primary, Text: white, full-width on mobile)
+
+STEP 2 - PROJECT BASICS:
+Form Section (left-aligned, single column):
+- Field 1: "Project website or docs URL *" (Input, Placeholder: "https://yourproject.xyz")
+- Field 2: "What stage are you at? *" (Radio buttons: Pre-launch, Early, Growth, Established)
+- Field 3: "What's your #1 marketing goal right now? *" (Dropdown: Awareness, Leads, Community, On-chain metrics, Token Launch)
+
+STEP 3 - CURRENT MARKETING:
+Checkbox Grid (3 columns on desktop, 1 column on mobile, 16px gap):
+- Options: Content marketing, Social media, SEO, Community management, Paid ads, Influencer partnerships, Email marketing, On-chain data tracking, AI tools.
+
+STEP 4 - CONTACT INFO:
+Form Section:
+- Headline: "Get your personalized Growth Score"
+- Field 1: "Your name *"
+- Field 2: "Work email *" (Input type="email")
+- Field 3: "Project or company name *"
+- Privacy Notice: "By submitting, you agree to receive your Growth Score report..."
+- Final CTA: "Generate My Growth Score →" (Primary, full-width)` 
+          }]
+        },
+        // PROMPT 2: Client Cockpit Dashboard
+        {
+          id: "section-03-prompt-2",
+          title: "Prompt 2: Client Dashboard",
+          type: "blueprints" as const,
+          content: "Comprehensive data-dense dashboard interface.",
+          data: [{
+            id: "PROMPT-02",
+            title: "Client Cockpit - Real-Time Marketing Dashboard",
+            description: "Main dashboard for Web3 marketing clients",
+            prompt: `Design a comprehensive, data-dense dashboard interface for Web3 marketing clients. This interface serves as the "Marketing Command Center".
+
+LAYOUT SPECIFICATION:
+- Grid system: 12-column grid, 24px gutters
+- Navigation: Fixed left sidebar, 280px width, collapsible to 80px
+- Header: Fixed top bar, 72px height, spans full width minus sidebar
+- Content area: Scrollable main region, 32px padding on all sides
+
+COMPONENT BREAKDOWN:
+
+HEADER SECTION:
+- Left: Dashboard title "Marketing Command Center", Date range selector (Last 30 days)
+- Center: Quick search input with magnifying glass
+- Right: Notification bell (with badge), Help icon, User avatar with dropdown
+
+SIDEBAR NAVIGATION (Fixed Left):
+- Logo area at top
+- Primary Nav: Dashboard, Experiments (Badge: "3 active"), Analytics, AI Insights (Badge: "2 new"), Campaigns, Community, ROI Reports
+- Secondary Nav (bottom): Settings, Help Center, Contact Team
+- Collapse toggle at bottom right
+
+MAIN CONTENT AREA:
+
+1. Top KPI Cards (4-column grid):
+   - Card 1: AI Visibility Score (47). Trend: +12 pts. Sparkline chart.
+   - Card 2: On-Chain Engagement (1,247). Label: Wallet Interactions. Trend: +18%.
+   - Card 3: Community Growth (8,429). Label: Total Members. Breakdown: Discord/Telegram/Twitter.
+   - Card 4: Content Performance (94K). Label: Content Impressions. Trend: -3%.
+
+2. Active Experiments Section:
+   - Header: "Active Experiments (3)" with "View all" link.
+   - Cards (3 horizontal):
+     - Card 1: "5x Twitter Posting Frequency". Status: RUNNING. Progress bar: 40%. Metrics: "Day 12 of 30", "+23% engagement".
+     - Card 2 & 3: Similar structure with different experiment data.
+
+3. AI-Generated Insights Section:
+   - Header: "AI Recommendations (2 new)"
+   - Insight Card: "Optimize AI Search Visibility for 'Web3 marketing automation'". Priority: HIGH. Description: "Ranking #8 in Perplexity but not appearing in ChatGPT." CTA: "Add to experiments".
+
+4. Analytics Overview (2-column grid):
+   - Left: Traffic Sources Chart (Donut chart). Legend: Organic Search, AI Search, Social Media, Direct, Referral.
+   - Right: Campaign Performance Table. Columns: Campaign Name, Impressions, Clicks, Conversions, ROI. ROI column color-coded.
+
+5. Recent Activity Feed (Full width):
+   - List of recent actions/events with icons, titles, timestamps, and action links.`
+          }]
+        },
+        // PROMPT 3: Experiment Builder
+        {
+          id: "section-04-prompt-3",
+          title: "Prompt 3: Experiment Builder",
+          type: "blueprints" as const,
+          content: "Step-by-step interface for creating marketing tests.",
+          data: [{
+            id: "PROMPT-03",
+            title: "Experiment Builder - Core Action Screen",
+            description: "Interface for creating and launching new experiments",
+            prompt: `Design an intuitive, step-by-step experiment builder interface where clients can create, configure, and launch marketing tests.
+
+LAYOUT SPECIFICATION:
+- Container: 1200px max-width, centered
+- Left panel (Form): 720px width, scrollable
+- Right panel (Preview): 440px width, sticky, shows live preview
+- Mobile: Single column, preview at bottom
+
+SCREEN STRUCTURE:
+
+HEADER (Sticky Top):
+- Breadcrumb: Dashboard > Experiments > New Experiment
+- Title: "Create New Experiment"
+- Action Buttons: "Save Draft" (Ghost), "Launch Experiment" (Primary, disabled until valid)
+
+LEFT PANEL - FORM:
+Section 1: Experiment Basics
+- Field: Experiment Name (Input, char counter 0/80)
+- Field: Category (Radio buttons with icons: Content, Community, Paid Ads, SEO/AI, Influencer, Email)
+- Field: Hypothesis (Textarea, "If we do X, then Y will happen because Z")
+
+Section 2: Test Configuration
+- Field: Test Duration (Slider: 7-90 days, default 30)
+- Field: Success Metrics (Select 1-3 from list). Example Metric Card: "Follower Growth" with checkbox and Target Input field ("+___%").
+
+Section 3: Tactics & Resources
+- Field: Tactics (Textarea, "Describe specific actions")
+- Field: Team & Resources (Input, "Who's involved?")
+- Field: Budget (Optional Number input)
+
+Section 4: Risk Assessment
+- Field: Potential Risks (Textarea)
+- Field: Mitigation Plan (Textarea)
+
+RIGHT PANEL - PREVIEW:
+- Card looking like a dashboard experiment card.
+- Live updates as user types name, selects category, sets duration.
+- "What happens next?" checklist below preview:
+  1. You launch the experiment
+  2. We track metrics automatically
+  3. You get progress updates [frequency]
+  4. At day [duration], we analyze results
+
+VALIDATION STATES:
+- Real-time inline validation for required fields.
+- Launch button opacity change when valid.
+- Success Modal upon launch: Rocket animation, "Experiment Launched!", CTA "View Dashboard".`
+          }]
+        },
+        // PROMPT 4: Account Settings
+        {
+          id: "section-05-prompt-4",
+          title: "Prompt 4: Account Settings",
+          type: "blueprints" as const,
+          content: "Client profile and preferences management interface.",
+          data: [{
+            id: "PROMPT-04",
+            title: "Account Settings - Profile & Management",
+            description: "Tabbed interface for account management",
+            prompt: `Design a comprehensive account settings interface organized with tab navigation.
+
+LAYOUT SPECIFICATION:
+- Container: 1120px max-width, centered
+- Tab navigation: Horizontal tabs (Profile, Team, Integrations, Billing, Notifications, Security)
+- Content area: Full-width within container, 32px padding
+
+VISUAL DESIGN SYSTEM:
+- Consistent with previous prompts (Indigo/Purple palette, Inter font)
+
+TAB 1 - PROFILE (Active):
+Section: Basic Information (Card)
+- Avatar Upload: 120px circle, "Change Photo" button.
+- Fields: Display Name, Email (Verified badge), Title/Role, Company Name, Website URL.
+- Social Fields: Twitter/X Handle, Discord ID.
+- Save Button: Bottom right, "Save Changes".
+
+Section: Time Zone & Language (Card)
+- Fields: Time Zone dropdown, Interface Language dropdown.
+
+Section: Danger Zone (Card with Red Border/Accent)
+- Action: "Delete Account" (Ghost button, Error color).
+- Helper text: "Once you delete your account, there is no going back."
+
+TAB 2 - TEAM & ACCESS:
+- Header: "Team Members (3)" with "+ Invite Member" button.
+- Table: Member, Role (Owner/Admin/Member), Status (Active/Pending), Last Active, Actions.
+- Invite Modal: Email input, Role selection (Radio buttons with descriptions), Message textarea.
+
+TAB 3 - INTEGRATIONS:
+- Grid of Integration Cards (Google Analytics, Discord, Twitter, Stripe, etc.).
+- State: Connected (Green badge, "Configure" button) vs Not Connected ("Connect" button).
+
+TAB 4 - BILLING & PLANS:
+- Current Plan Card: "Growth Plan" badge, Price ($10,000/mo), Next billing date.
+- Included Features list with checkmarks.
+- Payment Method Section: Visa ending in 4242, Expiry, Edit/Remove buttons.
+- Billing History Table: Date, Description, Amount, Status, Invoice Download.`
           }]
         }
-        // ... (Remaining prompts preserved)
+      ]
+    };
+  }
+
+  // PHASE 04: ADVANCED SCREENS & EDGE CASES (Formerly Scaling)
+  // Maps to "Syndicate Part 5" in source material
+  if (phaseIndex === 4) {
+    return {
+      id: "phase-05",
+      badge: "Edge Cases & States",
+      title: "Advanced Screens & Edge Cases",
+      subtitle: "Comprehensive system states including error handling, empty states, and loading patterns.",
+      metadata: ["Input: Syndicate Part 5", "Status: Specification", "Scope: UX Resilience"],
+      sources: [],
+      sections: [
+        {
+          id: "section-01-intro",
+          title: "UX Resilience Strategy",
+          type: "text" as const,
+          content: "A robust application must handle the 'unhappy paths' with as much care as the ideal user journey. This section defines the visual and interaction specifications for empty states, errors, loading sequences, and notifications to ensure user confidence remains high even when the system faces friction."
+        },
+        // PROMPT 6: Empty States
+        {
+          id: "section-02-prompt-6",
+          title: "Prompt 6: Empty States",
+          type: "blueprints" as const,
+          content: "First-time user and zero-data experiences.",
+          data: [{
+            id: "PROMPT-06",
+            title: "Empty States Library",
+            description: "First-Time User & Zero-Data Experiences",
+            prompt: `Design a comprehensive set of empty state screens for a Web3 marketing agency dashboard.
+
+VISUAL DESIGN SYSTEM:
+- Illustrations: Isometric line art with gradient accents (Primary #6366F1 to Secondary #8B5CF6).
+- Layout: Centered content, max-width 560px.
+
+SCENARIO A: NO EXPERIMENTS YET (New User)
+- Illustration: Laboratory beaker with upward growth chart inside, sparkles.
+- Headline: "No experiments running yet"
+- Subheadline: "Start testing new marketing tactics to improve your performance."
+- Primary CTA: "Create Your First Experiment" (Button with '+' icon).
+- Secondary CTA: "Browse Experiment Templates" (Ghost button).
+
+SCENARIO B: NO SEARCH RESULTS
+- Illustration: Magnifying glass with question mark.
+- Headline: "No results for '[search term]'"
+- Suggestions: Check spelling, try general keywords, use fewer filters.
+- Actions: "Clear all filters", "Contact support".
+
+SCENARIO C: NO NOTIFICATIONS (All Caught Up)
+- Illustration: Check mark inside peaceful circle.
+- Headline: "You're all caught up!"
+- Subheadline: "No new notifications right now."
+
+SCENARIO D: PERMISSION REQUIRED (Access Denied 403)
+- Illustration: Shield with lock icon.
+- Headline: "This feature requires Growth or Enterprise plan" OR "You don't have permission".
+- Action: "Upgrade to Growth Plan" or "Request Access".
+
+SCENARIO E: NO ANALYTICS DATA (Integration Required)
+- Illustration: Plug icon connecting to dashboard icon with dashed line.
+- Headline: "Connect your data sources to see analytics"
+- Visual Steps: 1. Connect Analytics (Active) -> 2. Authorize -> 3. Syncing.
+- CTA: "Connect Data Sources".
+
+GENERAL PRINCIPLES:
+- Animation: Subtle float or pulse (2-3s duration).
+- Tone: Encouraging, providing clear next steps.` 
+          }]
+        },
+        // PROMPT 7: Error States
+        {
+          id: "section-03-prompt-7",
+          title: "Prompt 7: Error Recovery",
+          type: "blueprints" as const,
+          content: "Validation, API failures, and recovery flows.",
+          data: [{
+            id: "PROMPT-07",
+            title: "Error Handling System",
+            description: "Validation, API Failures & Recovery Flows",
+            prompt: `Design a comprehensive error handling system that turns failures into opportunities.
+
+ERROR TYPE A: FORM VALIDATION
+- Inline Fields: Red border, error icon inside right edge.
+- Error Message: Below input, 14px Red text. Shake animation on appearance.
+- Example: "Email address is required" or "Password must be at least 8 characters".
+- Error Summary: Banner at top of form listing all errors with anchor links to fields.
+
+ERROR TYPE B: API / SYSTEM ERRORS
+- Toast: "Something went wrong. Changes not saved." with "Retry" button.
+- Modal (Critical): Overlay with blur.
+  - Icon: Warning triangle.
+  - Headline: "Connection Timeout" or "Server Error 500".
+  - Body: "We couldn't complete your request. This is usually temporary."
+  - Buttons: "Try Again" (Primary), "Contact Support" (Secondary).
+
+ERROR TYPE C: 404 NOT FOUND
+- Full page layout.
+- Illustration: Astronaut floating with broken link chain.
+- Headline: "Page not found".
+- Navigation Options: Grid of cards (Home, Search, Sitemap, Support).
+
+ERROR TYPE D: NETWORK / OFFLINE
+- Persistent Banner: Top of screen, Red/Orange background.
+- Icon: WiFi off.
+- Text: "You're offline. Some features may not work until you reconnect."
+- Action: "Retry Connection".
+
+INTERACTION STATES:
+- Shake animation for inline errors.
+- Fade-in for toasts/modals.
+- Accessibility: aria-live="assertive" for critical errors.` 
+          }]
+        },
+        // PROMPT 8: Loading States
+        {
+          id: "section-04-prompt-8",
+          title: "Prompt 8: Loading Patterns",
+          type: "blueprints" as const,
+          content: "Skeleton screens and progressive loading indicators.",
+          data: [{
+            id: "PROMPT-08",
+            title: "Loading States & Skeleton Screens",
+            description: "Progressive Content Reveal Patterns",
+            prompt: `Design a comprehensive loading system that makes waiting feel shorter.
+
+PATTERN A: SKELETON SCREENS
+- Dashboard Skeleton: Maintains full layout structure.
+- Elements:
+  - Header: Rectangles for logo/search/avatar. Base color gray-700 (30% opacity).
+  - Sidebar: Rectangles for nav items.
+  - Cards: Rectangles matching exact dimensions of KPI cards.
+- Animation: "Shimmer" effect (linear gradient moving left to right).
+
+PATTERN B: PROGRESS INDICATORS
+- Linear Bar: Top of screen for page transitions. Primary color fill.
+- Modal Progress: For file uploads.
+  - Icon: Upload/Download.
+  - Bar: Percentage fill + Time remaining text ("About 2 minutes remaining").
+  - Cancel button available.
+
+PATTERN C: OPTIMISTIC UI
+- Toggle Switches: Immediately animate to "On" state before API confirms. Revert if failed.
+- Like Buttons: Instant fill.
+
+PATTERN D: CONTENT PLACEHOLDERS
+- Image Lazy Load: Blurred low-res version or solid background color before image fades in.
+- Spinner: Circular spinner with gradient trail for button states ("Loading...").
+
+ACCESSIBILITY:
+- aria-busy="true" on containers.
+- Reduced motion support (disable shimmer, use static pulse).` 
+          }]
+        },
+        // PROMPT 9: Notifications
+        {
+          id: "section-05-prompt-9",
+          title: "Prompt 9: Notifications",
+          type: "blueprints" as const,
+          content: "Toasts, modals, banners, and badge systems.",
+          data: [{
+            id: "PROMPT-09",
+            title: "Notification System",
+            description: "Toasts, Modals, Banners & Badges",
+            prompt: `Design a comprehensive notification system communicating system status.
+
+TYPE A: TOAST NOTIFICATIONS
+- Position: Top-right (desktop), Top-center (mobile).
+- Success Toast: Green accent. Checkmark icon. "Changes saved successfully." Auto-dismiss (3s).
+- Error Toast: Red accent. Error circle icon. "Upload failed." Persistent until dismissed or action taken.
+- Warning/Info Toasts: Amber/Blue accents.
+- Stacking: Vertical stack with gap.
+
+TYPE B: MODAL ALERTS
+- Destructive Confirmation:
+  - Red warning icon.
+  - Headline: "Delete [Item Name]?"
+  - Body: "This action cannot be undone."
+  - Input: "Type DELETE to confirm."
+  - Buttons: "Delete" (Red), "Cancel".
+
+TYPE C: INLINE BANNERS
+- Info Banner: Blue background (10% opacity). "New feature available."
+- Warning Banner: Amber background. "Your trial ends in 3 days."
+- Success Banner: Green background. "Payment successful."
+
+TYPE D: BADGES / INDICATORS
+- Notification Bell: Red dot for unread.
+- Nav Items: Pill badge ("3 active", "New").
+- Status Indicators: Colored dot + Text (Online, Offline, Busy).
+
+VISUAL STYLE:
+- Consistent with design system (Inter font, rounded corners, subtle shadows).
+- Clear iconography for quick scanning.` 
+          }]
+        }
       ]
     };
   }

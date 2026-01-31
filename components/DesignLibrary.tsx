@@ -371,10 +371,10 @@ export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle
             )}
 
             {/* Timeline Visualization (Right) */}
-            <div className="lg:col-span-9 flex flex-col justify-center h-full min-h-[300px]">
+            <div className="lg:col-span-9 flex flex-col justify-center h-full min-h-[300px] bg-[#F3F3F1] p-8 lg:p-12">
                 <div className="grid grid-cols-3 w-full">
                      {quarters.map((q, i) => (
-                         <div key={i} className={`relative border-l ${i === 0 ? 'border-charcoal' : 'border-border-hairline'} ${i === 2 ? 'border-r border-charcoal' : ''} h-48`}>
+                         <div key={i} className={`relative border-l ${i === 0 ? 'border-charcoal' : 'border-charcoal/20'} ${i === 2 ? 'border-r border-charcoal/20' : ''} h-48`}>
                             {/* Quarter Header */}
                             <div className="absolute top-0 left-0 p-4 flex items-baseline gap-3">
                                 <span className="bg-charcoal text-white font-mono font-bold text-sm px-2 py-1">{q.id}</span>
@@ -907,7 +907,8 @@ export const DSBlueprintCard: React.FC<BlueprintItem> = ({ id, title, descriptio
         <div className="flex items-center justify-between md:justify-end w-full md:w-auto mt-4 md:mt-0">
           <button 
             onClick={handleCopy}
-            className="flex items-center gap-2 px-4 py-2 border border-border-hairline bg-off-white text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-colors group-hover:border-primary">
+            className="flex items-center gap-2 px-4 py-2 border border-border-hairline bg-off-white text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-colors group-hover:border-primary"
+          >
             {copied ? 'Copied!' : 'Copy Prompt'}
             <span className="material-symbols-outlined text-[12px]">{copied ? 'check' : 'content_copy'}</span>
           </button>
