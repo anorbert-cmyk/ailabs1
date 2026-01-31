@@ -844,7 +844,7 @@ TYPE D: BADGES
     return {
       id: "phase-06",
       badge: "Strategic Analysis",
-      title: titles[5],
+      title: "Risk Assessment, Metrics & ROI",
       subtitle: subtitles[5],
       metadata: ["Input: Syndicate Part 6", "Status: Review Pending", "Scope: Validation & Finance"],
       sources: [
@@ -852,71 +852,51 @@ TYPE D: BADGES
       ],
       sections: [
         {
-          id: "section-risk-overview",
-          title: "Executive Risk Summary",
-          type: "text" as const,
-          content: "The current architectural posture exhibits a high dependency on single-vendor APIs (OpenAI), creating a critical operational bottleneck. Financial exposure is moderate but correlates strongly with compute cost volatility. The composite risk score is evaluated at 72/100 (High), necessitating a focus on rapid validation of the AI value proposition."
-        },
-        {
-          id: "section-risk-clusters",
-          title: "Risk Clusters",
-          type: "cards" as const,
-          content: "Categorization of primary risk vectors impacting the 9-month roadmap.",
-          data: [
-            { 
-              title: "Strategic Risks", 
-              text: "Focus: Market Fit (Critical). Primary risks include AI visibility failing to drive traffic and competitors launching copycat dashboards. Mitigation: Run 2 pilot case studies with explicit KPIs and adopt dual positioning.", 
-              icon: "flag",
-              subLabel: "High Impact"
-            },
-            { 
-              title: "Operational Risks", 
-              text: "Focus: Execution (Critical). Primary risks include Client Cockpit delays and founder burnout. Mitigation: Leverage no-code tools (Retool) and hire a contractor by Week 4.", 
-              icon: "engineering",
-              subLabel: "High Impact"
-            },
-            { 
-              title: "Financial Risks", 
-              text: "Focus: Viability (Moderate). Primary risks include integration cost blowouts and GDPR compliance gaps. Mitigation: Start with manual reporting and conduct legal review by Week 12.", 
-              icon: "payments",
-              subLabel: "Moderate"
-            }
-          ]
-        },
-        {
-          id: "section-contingencies",
-          title: "Key Contingencies",
+          id: "section-risk-matrix",
+          title: "1. Comprehensive Risk Matrix",
           type: "table" as const,
-          content: "Specific triggers and pre-planned mitigation responses.",
+          content: "A detailed analysis of potential pitfalls, their likelihood, impact, and mitigation strategies.",
           columns: [
-             { header: "Risk Vector", key: "risk", width: "w-1/3" },
-             { header: "Trigger / Probability", key: "trigger", width: "w-1/4" },
-             { header: "Mitigation Plan", key: "plan", width: "w-1/3" }
+             { header: "ID", key: "id", width: "w-12" },
+             { header: "Risk Description", key: "desc", width: "w-1/4" },
+             { header: "Likelihood", key: "prob", width: "w-24" },
+             { header: "Impact", key: "impact", width: "w-20" },
+             { header: "Score", key: "score", width: "w-20" },
+             { header: "Mitigation Strategy", key: "mitigation", width: "w-1/4" },
+             { header: "Owner", key: "owner", width: "w-20" },
+             { header: "Contingency", key: "contingency", width: "w-1/4" }
           ],
           data: [
-            { risk: "AI Value Prop Failure", trigger: "Low traffic (30%)", plan: "Pivot to traditional SEO + Dashboard positioning." },
-            { risk: "Founder Burnout", trigger: "Overwork (40%)", plan: "Extend timeline by 4-8 weeks; reduce pilot scope." },
-            { risk: "Integration Cost Blowout", trigger: "API limits (30%)", plan: "Offer 'consultation' instead of automated dashboard." }
+            { id: "R1", desc: "AI visibility/GEO doesn't drive meaningful traffic; clients don't see value in 30-60 days", prob: "Medium (30%)", impact: "High", score: "HIGH", mitigation: "Run 2 pilot case studies (Weeks 6-12) with explicit AI visibility KPIs. Set realistic 60-90 day expectations in SOW. Track AI citations weekly using Perplexity/ChatGPT searches.", owner: "Founder", contingency: "Pivot to proven SEO + dashboard positioning. Reframe AI visibility as 'future-proof bonus' not core value. Competitors don't have this either, so still differentiated on dashboard." },
+            { id: "R2", desc: "Client Cockpit v1 delayed beyond Week 18, killing competitive differentiation timing", prob: "Medium (25%)", impact: "High", score: "HIGH", mitigation: "Use no-code tools (Retool, Softr) not custom dev. Embed existing analytics (Dune, Google Looker) not build from scratch. Start dashboard design in Week 8. Hire dashboard contractor by Week 12.", owner: "Founder + Contractor", contingency: "Launch 'manual dashboard' (curated Notion page with embedded Dune charts) as v0.5 by Week 16. Still provides transparency, buys 4 weeks for real dashboard." },
+            { id: "R3", desc: "Founder bandwidth bottleneck: Solo founder can't deliver pilots + build systems + sell simultaneously", prob: "High (40%)", impact: "High", score: "HIGH", mitigation: "Hire part-time contractor (15-20 hrs/week) by Week 4 for execution. Founder focuses on strategy. Use AI tools to 3x output (ChatGPT for content, n8n for automation).", owner: "Founder", contingency: "Extend timeline by 4-8 weeks. Reduce pilot scope (1 pilot not 2). Accept lower MRR target ($25K-$35K) for Q3." },
+            { id: "R4", desc: "On-chain analytics integration complexity exceeds estimates (Dune API, wallet linking, attribution)", prob: "Medium (30%)", impact: "Medium", score: "MEDIUM", mitigation: "Start with manual on-chain reporting. Validate client demand before building automation. Partner with Dune/Nansen for API access by Month 4. Budget $2K-$5K for integration dev.", owner: "Founder + Tech Lead", contingency: "Offer 'on-chain analytics consultation' (teach clients to use Dune) not automated dashboard. Still valuable, lower dev cost. Position as 'v2 roadmap feature'." },
+            { id: "R5", desc: "Case studies underperform or clients refuse testimonials (Weeks 25-32 deliverable at risk)", prob: "Medium (25%)", impact: "High", score: "MEDIUM", mitigation: "Build case study rights into pilot SOWs. Offer incentives: $500 gift card or 1 free month. Set conservative success metrics. Weekly check-ins to course-correct.", owner: "Founder", contingency: "If results weak, focus on 'process case studies' (methodology, learnings) not pure metrics. Still builds thought leadership. Use anonymized data if client refuses attribution." },
+            { id: "R6", desc: "Web3 market downturn reduces client budgets; pivot to Web2 SaaS/fintech required", prob: "Low (15%)", impact: "High", score: "MEDIUM", mitigation: "Dual positioning from Day 1: 'Web2/Web3' not 'Web3-only.' Target 50% Web2 clients (SaaS, fintech) for diversification. Services apply to both.", owner: "Founder", contingency: "Increase Web2 focus to 80%. Drop 'Web3' from primary positioning (keep as specialty). Competitors like Ninja Promo already serve both successfully." },
+            { id: "R7", desc: "Competitors (Coinbound, RZLT) launch similar AI-native + dashboard combo, eroding differentiation", prob: "Low (15%)", impact: "Medium", score: "LOW", mitigation: "Speed to market: Launch public pricing + lead magnet by Week 5. First client by Week 10. Establish 'first mover' brand via thought leadership starting Week 20.", owner: "Founder", contingency: "Double down on service quality and client relationships (harder to replicate than features). Add unique IP: proprietary 'Growth Score' methodology, exclusive templates." },
+            { id: "R8", desc: "GDPR/CCPA compliance gaps in dashboard (wallet data = PII, tracking without consent)", prob: "Low (10%)", impact: "High", score: "MEDIUM", mitigation: "Legal review by Week 12 ($1K-$2K). Implement: explicit consent for tracking, data deletion workflows, privacy policy updates. Use Osano/Termly.", owner: "Founder", contingency: "Worst case: Remove wallet-level tracking (use aggregated on-chain data only). Still differentiated vs. competitors. Inform clients: 'We prioritize your users' privacy.'" },
+            { id: "R9", desc: "Client churn in Months 1-3 due to unrealistic expectations or slow results", prob: "Medium (30%)", impact: "Medium", score: "MEDIUM", mitigation: "Explicit expectation-setting in sales: '90-Day Roadmap' showing gradual growth curve. Monthly retro calls. 'Month 1 Progress Report' at Day 25. Offer 60-day pilot.", owner: "Founder", contingency: "If churn >20% in Q2, offer 'satisfaction guarantee': refund Month 1 if not satisfied. Forces founder to over-deliver. Converts unhappy clients to promoters." },
+            { id: "R10", desc: "Support/operational scalability: 8+ clients overwhelm founder's capacity by Month 9", prob: "High (35%)", impact: "Medium", score: "MEDIUM", mitigation: "Productize services: reusable templates, AI-automated workflows (n8n, Zapier). Hire Client Success Manager (part-time) by Month 6. Build FAQ/docs.", owner: "Founder", contingency: "Accept lower client count (5-6 not 8) for higher quality. Charge premium ($12K-$18K/month Growth tier). Margin covers hiring faster." }
           ]
         },
         {
           id: "section-metrics-primary",
-          title: "Primary KPIs (North Star Metrics)",
+          title: "2. Success Metrics Dashboard",
           type: "table" as const,
-          content: "Key Performance Indicators (KPIs) tracked to validate product-market fit and operational health.",
+          content: "Primary KPIs (North Star Metrics)",
           columns: [
              { header: "Metric", key: "metric", width: "w-1/4" },
-             { header: "Baseline", key: "baseline", width: "w-1/6" },
-             { header: "Target (M3)", key: "target3", width: "w-1/4" },
-             { header: "Target (M9)", key: "target9", width: "w-1/4" },
-             { header: "Method", key: "method", width: "w-1/6" }
+             { header: "Current Baseline", key: "baseline", width: "w-1/6" },
+             { header: "Target (Month 3)", key: "target3", width: "w-1/4" },
+             { header: "Target (Month 9)", key: "target9", width: "w-1/4" },
+             { header: "Measurement Method", key: "method", width: "w-1/4" }
           ],
           data: [
-            { metric: "Monthly Recurring Revenue", baseline: "$0", target3: "$15,000 (2-3 clients)", target9: "$50,000 (6-8 clients)", method: "Stripe" },
-            { metric: "Client NPS", baseline: "N/A", target3: "≥40 (Acceptable)", target9: "≥60 (Excellent)", method: "Typeform" },
-            { metric: "Dashboard Login Freq", baseline: "N/A", target3: "≥3x per week", target9: "≥5x per week", method: "PostHog" },
-            { metric: "Pilot Success Rate", baseline: "N/A", target3: "100% (2/2 pilots)", target9: "N/A", method: "Binary" },
-            { metric: "Thought Leadership", baseline: "0", target3: "+500 followers", target9: "+2,000 followers", method: "Social" }
+            { metric: "Monthly Recurring Revenue (MRR)", baseline: "$0", target3: "$15,000 (2-3 clients)", target9: "$50,000 (6-8 clients)", method: "Stripe dashboard, manual tracking" },
+            { metric: "Client Net Promoter Score (NPS)", baseline: "N/A", target3: "≥40 (acceptable)", target9: "≥60 (excellent)", method: "Quarterly survey (Typeform)" },
+            { metric: "Client Cockpit Dashboard Login Frequency", baseline: "N/A", target3: "≥3× per week (engaged)", target9: "≥5× per week (habitual)", method: "PostHog or Google Analytics event tracking" },
+            { metric: "Pilot Client Success Rate", baseline: "N/A", target3: "100% (2/2 pilots meet success criteria)", target9: "N/A (one-time validation)", method: "Manual: Did pilot achieve stated outcomes?" },
+            { metric: "Thought Leadership Reach", baseline: "0 followers", target3: "+500 social followers, 1 case study published", target9: "+2,000 followers, 3 case studies, 2 speaking slots", method: "Twitter/LinkedIn analytics; content audit" }
           ]
         },
         {
@@ -925,63 +905,122 @@ TYPE D: BADGES
           type: "list" as const,
           content: "Client Acquisition & Pipeline:",
           data: [
-             "Lead generation rate: 10+ qualified leads/month by Month 6 (source: content, referrals, outbound).",
-             "Lead-to-client conversion rate: ≥30% (3 clients from 10 leads) by Month 6.",
-             "Sales cycle length: ≤4 weeks (first contact → signed contract).",
-             "Onboarding completion rate: 100% (all clients complete setup within 7 days).",
-             "Experiment launch rate: ≥1 new experiment per client per month (shows engagement).",
-             "Client check-in attendance: ≥90% (clients attend scheduled monthly calls).",
-             "Experiment success rate: ≥60% of experiments meet or exceed targets.",
-             "AI visibility citations: ≥10 citations per client by Month 3 (cumulative).",
-             "On-chain attribution: Track ≥50% of conversions to marketing (where applicable).",
-             "Churn rate: ≤10% (lose ≤1 client in 9 months).",
-             "Expansion revenue: ≥20% of clients upgrade tier or add services by Month 9.",
-             "Contract renewal rate: 100% of pilots convert to ongoing retainer."
+             "Lead generation rate: 10+ qualified leads/month by Month 6 (source: content, referrals, outbound)",
+             "Lead-to-client conversion rate: ≥30% (3 clients from 10 leads) by Month 6",
+             "Sales cycle length: ≤4 weeks (first contact → signed contract)",
+             "Measurement: Notion CRM or Airtable pipeline tracker"
           ]
         },
         {
-          id: "section-metrics-ops",
-          title: "Operational & UX Metrics",
+          id: "section-metrics-engagement",
+          title: "Client Engagement",
           type: "list" as const,
-          content: "Operational Efficiency & UX:",
+          content: "",
           data: [
-             "Founder hours per client: ≤15 hrs/week by Month 9 (via automation + hiring).",
-             "Support ticket volume: ≤5 tickets per client per month.",
-             "Dashboard uptime: ≥99.5% (minimal downtime).",
-             "Dashboard task completion rate: ≥95% (users successfully complete core tasks).",
-             "Error rate: ≤2% (failed API calls, broken integrations).",
-             "Accessibility score: WCAG 2.1 AA compliant (100% of core flows).",
-             "Mobile usage: ≥20% of dashboard sessions from mobile by Month 9."
+             "Onboarding completion rate: 100% (all clients complete setup within 7 days)",
+             "Experiment launch rate: ≥1 new experiment per client per month (shows engagement)",
+             "Client check-in attendance: ≥90% (clients attend scheduled monthly calls)",
+             "Measurement: Manual tracking (calendar + Notion), dashboard analytics"
+          ]
+        },
+        {
+          id: "section-metrics-quality",
+          title: "Service Delivery Quality",
+          type: "list" as const,
+          content: "",
+          data: [
+             "Experiment success rate: ≥60% of experiments meet or exceed targets",
+             "AI visibility citations: ≥10 citations per client by Month 3 (cumulative)",
+             "On-chain attribution: Track ≥50% of conversions to marketing (where applicable)",
+             "Measurement: Experiment tracking (dashboard), manual AI search audits, Dune Analytics"
+          ]
+        },
+        {
+          id: "section-metrics-retention",
+          title: "Client Retention",
+          type: "list" as const,
+          content: "",
+          data: [
+             "Churn rate: ≤10% (lose ≤1 client in 9 months)",
+             "Expansion revenue: ≥20% of clients upgrade tier or add services by Month 9",
+             "Contract renewal rate: 100% of pilots convert to ongoing retainer",
+             "Measurement: Stripe, manual tracking"
+          ]
+        },
+        {
+          id: "section-metrics-efficiency",
+          title: "Operational Efficiency",
+          type: "list" as const,
+          content: "",
+          data: [
+             "Founder hours per client: ≤15 hrs/week by Month 9 (via automation + hiring)",
+             "Support ticket volume: ≤5 tickets per client per month",
+             "Dashboard uptime: ≥99.5% (minimal downtime)",
+             "Measurement: Time tracking (Toggl), support tool (Intercom), uptime monitoring"
+          ]
+        },
+        {
+          id: "section-metrics-ux",
+          title: "UX-Specific Metrics",
+          type: "list" as const,
+          content: "",
+          data: [
+             "Dashboard task completion rate: ≥95% (users successfully complete core tasks)",
+             "Error rate: ≤2% (failed API calls, broken integrations)",
+             "Accessibility score: WCAG 2.1 AA compliant (100% of core flows)",
+             "Mobile usage: ≥20% of dashboard sessions from mobile by Month 9",
+             "Measurement: PostHog funnel analysis, Sentry error tracking, Lighthouse audits"
           ]
         },
         {
           id: "section-okrs",
-          title: "Business OKR Alignment",
-          type: "list" as const,
-          content: "Strategic objectives mapping the initiative to broader business goals.",
+          title: "3. Business OKR Alignment",
+          type: "cards" as const,
+          content: "How This Initiative Connects to Business Goals",
           data: [
-             "Objective 1: Achieve Product-Market Fit. Key Results: Close 2 pilots (Week 12), $15K MRR (Month 3), Validate AI visibility with 3 case studies.",
-             "Objective 2: Establish Market Leadership. Key Results: 2,000+ social followers, Rank top 3 Google for 'AI marketing Web3', Generate 10+ leads/month.",
-             "Objective 3: Build Scalable Operations. Key Results: Reduce founder hours to ≤15/client/week, 90% client retention, Productize 3 reusable systems."
+            {
+              title: "Objective 1: Achieve Product-Market Fit",
+              text: "Key Result 1.1: Close 2 pilot clients by Week 12 with ≥8/10 satisfaction. Key Result 1.2: Generate $15K MRR by Month 3 and $50K MRR by Month 9. Key Result 1.3: Validate AI visibility + dashboard differentiation with 3 case studies by Week 32.",
+              icon: "verified",
+              subLabel: "Validation"
+            },
+            {
+              title: "Objective 2: Establish Market Leadership",
+              text: "Key Result 2.1: Achieve 2,000+ social followers and 2-3 speaking slots by Month 9. Key Result 2.2: Rank in top 3 Google results for 'AI marketing Web3'. Key Result 2.3: Generate ≥10 qualified inbound leads/month by Month 6.",
+              icon: "leaderboard",
+              subLabel: "Growth"
+            },
+            {
+              title: "Objective 3: Build Scalable Operations",
+              text: "Key Result 3.1: Reduce founder hours per client from 20 hrs/week to ≤15 hrs/week. Key Result 3.2: Achieve ≥90% client retention (≤10% churn) in first 9 months. Key Result 3.3: Productize 3 reusable systems by Month 9.",
+              icon: "settings_suggest",
+              subLabel: "Scale"
+            }
           ]
         },
         {
-          id: "section-strategic-alignment",
+          id: "section-alignment-matrix",
           title: "Strategic Alignment Matrix",
           type: "table" as const,
           content: "Mapping business priorities to UX contributions.",
           columns: [
-             { header: "Priority", key: "priority", width: "w-1/4" },
+             { header: "Business Priority", key: "priority", width: "w-1/4" },
              { header: "UX Contribution", key: "ux", width: "w-1/3" },
              { header: "Measurement", key: "measure", width: "w-1/4" },
              { header: "Timeline", key: "time", width: "w-1/6" }
           ],
           data: [
-            { priority: "Revenue Growth", ux: "Transparent pricing reduces sales friction; dashboard justifies premium.", measure: "MRR, Close rate", time: "Month 1-9" },
-            { priority: "Client Retention", ux: "Real-time dashboard eliminates 'black box' anxiety; Error recovery prevents frustration.", measure: "Churn rate, NPS", time: "Month 3-9" },
-            { priority: "Differentiation", ux: "Client Cockpit = unique IP. AI visibility = future-proof niche.", measure: "Thought leadership", time: "Month 6-9" },
-            { priority: "Efficiency", ux: "AI insights reduce reporting; Productized services scale.", measure: "Founder hours", time: "Month 6-9" }
+            { priority: "Revenue Growth ($0 -> $50K MRR)", ux: "Transparent pricing reduces sales friction; dashboard-centric UX justifies premium pricing vs. competitors", measure: "MRR (Stripe), close rate (≥30%)", time: "Month 1-9" },
+            { priority: "Client Retention (≤10% churn)", ux: "Real-time dashboard eliminates 'black box' anxiety; 90-Day Roadmap sets realistic expectations; error recovery flows prevent frustration", measure: "Churn rate, NPS (≥60), dashboard login frequency (≥5x/week)", time: "Month 3-9" },
+            { priority: "Market Differentiation", ux: "Client Cockpit = only Web3 agency with real-time, client-facing dashboard; AI visibility = future-proof niche no competitor owns", measure: "Thought leadership reach (+2K followers), case studies (3 published), inbound leads (10+/month)", time: "Month 6-9" },
+            { priority: "Operational Efficiency", ux: "AI-powered insights reduce manual reporting; productized services enable scaling beyond founder; empty states + onboarding UX reduce support load", measure: "Founder hours per client (≤15 hrs/week), support tickets (≤5/client/month)", time: "Month 6-9" }
           ]
+        },
+        {
+          id: "section-roi-intro",
+          title: "4. ROI Justification",
+          type: "text" as const,
+          content: "Investment Required & Expected Returns"
         },
         {
            id: "section-roi-investment",
@@ -990,98 +1029,182 @@ TYPE D: BADGES
            content: "Detailed cost breakdown for the 9-month execution.",
            columns: [
              { header: "Category", key: "cat", width: "w-1/4" },
-             { header: "Est. Cost", key: "cost", width: "w-1/4" },
+             { header: "Estimated Cost", key: "cost", width: "w-1/4" },
              { header: "Timeframe", key: "time", width: "w-1/4" },
              { header: "Notes", key: "notes", width: "w-1/4" }
            ],
            data: [
-             { cat: "Design Resources", cost: "$0", time: "Weeks 1-18", notes: "Founder executed (16+ yrs exp) using AI tools + Figma." },
-             { cat: "Dev (Cockpit)", cost: "$3k-$5k or 60-80 hrs", time: "Weeks 8-18", notes: "No-code (Retool/Softr) + contractor integration." },
-             { cat: "Research/Testing", cost: "$1,000 or 20 hrs", time: "Weeks 1-12", notes: "5-7 JTBD interviews, usability testing incentives." },
-             { cat: "Tools/Infra", cost: "$3,600/year", time: "Ongoing", notes: "Perplexity, Dune Pro, PostHog, Retool, ConvertKit." },
-             { cat: "Legal/Compliance", cost: "$1,500 one-time", time: "Week 12", notes: "Contract templates, privacy policy review, GDPR." },
-             { cat: "Contractor (Content)", cost: "$15k-$20k", time: "Weeks 4-36", notes: "Part-time 15-20 hrs/week for 8 months." },
-             { cat: "Marketing (Lead Gen)", cost: "$2,000", time: "Weeks 16-36", notes: "Tool dev, content tools, minimal ads/events." },
-             { cat: "Pilot Discounts", cost: "$6,000 (opportunity)", time: "Weeks 6-12", notes: "2 pilots at discounted rate vs standard." },
-             { cat: "Founder Salary", cost: "$45,000 (opportunity)", time: "Weeks 1-36", notes: "Foregone $60k/year salary during buildout." }
+             { cat: "Design Resources", cost: "$0", time: "Weeks 1-18", notes: "Founder has 16+ years UX experience; can execute design prompts from Part 4-5 with AI tools + Figma" },
+             { cat: "Development (Client Cockpit)", cost: "$3,000-$5,000 or 60-80 contractor hours", time: "Weeks 8-18", notes: "No-code approach (Retool $50/month + Softr $100/month); alternative: hire Upwork dev at $40-$60/hr" },
+             { cat: "Research/Testing", cost: "$1,000 or 20 founder hours", time: "Weeks 1-12", notes: "5-7 JTBD interviews (10 hrs), usability testing (10 hrs); incentives: $50 gift cards x 10 participants" },
+             { cat: "Tools/Infrastructure", cost: "$3,600/year ($300/month)", time: "Ongoing", notes: "Perplexity API, Dune Analytics Pro, PostHog, Retool, ConvertKit" },
+             { cat: "Legal/Compliance", cost: "$1,500 one-time", time: "Week 12", notes: "Contract templates + privacy policy review, compliance tools (Termly)" },
+             { cat: "Contractor (Content/Community)", cost: "$15,000-$20,000", time: "Weeks 4-36 (8 months)", notes: "Part-time contractor 15-20 hrs/week at $25-$30/hr" },
+             { cat: "Marketing (Lead Gen)", cost: "$2,000", time: "Weeks 16-36", notes: "\"Web3 Growth Score\" tool development, content creation tools, paid ads testing" },
+             { cat: "Pilot Discounts", cost: "$6,000 (opportunity cost)", time: "Weeks 6-12", notes: "2 pilots at $3K-$5K discount each (charged $5K vs. $8K-$10K standard)" },
+             { cat: "Founder Salary (Opportunity Cost)", cost: "$45,000", time: "Weeks 1-36 (9 months)", notes: "Founder foregoes $60K/year salary ($5K/month) during buildout" },
+             { cat: "TOTAL CASH OUTLAY", cost: "$32,100-$39,100", time: "9 months", notes: "Does not include founder opportunity cost ($45K)" },
+             { cat: "TOTAL WITH OPPORTUNITY COST", cost: "$77,100-$84,100", time: "9 months", notes: "Full economic cost including founder time" }
            ]
         },
         {
-           id: "section-roi-analysis",
-           title: "ROI Justification",
-           type: "roi_analysis" as const,
-           content: "Financial projection comparing cash-only investment vs. full economic cost including opportunity cost.",
-           data: [
-             {
-               title: "Scenario 1: Cash-Only ROI",
-               investment: "$32,100 - $39,100",
-               mrr: "$50,000 ($600K ARR)",
-               roi: "820 - 1,020%",
-               payback: "1 month of Month 9 MRR"
-             },
-             {
-               title: "Scenario 2: Full Economic ROI",
-               investment: "$77,100 - $84,100",
-               mrr: "$50,000 ($600K ARR)",
-               roi: "330 - 370%",
-               payback: "1.5 - 2 months of Month 9 MRR"
-             }
-           ]
-        },
-        {
-          id: "section-roi-details",
-          title: "Detailed ROI Benefits",
-          type: "text" as const,
-          content: "Break-Even Point: Cash break-even at Month 5-6 (cumulative revenue ~$40K covers spend). Economic break-even at Month 7-8. Risk-Adjusted ROI: Success scenario (70% probability) achieves $360K net profit. Moderate scenario (20%) achieves $216K. Failure scenario (10%) recovers costs ($0-$50K net). Expected value: $300K net profit."
-        },
-        {
-          id: "section-qualitative-benefits",
-          title: "Qualitative Benefits",
+          id: "section-returns-quant",
+          title: "Expected Returns: Quantitative",
           type: "list" as const,
-          content: "Strategic value beyond immediate revenue:",
+          content: "Month 9 Snapshot:",
           data: [
-            "Competitive Differentiation: Only Web3 agency with public pricing + real-time dashboard + AI visibility.",
-            "Brand Authority: 3 case studies + thought leadership position founder as category expert.",
-            "Scalability: Reusable blueprints and AI workflows enable scaling to 15-20 clients in Year 2 without proportional cost.",
-            "Validation: De-risks future fundraising by proving model with traction.",
-            "Team & Culture: Data-driven ops attract top talent; founder maintains work-life balance."
+            "Revenue Generation: MRR at Month 9: $50,000 (6-8 clients x $6K-$8K average). Annualized: $600,000 ARR. Net margin: ~60% = $360K net profit/year.",
+            "Client Lifetime Value (LTV): Average client lifespan: 18 months. Average monthly value: $8,000. LTV per client: $144,000. 6-8 clients x $144K = $864K-$1.15M total LTV from first cohort.",
+            "Cost Savings: Traditional approach: Hire 3-5 FTEs upfront ($300K-$500K annual payroll). Lean approach: Founder + contractor ($20K-$25K annual cost in Year 1). Savings: $275K-$475K in first year.",
+            "Time to Revenue: First dollar of revenue: Week 10 (pilot #1, $5K). Payback period: 5-6 months."
           ]
         },
         {
+          id: "section-returns-qual",
+          title: "Expected Returns: Qualitative",
+          type: "list" as const,
+          content: "Strategic Benefits:",
+          data: [
+            "Competitive Differentiation: Only Web3 marketing agency with public pricing + real-time client dashboard + AI visibility positioning.",
+            "Brand Authority: 3 case studies + thought leadership (2K+ followers) position founder as category expert. Leads to inbound opportunities.",
+            "Scalability Foundation: Reusable service blueprints, dashboard infrastructure, AI workflows enable scaling to 15-20 clients in Year 2 without proportional cost increase.",
+            "Learning & Validation: Validates assumptions before significant capital commitment. De-risks future fundraising.",
+            "Team & Culture: Data-driven, AI-native operations attract top-tier talent when hiring scales."
+          ]
+        },
+        {
+          id: "section-roi-calc",
+          title: "ROI Calculation",
+          type: "roi_analysis" as const,
+          content: "Financial projection comparing cash-only investment vs. full economic cost.",
+          data: [
+            {
+              title: "Scenario 1: Cash-Only ROI",
+              investment: "$32,100 - $39,100",
+              mrr: "$50,000 ($600K ARR)",
+              roi: "820 - 1,020%",
+              payback: "1 month of Month 9 MRR"
+            },
+            {
+              title: "Scenario 2: Full Economic ROI",
+              investment: "$77,100 - $84,100",
+              mrr: "$50,000 ($600K ARR)",
+              roi: "330 - 370%",
+              payback: "1.5 - 2 months of Month 9 MRR"
+            }
+          ]
+        },
+        {
+          id: "section-roi-notes",
+          title: "ROI Notes",
+          type: "text" as const,
+          content: "Break-Even Point: Cash break-even at Month 5-6 (cumulative revenue ~$40K-$50K). Economic break-even at Month 7-8. Risk-Adjusted ROI: Success scenario (70% probability) achieves $360K net profit. Moderate scenario (20%) achieves $216K. Failure scenario (10%) recovers costs. Expected value: $300K net profit."
+        },
+        {
            id: "section-compliance",
-           title: "Compliance Checkpoints",
+           title: "5. Compliance & Legal Checkpoints",
            type: "table" as const,
            content: "Regulatory requirements and implementation status.",
            columns: [
              { header: "Regulation", key: "reg", width: "w-1/6" },
              { header: "Applicability", key: "apply", width: "w-1/6" },
-             { header: "Status", key: "status", width: "w-1/6" },
+             { header: "Current Status", key: "status", width: "w-1/6" },
              { header: "Required Actions", key: "action", width: "w-1/3" },
              { header: "Deadline", key: "deadline", width: "w-1/6" }
            ],
            data: [
-             { reg: "GDPR (EU)", apply: "Yes (Wallet = PII)", status: "Gap", action: "Privacy policy update, Cookie banner, DPA template, 'Delete my data' flow.", deadline: "Week 12" },
-             { reg: "CCPA (California)", apply: "Yes", status: "Gap", action: "'Do Not Sell' link, Privacy policy update, Data request tool.", deadline: "Week 12" },
-             { reg: "WCAG 2.1 AA", apply: "Yes", status: "Partial", action: "Accessibility audit (axe DevTools), fix contrast/nav issues.", deadline: "Week 18" },
-             { reg: "CAN-SPAM", apply: "Yes", status: "Gap", action: "Physical address in emails, 1-click unsubscribe, auto-compliance tools.", deadline: "Week 16" },
-             { reg: "SOC 2 Type II", apply: "Maybe (Enterprise)", status: "N/A", action: "No action in first 9 months. Revisit if 2+ Enterprise clients request it.", deadline: "Month 12+" }
+             { reg: "GDPR (EU)", apply: "Yes (serving EU clients)", status: "Gap (not yet compliant)", action: "1. Privacy policy update. 2. Explicit consent for tracking. 3. DPA template for clients. 4. 'Delete my data' workflow.", deadline: "Week 12" },
+             { reg: "CCPA (California)", apply: "Yes (serving CA clients)", status: "Gap", action: "1. 'Do Not Sell My Personal Information' link. 2. Privacy policy update. 3. Respond to data requests within 45 days.", deadline: "Week 12" },
+             { reg: "WCAG 2.1 AA", apply: "Yes (public website + dashboard)", status: "Partial", action: "1. Accessibility audit using axe DevTools. 2. Fix critical issues: color contrast, keyboard nav, screen reader labels.", deadline: "Week 18" },
+             { reg: "PCI-DSS", apply: "No (using Stripe)", status: "Compliant", action: "No action required. Never store or process card data directly—always via Stripe hosted pages.", deadline: "N/A" },
+             { reg: "CAN-SPAM Act", apply: "Yes (email marketing)", status: "Gap", action: "1. Include physical address in all emails. 2. 'Unsubscribe' link. 3. Honor opt-outs within 10 days.", deadline: "Week 16" },
+             { reg: "Cookie Law (EU)", apply: "Yes (cookies for analytics)", status: "Gap", action: "1. Cookie consent banner (Osano or Termly). 2. Block analytics cookies until consent given. 3. Cookie policy page.", deadline: "Week 5" },
+             { reg: "SOC 2 Type II", apply: "Maybe (Enterprise)", status: "Not applicable", action: "No action in first 9 months. Revisit if 2+ Enterprise clients request it.", deadline: "Month 12+" }
            ]
         },
         {
+          id: "section-legal-review",
+          title: "Legal Review Flags",
+          type: "list" as const,
+          content: "Documents and Policies Required:",
+          data: [
+             "Terms of Service updates needed: YES. Specifics: Create client SOW template (scope, deliverables, payment terms, IP ownership). Add limitation of liability. Legal review: $500-$1,000, Week 8-10.",
+             "Privacy Policy updates needed: YES. Specifics: Draft comprehensive policy covering data collection, data usage, third-party sharing, user rights, data retention. Week 10-12.",
+             "Cookie consent changes: YES. Specifics: Implement cookie banner. Strictly necessary vs Analytics vs Marketing categories. Week 5.",
+             "Data processing agreements: YES. Specifics: DPA template for clients who share EU customer data. Week 12.",
+             "Insurance: Professional Liability Insurance (E&O) recommended by Month 3-4 ($1K-$2K/yr). Cyber Liability Insurance recommended by Month 6 ($1.5K-$3K/yr)."
+          ]
+        },
+        {
           id: "section-strategic-notes",
-          title: "Strategic Notes: Behind the Decision",
+          title: "6. 'Behind the Decision' Strategic Notes",
           type: "text" as const,
-          content: "Choice 1: Hybrid Positioning (Web2/Web3) vs. Web3-Only. Chosen to mitigate market risk (Web3 volatility) and access larger TAM ($50B+ vs $5B). Competitive analysis shows incumbents struggling to scale. Reversibility is high. Choice 2: Dashboard-Centric UX (Build vs. Buy). Chosen to differentiate from competitors who hide analytics. Choice 3: Lean Validation (Pilots First). Chosen to validate assumptions before hiring. Choice 4: AI Visibility as Primary Differentiator. Blue ocean opportunity vs commoditized SEO. Choice 5: Transparent Pricing. Chosen to reduce sales friction and align with 'innovative' brand positioning."
+          content: "Key Strategic Choices Made"
+        },
+        {
+          id: "section-choice-1",
+          title: "Choice 1: Hybrid Positioning (Web2/Web3) vs. Web3-Only",
+          type: "list" as const,
+          content: "We chose Dual Positioning.",
+          data: [
+             "What we chose: Dual 'Web2/Web3' positioning with explicit messaging: 'We serve AI-forward SaaS, fintech, and Web3 companies'.",
+             "Why: Market risk mitigation (Web3 volatility); Larger TAM ($50B+ vs $2-5B).",
+             "Reversibility: Easy to adjust (rebrand heavily toward Web3 if market booms, or pivot fully to Web2 SaaS if crypto crashes)."
+          ]
+        },
+        {
+          id: "section-choice-2",
+          title: "Choice 2: Dashboard-Centric UX (Build vs. Buy vs. Partner)",
+          type: "list" as const,
+          content: "We chose Build (No-Code).",
+          data: [
+             "What we chose: Build Client Cockpit v1 using no-code tools (Retool, Softr) + embedded analytics by Week 18.",
+             "Why: Competitive differentiation (Coinbound has dashboard but doesn't showcase it); No-code fits budget ($3K-$5K); Control over roadmap.",
+             "Reversibility: Medium (can migrate to custom-coded v2 in Year 2)."
+          ]
+        },
+        {
+          id: "section-choice-3",
+          title: "Choice 3: Lean Validation (Pilots First) vs. Full Buildout",
+          type: "list" as const,
+          content: "We chose Pilots First.",
+          data: [
+             "What we chose: Solo founder + contractor model with 2 pilot clients (Weeks 6-12) to validate demand before scaling.",
+             "Why: Risk mitigation (Validates all 3 core assumptions); Financial prudence ($32K spend vs $300K+); User research data.",
+             "Reversibility: Easy (if pilots succeed, hire aggressively; if fail, pivot with minimal sunk cost)."
+          ]
+        },
+        {
+          id: "section-choice-4",
+          title: "Choice 4: AI Visibility as Primary Differentiator",
+          type: "list" as const,
+          content: "We chose Primary Differentiator.",
+          data: [
+             "What we chose: Position AI visibility (AI SEO/GEO) as primary differentiator alongside dashboard.",
+             "Why: Competitive gap (NO competitor explicitly offers AI SEO/GEO); Market timing (ChatGPT Search, Perplexity growth).",
+             "Reversibility: Easy (if pilots show weak demand, reframe as 'future-proof bonus' and lead with dashboard)."
+          ]
+        },
+        {
+          id: "section-choice-5",
+          title: "Choice 5: Transparent Pricing vs. Custom Quotes",
+          type: "list" as const,
+          content: "We chose Transparent Pricing.",
+          data: [
+             "What we chose: Public pricing tiers on website (Starter $3K-$5K, Growth $8K-$15K, Enterprise $20K+).",
+             "Why: Reduces sales friction; Buyer psychology (mid-market wants self-service); Brand positioning aligns with transparency.",
+             "Reversibility: Easy (can test both)."
+          ]
         },
         {
           id: "section-assumptions",
-          title: "Critical Assumptions",
+          title: "Assumptions That Must Hold True",
           type: "list" as const,
-          content: "Assumptions that must hold true:",
+          content: "Critical validation points:",
           data: [
             "1. AI visibility (AI SEO/GEO) will become a meaningful traffic driver by 2026-2027. Validation: Track citations for 2 pilots. Threshold: ≥10 citations by Week 12.",
-            "2. Web3/Web2 buyers are willing to pay $8K-$15K/mo for 'marketing systems' vs traditional execution. Validation: Pilot pricing test and win/loss analysis.",
-            "3. Real-time dashboard creates sufficient differentiation to justify premium pricing. Validation: NPS survey and login analytics."
+            "2. Web3/Web2 buyers are willing to pay $8K-$15K/mo for 'marketing systems' (dashboard + experiments) vs traditional execution. Validation: Pilot pricing test.",
+            "3. Real-time client-facing dashboard creates sufficient differentiation to justify premium pricing. Validation: NPS survey and login analytics."
           ]
         },
         {
@@ -1090,18 +1213,31 @@ TYPE D: BADGES
           type: "list" as const,
           content: "Scenario Planning:",
           data: [
-            "Scenario 1: If pilot results show weak AI visibility outcomes (<5 citations) -> De-prioritize AI visibility, lead with Dashboard + Systems.",
+            "Scenario 1: If pilot results show weak AI visibility outcomes -> De-prioritize AI visibility, lead with 'Real-time marketing dashboard'.",
             "Scenario 2: If founder can't hire reliable contractor -> Extend timeline 4-8 weeks, reduce pilot scope.",
             "Scenario 3: If dashboard build delayed beyond Week 22 -> Launch 'manual dashboard' v0.5 (Notion + Dune embeds).",
-            "Scenario 4: If 2+ enterprise clients request SOC 2 -> Fast-track SOC 2 Type II audit ($15k-$50k investment).",
-            "Scenario 5: If Web3 market crashes -> Aggressively pivot to Web2 SaaS/fintech, rebrand as 'AI-native agency'."
+            "Scenario 4: If 2+ enterprise clients request SOC 2 -> Fast-track SOC 2 Type II audit.",
+            "Scenario 5: If Web3 market crashes -> Aggressively pivot to Web2 SaaS/fintech."
           ]
         },
         {
           id: "section-final-summary",
-          title: "Final Executive Summary",
+          title: "7. Final Executive Summary",
           type: "text" as const,
-          content: "The Web3 marketing agency market is professionalizing. Clients demand attribution and insights, yet competitors lack comprehensive solutions. We recommend launching a lean, founder-led agency using a hybrid Service Design + Lean Validation approach. Key deliverables include a Web3 Growth Score lead magnet, 2 pilot engagements with case studies, and a Client Cockpit Dashboard v1. With a total cash investment of ~$35K and an expected MRR of $50K by Month 9, the initiative offers a high ROI (820% cash-only) and a defensible competitive moat."
+          content: "The Web3 marketing agency market is professionalizing rapidly, with clients demanding measurable attribution, AI-powered insights, and transparent data access—yet no competitor offers all three. We recommend launching a lean, founder-led Web2/Web3 marketing agency using a hybrid Service Design + Lean Validation approach over 9 months. Key deliverables include a Web3 Growth Score lead magnet, 2 pilot engagements with case studies, and a Client Cockpit Dashboard v1. With a total cash investment of ~$35K and an expected MRR of $50K by Month 9, the initiative offers a high ROI (820% cash-only) and a defensible competitive moat."
+        },
+        {
+          id: "section-deliverables",
+          title: "Key Deliverables",
+          type: "list" as const,
+          content: "",
+          data: [
+             "1. Web3 Growth Score Lead Magnet + Website (Week 5): Drives inbound pipeline.",
+             "2. 2 Pilot Client Engagements with Case Studies (Weeks 6-12): Validates AI visibility + dashboard demand.",
+             "3. Client Cockpit Dashboard v1 (Week 18): Core competitive differentiator; real-time metrics.",
+             "4. 3 Published Case Studies + Thought Leadership (Weeks 25-32): Establishes category authority.",
+             "5. Scaled Operations: $50K MRR, 6-8 Clients (Month 9): Productized services, AI automation."
+          ]
         },
         {
           id: "section-next-steps",
@@ -1119,12 +1255,12 @@ TYPE D: BADGES
     };
   }
 
-  // Fallback for Phase 5 & 6 (preserving structure)
+  // Fallback for future phases
   return {
     id: `phase-0${phaseIndex + 1}`,
     badge: `Analysis Phase 0${phaseIndex + 1}`,
-    title: titles[phaseIndex],
-    subtitle: subtitles[phaseIndex],
+    title: titles[phaseIndex] || `Phase ${phaseIndex + 1}`,
+    subtitle: subtitles[phaseIndex] || "Details pending...",
     metadata: ["Authored by Agent Alpha", `Phase Depth: Level ${phaseIndex + 3}`, "Confidential"],
     sources: [],
     sections: []
