@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface HeaderProps {
   currentPhase: number;
@@ -9,31 +9,32 @@ interface HeaderProps {
 const phases = [
   "01: Discovery",
   "02: Tech Audit",
-  "03: Market Fit",
-  "04: Growth",
+  "03: Timeline",
+  "04: Core Design",
   "05: Scale",
   "06: Blueprints"
 ];
 
 export const Header: React.FC<HeaderProps> = ({ currentPhase, setPhase }) => {
-  
   return (
-    <header className="h-20 px-4 lg:px-8 border-b border-border-hairline bg-off-white/95 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between">
+    <header className="h-16 lg:h-20 px-4 lg:px-8 bg-white/90 backdrop-blur-md border-b border-charcoal/10 sticky top-0 z-50 flex items-center justify-between shadow-sm transition-all duration-200">
       
-      {/* Phase Navigation (Horizontal Scroll on Mobile) */}
-      <nav className="flex-1 overflow-x-auto no-scrollbar mr-4">
-        <div className="flex items-center gap-1">
+      {/* Navigation - Scrollable on Mobile */}
+      <nav className="flex-1 overflow-x-auto no-scrollbar w-full">
+        <div className="flex items-center gap-1 min-w-max pr-4">
           {phases.map((phase, idx) => {
             const isActive = currentPhase === idx;
             return (
               <button
                 key={idx}
                 onClick={() => setPhase(idx)}
-                className={`whitespace-nowrap px-4 py-2 text-[10px] font-bold font-mono uppercase tracking-widest transition-all rounded-sm border ${
-                  isActive 
-                    ? 'bg-charcoal text-white border-charcoal shadow-sharp' 
-                    : 'bg-transparent text-charcoal-muted border-transparent hover:bg-white hover:border-border-hairline'
-                }`}
+                className={`
+                  relative px-4 py-2 text-[10px] lg:text-[11px] font-bold font-mono uppercase tracking-widest rounded-sm transition-all duration-200 border
+                  ${isActive 
+                    ? 'bg-charcoal text-white border-charcoal shadow-md translate-y-0' 
+                    : 'bg-transparent text-charcoal-muted border-transparent hover:bg-charcoal/5 hover:text-charcoal'
+                  }
+                `}
               >
                 {phase}
               </button>
@@ -42,19 +43,18 @@ export const Header: React.FC<HeaderProps> = ({ currentPhase, setPhase }) => {
         </div>
       </nav>
 
-      <div className="flex items-center gap-3 pl-4 border-l border-border-hairline flex-shrink-0">
-        {/* Action Buttons */}
+      <div className="flex items-center gap-2 pl-4 border-l border-charcoal/10 flex-shrink-0">
         <button 
-          title="Download JSON"
-          className="size-9 flex items-center justify-center border border-border-hairline bg-white hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-90"
+          title="Export Data"
+          className="size-8 lg:size-9 flex items-center justify-center rounded-sm border border-transparent hover:border-charcoal/10 hover:bg-off-white text-charcoal-muted transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">data_object</span>
         </button>
         <button 
           title="Download PDF"
-          className="size-9 flex items-center justify-center border border-border-hairline bg-white hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-90"
+          className="size-8 lg:size-9 flex items-center justify-center rounded-sm border border-transparent hover:border-charcoal/10 hover:bg-off-white text-charcoal-muted transition-all"
         >
-          <span className="material-symbols-outlined text-[18px]">download</span>
+          <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
         </button>
       </div>
     </header>
