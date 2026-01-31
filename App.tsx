@@ -6,9 +6,40 @@ import { RightPanel, SourceItem } from './components/RightPanel';
 
 /* 
   =============================================================================
-  SYSTEM DOCUMENTATION: AI GENERATION SCHEMA
+  SYSTEM DOCUMENTATION: COMPONENT DATA SCHEMA
   =============================================================================
-  ... (Schema documentation preserved) ...
+  
+  The application renders content based on a JSON-like structure defined in 'sections'.
+  To update content, find the specific 'phaseIndex' and modify the 'sections' array.
+
+  1. TEXT BLOCKS
+     type: 'text'
+     content: string (HTML-like string or plain text)
+
+  2. LISTS
+     type: 'list'
+     content: string (Introductory paragraph)
+     data: string[] (Array of bullet points)
+
+  3. GENERIC TABLES (Risk Matrix, Compliance, Investment)
+     type: 'table'
+     columns: { header: string, key: string, width: string }[]
+     data: Object[] (Keys must match 'key' in columns)
+
+  4. METRICS TABLE (Financial KPIs)
+     type: 'metrics'
+     data: { name: string, baseline: string, stress: string, variance: string }[]
+     Note: 'stress' maps to Month 3 Target, 'variance' maps to Month 9 Target/Method.
+
+  5. ROI ANALYSIS
+     type: 'roi_analysis'
+     data: { title: string, investment: string, mrr: string, roi: string, payback: string }[]
+
+  6. CARDS (OKRs, Highlights)
+     type: 'cards'
+     data: { title: string, text: string, icon: string, subLabel?: string }[]
+
+  =============================================================================
 */
 
 // --- MOCK AI DATA GENERATION ---
@@ -501,9 +532,12 @@ STYLE:
 
 STEPS:
 1. "Project Basics":
-   - Input: Project Name, Website URL.
+   - Input: Project Name (Required), Website URL (Required, URL validation).
    - Selector: Project Type (DeFi / NFT / Infra / SaaS / DAO).
    - Visual: Cards with simple icons for Project Type.
+   - Micro-interactions (Project Type Cards):
+     * Hover: Scale 1.02x, border turns Primary Blue (#0047AB), shadow increases.
+     * Selected: Background fills with Primary/5, border becomes 2px solid Primary, Checkmark badge appears in top-right corner.
 
 2. "Current Traction":
    - Slider: Monthly Marketing Budget ($0 - $50k+).
@@ -515,9 +549,14 @@ STEPS:
    - "Do you have a structured SEO strategy?" (Yes/No toggle).
 
 4. "Results & Capture":
-   - Email Input (Floating label).
+   - Email Input (Floating label, Email format validation).
    - "Calculate Score" Button (Full width, primary color).
    - Micro-copy: "We'll email your full report instantly. No spam."
+
+DATA VALIDATION & ERRORS:
+- "Next" button disabled until step requirements met.
+- Real-time inline validation for URL and Email fields.
+- Error state: Input border turns Red-500, shake animation, helper text appears below input.
 
 OUTPUT UI:
 - Show a radial progress bar animating to the calculated score.
