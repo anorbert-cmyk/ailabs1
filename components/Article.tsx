@@ -11,23 +11,23 @@ import {
   DSList,
   DSCompetitorAnalysis,
   DSRoadmapPhase,
+  DSPhaseCard,
   DSStrategyGrid,
   DSResourceSplit,
   DSErrorPathGrid,
   DSVisualTimeline,
   DSRiskDossierHeader,
-  DSRiskTable,
   DSROIAnalysis,
   MetricRow,
   BlueprintItem,
   CompetitorData,
   RoadmapPhaseData,
+  PhaseCardData,
   PhaseDetail,
   ResourceData,
   ErrorPathData,
   VisualTimelineData,
   RiskData,
-  RiskItem,
   ROIScenario
 } from './DesignLibrary';
 
@@ -36,9 +36,9 @@ interface SectionData {
   id: string;
   title: string;
   content: string;
-  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis';
+  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'phase_card' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis';
   // Flexible data union
-  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | any; 
+  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseCardData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | any; 
   columns?: { header: string; key: string; width?: string }[]; // For tables
 }
 
@@ -107,26 +107,6 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                <section key={section.id} id={section.id} className="scroll-mt-32">
                  <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-16 lg:pt-24 mb-16">
                     <DSRiskDossierHeader {...(section.data as RiskData)} />
-                    
-                    {/* Render Risk Clusters immediately after header in this layout */}
-                    <DSRiskTable 
-                      number="01" 
-                      title="Strategic Risk Cluster" 
-                      rows={(section.data as RiskData).strategic} 
-                      colorTheme="red"
-                    />
-                    <DSRiskTable 
-                      number="02" 
-                      title="Operational Risk Cluster" 
-                      rows={(section.data as RiskData).operational} 
-                      colorTheme="amber"
-                    />
-                     <DSRiskTable 
-                      number="03" 
-                      title="Financial Risk Cluster" 
-                      rows={(section.data as RiskData).financial} 
-                      colorTheme="emerald"
-                    />
                  </div>
                </section>
              )
@@ -270,6 +250,10 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               
               {section.type === 'roadmap_phase' && section.data && (
                 <DSRoadmapPhase {...(section.data as RoadmapPhaseData)} />
+              )}
+
+              {section.type === 'phase_card' && section.data && (
+                <DSPhaseCard {...(section.data as PhaseCardData)} />
               )}
 
               {section.type === 'roi_analysis' && section.data && (

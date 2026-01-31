@@ -12,7 +12,7 @@ const phases = [
   "03: Timeline",
   "04: Core Design",
   "05: Scale",
-  "06: Blueprints"
+  "06: Risk & ROI"
 ];
 
 export const Header: React.FC<HeaderProps> = ({ currentPhase, setPhase }) => {

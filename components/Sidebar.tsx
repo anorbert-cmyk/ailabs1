@@ -52,9 +52,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, sectionIds }) =
               key={item} 
               href={`#section-${item}`} 
               onClick={(e) => handleNavClick(e, item)}
-              className={`hover:text-primary transition-colors flex flex-col items-center gap-1 group py-1 ${isActive ? 'text-primary' : ''}`}
+              className={`hover:text-primary transition-colors flex flex-col items-center gap-1 group py-1 text-center ${isActive ? 'text-primary' : ''}`}
             >
-              <span className={`transition-transform duration-300 ${isActive ? 'translate-x-1' : 'group-hover:-translate-y-1'}`}>
+              <span className={`transition-transform duration-300 px-1 ${isActive ? 'translate-x-0 font-extrabold' : 'group-hover:-translate-y-1'}`}>
                 {item}
               </span>
               <div 

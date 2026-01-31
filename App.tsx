@@ -41,7 +41,7 @@ const generatePhaseData = (phaseIndex: number) => {
       subtitle: subtitles[0],
       metadata: ["Input: PDF Brief", "Status: Exploratory", "Horizon: 3-6 Months"],
       sources: [
-         { source: 'Perplexity', title: 'Executive Summary Brief', icon: 'description' },
+         { source: 'Perplexity', title: 'Syndicate Part 1: Executive Summary', icon: 'description' },
          { source: 'JSEO', title: 'AI Marketing Systems Analysis', url: 'https://jseo.polteksci.ac.id/index.php/Jseo/article/view/28' },
          { source: 'IEEE Xplore', title: 'Document 11198381', url: 'https://ieeexplore.ieee.org/document/11198381/' },
          { source: 'GrowthCurve', title: 'Web3 Marketing Agency Landscape', url: 'https://growthcurve.co/agency/digital-marketing-agency/web3-marketing-agency' },
@@ -104,7 +104,7 @@ const generatePhaseData = (phaseIndex: number) => {
             },
             { 
               title: "Regulatory Compliance", 
-              text: "Web3 + AI marketing touches user data, tracking, and financial promotions. Messaging must show responsibility and ethics.", 
+              text: "Web3 + AI marketing touches topics like user data, tracking, and possibly financial promotions; messaging must show responsibility and ethics.", 
               icon: "policy"
             }
           ]
@@ -119,12 +119,33 @@ const generatePhaseData = (phaseIndex: number) => {
           id: "section-05",
           title: "Jobs To Be Done Breakdown",
           type: "list" as const,
-          content: "Functional Jobs:",
+          content: "Functional & Emotional Jobs:",
           data: [
-            "Design and run data-driven campaigns with measurable impact (SQLs, MRR, TVL, retention, community activity).",
-            "Build AI marketing systems: connected workflows that integrate research, content creation, publishing, and measurement (including AI SEO/GEO and on-chain-aware targeting).",
-            "Translate complex data (analytics, on-chain activity, AI search visibility) into simple dashboards and narratives for internal stakeholders and investors.",
-            "De-risk experimentation through structured, ethical use of AI (no random prompt hacking, clear guardrails, privacy-conscious tracking)."
+            "Design and run data-driven campaigns with measurable impact (SQLs, MRR, TVL, retention).",
+            "Build AI marketing systems: connected workflows that integrate research, content creation, and measurement.",
+            "Translate complex data (analytics, on-chain activity, AI search visibility) into simple dashboards.",
+            "De-risk experimentation through structured, ethical use of AI.",
+            "Feel confident that someone truly understands both their technical product and new marketing realities.",
+            "Reduce anxiety about wasting budget on vanity metrics or agencies that don’t measure attribution."
+          ]
+        },
+        {
+          id: "section-06",
+          title: "Assumption Ledger",
+          type: "table" as const,
+          content: "Critical assumptions that must be validated to ensure business viability.",
+          columns: [
+             { header: "Assumption", key: "assumption", width: "w-1/3" },
+             { header: "Confidence", key: "confidence", width: "w-1/6" },
+             { header: "Validation Plan", key: "plan", width: "w-1/3" },
+             { header: "Risk", key: "risk", width: "w-1/6" }
+          ],
+          data: [
+            { assumption: "Growing niche of Web2/Web3 teams seek AI-native, systems-first partners.", confidence: "Medium", plan: "5-10 structured founder/CMO interviews using JTBD format.", risk: "Positioning too narrow." },
+            { assumption: "AI SEO/GEO will become a key driver for Web3 brand discovery.", confidence: "High", plan: "Run 1-2 pilot case studies optimizing AI visibility.", risk: "Pitch feels over-futuristic." },
+            { assumption: "Projects willing to pay premium retainers for systems vs campaigns.", confidence: "Medium", plan: "Test pricing structure with 3-5 prospects; offer 'system build' pilot.", risk: "Sales cycles lengthen." },
+            { assumption: "Trust concerns around AI require explicit safeguards.", confidence: "High", plan: "Include privacy/AI-ethics content; test close rates.", risk: "Losing regulated clients." },
+            { assumption: "Dashboard-centric UX differentiates from traditional agencies.", confidence: "High", plan: "Build lean v1 'client cockpit'; run usability tests.", risk: "Clients prefer PDF decks." }
           ]
         }
       ]
@@ -175,7 +196,126 @@ const generatePhaseData = (phaseIndex: number) => {
             opportunity: "RZLT lacks a self-serve diagnostic tool or interactive 'growth score' widget. Building this would create a top-of-funnel lead magnet and demonstrate AI/data capabilities upfront."
           }
         },
-        // ... (Other competitors omitted for brevity in XML, but would be here)
+        {
+          id: "section-03",
+          title: "Competitor 2: Coinbound",
+          type: "competitor" as const,
+          content: "Deep dive analysis of Coinbound.",
+          data: {
+            name: "Coinbound",
+            website: "https://coinbound.io",
+            info: "Founded: 2018. Target: Major crypto exchanges, NFT projects. Pricing: High-end retainers ($10K+).",
+            strengths: [
+              "High Brand Authority: 'Leading Web3 Marketing Agency' positioning with strong SEO presence.",
+              "Influencer Network: Extensive roster of crypto influencers and KOLs.",
+              "Content Machine: Hosts a popular podcast, driving significant inbound traffic."
+            ],
+            weaknesses: [
+              "Traditional Agency feel: Less emphasis on 'systems' or automation, more on 'connections'.",
+              "Opaque Reporting: Dashboard exists but is not a primary selling point on the landing page.",
+              "Expensive Entry: Pricing creates a barrier for mid-market B2B SaaS pivoting to Web3."
+            ],
+            opportunity: "Differentiate by offering a 'glass-box' approach—public dashboard access and clear, lower-tier pricing for automated services."
+          }
+        },
+        {
+          id: "section-04",
+          title: "Competitor 3: Lunar Strategy",
+          type: "competitor" as const,
+          content: "Deep dive analysis of Lunar Strategy.",
+          data: {
+            name: "Lunar Strategy",
+            website: "https://lunarstrategy.com",
+            info: "Founded: 2019. Target: DeFi, Metaverse. Pricing: Mid-range, paid media focus.",
+            strengths: [
+              "Paid Media Expertise: Strong positioning on Google/Facebook ads for crypto (difficult niche).",
+              "Clear Packages: Offers distinct service bundles, improving sales clarity.",
+              "Educational Content: Good blog content explaining Web3 marketing nuances."
+            ],
+            weaknesses: [
+              "Generic Analytics: Reports focus on vanity metrics (impressions, clicks) rather than on-chain value.",
+              "Low AI Integration: Little mention of AI-driven optimization or workflows.",
+              "Website UX: Standard agency template, lacks the 'tech-forward' feel of an AI-native firm."
+            ],
+            opportunity: "Win on attribution. Connect marketing spend directly to wallet transactions (TVL/Sales) via the client dashboard, highlighting the 'real ROI' Lunar misses."
+          }
+        },
+        {
+          id: "section-05",
+          title: "Competitor 4: theKOLLAB",
+          type: "competitor" as const,
+          content: "Deep dive analysis of theKOLLAB.",
+          data: {
+            name: "theKOLLAB",
+            website: "https://thekollab.io",
+            info: "Founded: ~2020. Target: Web3 projects needing KOL marketing. Pricing: Competitive fee.",
+            strengths: [
+              "Niche specialization creates clarity: Explicitly a 'Web3 KOL agency'.",
+              "Service mix is balanced: 40% blockchain marketing, 20% social media, 10% PR.",
+              "Client satisfaction is high: Strong reviews on organic traffic and lead increases."
+            ],
+            weaknesses: [
+              "No ROI guarantees create uncertainty: Explicitly states results vary drastically.",
+              "Pricing ambiguity is frustrating: Pricing determined by 'supply/demand', feels arbitrary.",
+              "No tech differentiation: No mention of dashboards, analytics, or AI tools."
+            ],
+            opportunity: "Offer real-time KOL performance dashboards (impressions, engagement, on-chain conversions per influencer) to provide accountability."
+          }
+        },
+        {
+          id: "section-06",
+          title: "Competitor 5: Ninja Promo",
+          type: "competitor" as const,
+          content: "Deep dive analysis of Ninja Promo.",
+          data: {
+            name: "Ninja Promo",
+            website: "https://ninjapromo.io",
+            info: "Founded: 2017. Target: Fintech, B2B, Crypto. Pricing: Starts $3,200/mo.",
+            strengths: [
+              "Pricing transparency is exceptional: Publicly disclosed tiers and deliverables.",
+              "Data-driven positioning is credible: Explicitly markets analytics capabilities.",
+              "Strong client feedback: Praise for updates and responsiveness."
+            ],
+            weaknesses: [
+              "Not Web3-native: Positioning is generalist (SaaS, fintech, healthcare).",
+              "No proprietary Web3 tooling: Uses standard tools (Google Analytics).",
+              "Content deliverables feel commoditized: Volume-based rather than outcome-based."
+            ],
+            opportunity: "Offer transparent pricing PLUS Web3-native dashboards (on-chain attribution, token holder cohorts)."
+          }
+        },
+        {
+          id: "section-07",
+          title: "Competitive Matrix",
+          type: "table" as const,
+          content: "Comparison of key features across top competitors.",
+          columns: [
+             { header: "Feature", key: "feature", width: "w-1/4" },
+             { header: "RZLT", key: "rzlt", width: "w-1/6" },
+             { header: "Coinbound", key: "coinbound", width: "w-1/6" },
+             { header: "Lunar Strategy", key: "lunar", width: "w-1/6" },
+             { header: "Our Edge", key: "us", width: "w-1/4" }
+          ],
+          data: [
+            { feature: "AI-Native Systems", rzlt: "Yes (Claimed)", coinbound: "No", lunar: "No", us: "Core Core (AI SEO/GEO)" },
+            { feature: "On-Chain Analytics", rzlt: "No", coinbound: "Yes (Strong)", lunar: "No", us: "Yes (Integrated)" },
+            { feature: "Transparent Pricing", rzlt: "No", coinbound: "No", lunar: "No", us: "Yes (Public Tiers)" },
+            { feature: "Self-Serve Diagnostic", rzlt: "No", coinbound: "No", lunar: "No", us: "Yes (Lead Magnet)" },
+            { feature: "Real-Time Dashboard", rzlt: "No", coinbound: "Yes", lunar: "No", us: "Yes (Client Cockpit)" }
+          ]
+        },
+        {
+          id: "section-08",
+          title: "Blue Ocean Opportunities",
+          type: "list" as const,
+          content: "Strategic gaps identified in the market:",
+          data: [
+            "Self-Serve Diagnostic + Freemium Entry Tier: No competitor offers a free tool to assess Web3 marketing maturity.",
+            "Real-Time Client Dashboard with Experimentation Backlog: Only Coinbound has a dashboard; none combine metrics with experiments.",
+            "AI Visibility & GEO Optimization as a Standalone Product: No competitor explicitly offers AI SEO (ChatGPT/Perplexity visibility).",
+            "Performance-Based Pricing with On-Chain Attribution: Offer a hybrid model (base + bonus) tied to measurable on-chain outcomes."
+          ]
+        }
       ]
     };
   }
@@ -288,70 +428,6 @@ const generatePhaseData = (phaseIndex: number) => {
            }
          },
          {
-           id: "section-Errors",
-           title: "Error Path Mapping",
-           type: "error_path_grid" as const,
-           content: "",
-           data: [
-             {
-               id: "ERR-01",
-               title: "Client Onboarding Confusion",
-               scenario: "New client signs for Growth tier ($10K) but expects Enterprise deliverables (dedicated Slack, weekly calls). Frustration builds.",
-               impact: "Lost $30K-$120K LTV, negative review risk, firefighting.",
-               recovery: "Automated Microcopy & Visual Checklist",
-               details: "Send Day 1 automated email explicitly listing inclusions vs add-ons. Client Cockpit onboarding checklist shows progress bars for deliverables with tooltips explaining scope. If client messages about out-of-scope items, auto-reply with upgrade CTA."
-             },
-             {
-               id: "ERR-02",
-               title: "Dashboard Integration Failure",
-               scenario: "Client logs in, sees 'No data available'. Doesn't know how to connect analytics. assumes dashboard is broken/fake.",
-               impact: "Dashboard differentiation fails; client perceives agency as traditional.",
-               recovery: "Empty State Wizard & Concierge Outreach",
-               details: "Dashboard empty state shows illustrated 3-step connection process. 'We'll handle this! Grant access form takes 2 mins'. If no data after 48h, trigger automated SMS/Email. If >5 days, founder manual outreach call."
-             },
-             {
-               id: "ERR-03",
-               title: "AI Visibility Results Delay",
-               scenario: "Client buys AI Sprint ($5K), expects instant results. Day 30: Googles project in ChatGPT, sees nothing. Demands refund.",
-               impact: "$5K refund + reputational damage.",
-               recovery: "Pre-emptive Timeline Setting & Progress Report",
-               details: "SOW & Week 2 email emphasize: 'AI visibility is like SEO—takes 60-90 days'. Dashboard timeline shows 'Expected Results' curve (gradual slope). At Day 30, auto-send 'Progress Report' showing citations found vs target."
-             },
-             {
-               id: "ERR-04",
-               title: "Client Can't Interpret Metrics",
-               scenario: "Client sees 'On-chain engagement: 47'. Thinks: Is that good? Bad? Frustrated, ignores dashboard.",
-               impact: "Dashboard becomes worthless; founder spends hours explaining metrics.",
-               recovery: "Contextual Tooltips & Benchmarks",
-               details: "Add tooltips: 'Great! You're trending up. (Avg for your tier: 35)'. First-time login triggers interactive tour. Color-coded indicators (green/yellow/red)."
-             },
-             {
-               id: "ERR-05",
-               title: "Client Cancels After Month 1",
-               scenario: "Client expects 'immediate hockey stick growth'. Sees +5% traffic. Cancels due to impatience.",
-               impact: "Lost LTV, wasted onboarding effort.",
-               recovery: "Month 1 Expectations Microcopy",
-               details: "Pre-emptive messaging: 'Month 1: Foundation. Month 2: Momentum. Month 3: Compounding.' Send 'Month 1 Progress Report' at Day 25 emphasizing 'what we built + early wins' to reinforce long-term vision."
-             },
-             {
-               id: "ERR-06",
-               title: "Generic AI Recommendations",
-               scenario: "AI suggests 'Post more on Twitter'. Client thinks 'That's obvious, why am I paying $10K?'.",
-               impact: "AI credibility gap, potential downgrade.",
-               recovery: "Improved Specificity & Confidence Score",
-               details: "Recommendation: 'Increase frequency to 5x/week focusing on AI+Web3 intersection. Why: Top performing tweet mentioned AI agents.' Show 'Confidence Score' based on data sources."
-             },
-             {
-               id: "ERR-07",
-               title: "No ROI Attribution",
-               scenario: "CFO asks 'What did we get for $30K?'. Client can't answer. CFO forces cancellation.",
-               impact: "Churn despite successful tactics.",
-               recovery: "Auto-Generated ROI Report",
-               details: "Monthly dashboard report: 'Marketing spend: $30K. Attributed outcomes: 47 leads ($638 CPL), 8 conversions. Net Impact: $66K gain.' Link to attribution model."
-             }
-           ]
-         },
-         {
            id: "section-Milestones",
            title: "Milestone Summary",
            type: "table" as const,
@@ -415,10 +491,171 @@ const generatePhaseData = (phaseIndex: number) => {
             description: "Multi-Step Lead Capture Flow",
             prompt: `Design a modern, high-conversion 4-step assessment flow for a Web3 marketing agency's lead magnet.
             
-            ... (Truncated for brevity, previously defined) ... ` 
+CONTEXT:
+This tool assesses a Web3 project's marketing maturity and gives them a 0-100 score. It is the primary lead capture device.
+
+STYLE:
+- Minimalist, high-end "Fintech" aesthetic (think Linear meets Coinbase).
+- White background, sharp black text, electric blue accents (#0047AB).
+- Smooth transitions between steps (framer-motion).
+
+STEPS:
+1. "Project Basics":
+   - Input: Project Name, Website URL.
+   - Selector: Project Type (DeFi / NFT / Infra / SaaS / DAO).
+   - Visual: Cards with simple icons for Project Type.
+
+2. "Current Traction":
+   - Slider: Monthly Marketing Budget ($0 - $50k+).
+   - Input: Current Community Size (Twitter + Discord combined).
+   - Checkbox Group: "Which analytics do you use?" (GA4, Dune, Nansen, None).
+
+3. "The 'AI Visibility' Test":
+   - "Have you checked how your brand appears in ChatGPT?" (Yes/No toggle).
+   - "Do you have a structured SEO strategy?" (Yes/No toggle).
+
+4. "Results & Capture":
+   - Email Input (Floating label).
+   - "Calculate Score" Button (Full width, primary color).
+   - Micro-copy: "We'll email your full report instantly. No spam."
+
+OUTPUT UI:
+- Show a radial progress bar animating to the calculated score.
+- Display 3 key "Actionable Insights" cards based on their answers.
+- CTA: "Book a Strategy Call to fix this" (Secondary button).` 
           }]
         },
-        // ... (Other prompts retained)
+        // PROMPT 2: Client Cockpit
+        {
+          id: "section-02-prompt-2",
+          title: "Prompt 2: Client Dashboard",
+          type: "blueprints" as const,
+          content: "The central hub for client reporting and transparency.",
+          data: [{
+            id: "PROMPT-02",
+            title: "Client Cockpit Dashboard",
+            description: "Main view for retained clients.",
+            prompt: `Design the "Client Cockpit" dashboard view for a Web3 marketing agency client.
+
+LAYOUT:
+- Sidebar Navigation (Left, 240px, dark mode optional): Overview, Campaigns, AI Visibility, On-Chain Metrics, Settings.
+- Main Content Area (White background, card-based layout).
+
+HEADER:
+- "Welcome back, [Client Name]".
+- Date Range Picker (Top right).
+- Status Indicator: "System Active" (Green dot).
+
+KEY METRIC CARDS (Top Row):
+1. "Total Spend": $12,450 (vs last month).
+2. "AI Visibility Score": 72/100 (+12% lift).
+3. "Net New Leads": 342.
+4. "On-Chain Conversions": 45 (Wallet connects).
+
+MAIN CHART (Middle):
+- Dual-axis line chart: "Web Traffic" (Left axis, blue line) vs. "Wallet Connections" (Right axis, grey bars).
+- Title: "Correlation: Awareness to Action".
+
+LOWER SECTION (2 Columns):
+- Left (Activity Feed): "Recent Actions" list. E.g., "Published blog post: 'DeFi Trends'", "Optimized 5 keywords", "Weekly Report Generated".
+- Right (AI Insights): "Agent Alpha recommends: Increase LinkedIn posting frequency to 3x/week based on recent engagement spike."
+
+STYLE GUIDANCE:
+- Use 'Inter' or 'Epilogue' font.
+- Clean borders, subtle drop shadows (box-shadow: 4px 4px 0px rgba(0,0,0,0.05)).
+- Data visualization colors: Blue (#0047AB), Teal (#14B8A6), Grey (#64748B).`
+          }]
+        },
+        // PROMPT 3: Experiment Builder
+        {
+          id: "section-02-prompt-3",
+          title: "Prompt 3: Experiment Builder",
+          type: "blueprints" as const,
+          content: "Interface for proposing and approving marketing experiments.",
+          data: [{
+            id: "PROMPT-03",
+            title: "AI Experiment Builder",
+            description: "Campaign proposal interface.",
+            prompt: `Design the "Experiment Builder" modal or page where the agency proposes new marketing tests to the client.
+
+STRUCTURE:
+- Header: "New Experiment Proposal".
+- Form Layout: Single column, clear hierarchy.
+
+FIELDS:
+1. Hypothesis: Text area. "If we [action], then [result] will happen."
+2. AI-Generated Suggestions: "Auto-fill with AI" button.
+3. Target Metric: Dropdown (e.g., "Wallet Connects", "Discord Joins").
+4. Budget Allocation: Input ($).
+5. Duration: Toggle (1 week / 2 weeks / 1 month).
+
+PREDICTION CARD (Right side or Bottom):
+- "Projected Outcome": High/Low estimate of results.
+- "Confidence Score": 85% (Visual gauge).
+
+APPROVAL FLOW:
+- "Approve Experiment" Button (Green).
+- "Request Changes" Button (Ghost).
+- Comment section for client feedback.
+
+AESTHETIC:
+- Scientific but accessible.
+- Use badge colors to denote "Experimental" vs "Proven" tactics.`
+          }]
+        },
+        // PROMPT 4: Account Settings
+        {
+          id: "section-02-prompt-4",
+          title: "Prompt 4: Account Settings",
+          type: "blueprints" as const,
+          content: "Account Settings - Client Profile & Preferences Management.",
+          data: [{
+            id: "PROMPT-04",
+            title: "Account Settings",
+            description: "Client Profile & Preferences Management",
+            prompt: `Design a comprehensive account settings interface organized with tab navigation. The UX should be standard B2B SaaS.
+
+LAYOUT SPECIFICATION:
+- Container: 1120px max-width, centered, 48px horizontal padding
+- Tab navigation: Horizontal tabs on desktop, vertical on mobile
+- Content area: Full-width within container, 32px padding
+
+HEADER (80px height):
+- Breadcrumb: "Dashboard > Settings"
+- Title: "Account Settings" (24px, 600 weight)
+- Save indicator (right): Auto-saved notification
+
+TAB NAVIGATION:
+1. "Profile" (icon: User)
+2. "Team & Access" (icon: Users)
+3. "Integrations" (icon: Plugs)
+4. "Billing & Plans" (icon: CreditCard)
+5. "Notifications" (icon: Bell)
+6. "Security" (icon: Shield)
+
+TAB 1 - PROFILE CONTENT:
+- Avatar Upload: 120px circle, "Change Photo" ghost button.
+- Form Fields (2-col): Display Name, Email (disabled), Title/Role, Company Name, Website, Twitter, Discord ID.
+- Section: Time Zone & Language.
+- Section: Danger Zone (Delete Account).
+
+TAB 2 - TEAM & ACCESS CONTENT:
+- Team Members Table: Member, Role (Owner/Admin/Viewer), Status, Last Active, Actions.
+- Invite Member Button (opens modal).
+
+TAB 3 - INTEGRATIONS:
+- Connected Integrations Grid: Google Analytics, Discord, Twitter API, Dune, Stripe.
+- Each card shows status (Connected/Not), key data point, and Configure/Disconnect buttons.
+
+TAB 4 - BILLING:
+- Current Plan Badge (Growth Plan).
+- Payment Method card (Visa ending 4242).
+- Billing History table.
+
+TAB 5 - NOTIFICATIONS:
+- Toggles for Email and Dashboard notifications, grouped by category (Experiments, Billing, System).`
+          }]
+        },
         {
            id: "section-end-p4",
            title: "End of Phase 4",
@@ -445,7 +682,153 @@ const generatePhaseData = (phaseIndex: number) => {
           type: "text" as const,
           content: "A robust application must handle the 'unhappy paths' with as much care as the ideal user journey. This section defines the visual and interaction specifications for empty states, errors, loading sequences, and notifications to ensure user confidence remains high even when the system faces friction."
         },
-        // ... (Retain existing P5 content) ...
+        // PROMPT 6: Empty States
+        {
+          id: "section-05-prompt-6",
+          title: "Prompt 6: Empty States",
+          type: "blueprints" as const,
+          content: "First-Time User & Zero-Data Experiences.",
+          data: [{
+            id: "PROMPT-06",
+            title: "Empty States Library",
+            description: "First-Time User & Zero-Data Experiences",
+            prompt: `Design a comprehensive set of empty state screens for a Web3 marketing agency dashboard.
+
+VISUAL DESIGN SYSTEM:
+- All empty states: Max-width 560px, centered vertically and horizontally.
+- Illustration Style: Isometric line art with gradient accents (Primary to Secondary).
+
+SCENARIO A: NO EXPERIMENTS YET (New Dashboard User)
+- Illustration: Laboratory beaker with upward growth chart inside, sparkles.
+- Headline: "No experiments running yet"
+- Subheadline: "Start testing new marketing tactics to improve your performance."
+- Primary CTA: "Create Your First Experiment" (+ icon).
+- Secondary CTA: "Browse Experiment Templates".
+
+SCENARIO B: NO SEARCH RESULTS
+- Illustration: Magnifying glass with question mark inside.
+- Headline: "No results for '[search term]'"
+- Suggestions: "Check your spelling", "Try more general keywords".
+- Actions: "Clear all filters", "Contact support".
+
+SCENARIO C: NO NOTIFICATIONS
+- Illustration: Check mark inside peaceful circle.
+- Headline: "You're all caught up!"
+
+SCENARIO D: PERMISSION REQUIRED
+- Illustration: Shield with lock icon.
+- Headline: "Access restricted"
+- CTA: "Request Access" or "Upgrade Plan".
+
+SCENARIO E: NO ANALYTICS DATA
+- Illustration: Plug icon connecting to dashboard icon (dashed line).
+- Headline: "Connect data sources to see analytics"
+- Steps: Visual step indicator (Connect -> Authorize -> Syncing).
+
+SCENARIO F: NO TEAM MEMBERS
+- Illustration: Two silhouette figures with "+" between them.
+- Headline: "Your team is just you—for now"
+- CTA: "Invite Team Member".`
+          }]
+        },
+        // PROMPT 7: Error States
+        {
+          id: "section-05-prompt-7",
+          title: "Prompt 7: Error States",
+          type: "blueprints" as const,
+          content: "Validation, API Failures & Recovery Flows.",
+          data: [{
+            id: "PROMPT-07",
+            title: "Error Handling System",
+            description: "Validation, API Failures & Recovery Flows",
+            prompt: `Design a comprehensive error handling system.
+
+ERROR TYPE A: FORM VALIDATION
+- Inline: Below input, red text, shake animation on submit.
+- Input State: Red border, red background tint (10% opacity).
+- Error Summary: Top of form, "Please fix 3 errors", links scroll to fields.
+
+ERROR TYPE B: API / SYSTEM ERRORS
+- Temporary Error: Modal overlay, "Something went wrong", "Try Again" button.
+- 500 Error: Full page illustration (Server rack), "System Overload", "Refresh".
+- 404 Error: Astronaut floating in space, "Page not found", "Return Home" button.
+- Permission Denied (403): Lock icon, "You don't have access".
+
+ERROR TYPE C: NETWORK / OFFLINE
+- Banner: Fixed top, full-width, "You're offline. Some features may not work." (Yellow/Warning).
+- Action: "Retry Connection".
+
+RECOVERY SUCCESS FEEDBACK:
+- After fixing error: Input border turns green briefly (Success state).
+- Toast: "Changes saved successfully".`
+          }]
+        },
+        // PROMPT 8: Loading & Skeleton
+        {
+          id: "section-05-prompt-8",
+          title: "Prompt 8: Loading & Skeleton Screens",
+          type: "blueprints" as const,
+          content: "Progressive Content Reveal patterns.",
+          data: [{
+            id: "PROMPT-08",
+            title: "Loading States",
+            description: "Skeleton Screens & Progress Indicators",
+            prompt: `Design a comprehensive loading system.
+
+LOADING PATTERN A: SKELETON SCREENS
+- Use for: Dashboard, Card Grids, Tables.
+- Style: Gray pulsing rectangles (Opactiy 0.3 to 0.7).
+- Header: Circle (Avatar) + Rectangle (Title).
+- Chart: Y-axis lines + Rectangle bars.
+- Animation: Linear gradient shimmer moving left to right.
+
+LOADING PATTERN B: PROGRESS INDICATORS
+- Linear Bar: Top of screen, fixed, for page loads.
+- Modal Progress: "Uploading file...", Percentage text, Cancel button.
+- Circular Spinner: Inside buttons ("Saving..."), or centered in small widgets.
+
+LOADING PATTERN C: OPTIMISTIC UI
+- Toggle Switch: Instantly moves to "On", background API call.
+- If fail: Revert toggle, show Error Toast.
+
+LOADING PATTERN D: LAZY LOADING
+- Images: Blur-up effect (Low res -> High res).
+- Infinite Scroll: Spinner at bottom of list "Loading more...".`
+          }]
+        },
+        // PROMPT 9: Notifications
+        {
+          id: "section-05-prompt-9",
+          title: "Prompt 9: Notifications & Alerts",
+          type: "blueprints" as const,
+          content: "Toasts, Modals, Banners & Badges.",
+          data: [{
+            id: "PROMPT-09",
+            title: "Notification System",
+            description: "Toasts, Modals, Banners & Badges",
+            prompt: `Design a comprehensive notification system.
+
+TYPE A: TOAST NOTIFICATIONS
+- Position: Top-right fixed. Stacking.
+- Success: Green check icon, "Changes saved". Auto-dismiss (3s).
+- Error: Red alert icon, "Upload failed". Persistent until closed. Action: "Retry".
+- Warning: Yellow triangle, "Subscription ending soon".
+
+TYPE B: MODAL ALERTS
+- Destructive: "Delete Account?", Red warning icon, "Delete" button (Red), "Cancel" (Ghost).
+- Info: "New features available", Blue info icon, "Got it" button.
+
+TYPE C: INLINE BANNERS
+- Page Level: Top of content area.
+- Info: Blue background tint, "New export options available".
+- Warning: Yellow tint, "Payment method expiring".
+- Error: Red tint, "System maintenance scheduled".
+
+TYPE D: BADGES
+- Notification Bell: Red dot with number count.
+- Status Badges: "Active" (Green), "Draft" (Gray), "Error" (Red).`
+          }]
+        },
          {
            id: "section-end-p5",
            title: "End of Phase 5",
@@ -471,108 +854,107 @@ const generatePhaseData = (phaseIndex: number) => {
         {
           id: "section-risk-matrix",
           title: "Risk Assessment Dossier",
-          type: "risk_dossier_header" as const, // New custom type
+          type: "risk_dossier_header" as const,
           content: "",
           data: {
              title: "Critical Exposure Analysis",
              description: "The current architectural posture exhibits a high dependency on single-vendor APIs (OpenAI), creating a critical operational bottleneck. Financial exposure is moderate but correlates strongly with compute cost volatility.",
              score: "72/100 (High)",
-             strategic: [
-               { 
-                 id: "STR-01", 
-                 vector: "R1: AI Visibility Failure: AI visibility/GEO doesn't drive meaningful traffic; clients don't see value in 30-60 days.", 
-                 mitigation: "Run 2 pilot case studies (Weeks 6-12) with explicit AI visibility KPIs. Set realistic 60-90 day expectations.", 
-                 owner: "Founder", 
-                 prob: "30%", 
-                 impact: "High",
-                 contingency: "Pivot to proven SEO + dashboard positioning. Reframe AI visibility as 'future-proof bonus' not core value."
-               },
-               { 
-                 id: "STR-02", 
-                 vector: "R6: Web3 Market Downturn: Web3 market downturn reduces client budgets; pivot to Web2 SaaS/fintech required.", 
-                 mitigation: "Dual positioning from Day 1: 'Web2/Web3' not 'Web3-only.' Target 50% Web2 clients (SaaS, fintech) for diversification.", 
-                 owner: "Founder", 
-                 prob: "15%", 
-                 impact: "High",
-                 contingency: "Increase Web2 focus to 80%. Drop 'Web3' from primary positioning. Competitors like Ninja Promo already serve both."
-               },
-               { 
-                 id: "STR-03", 
-                 vector: "R7: Competitor Erosion: Competitors (Coinbound, RZLT) launch similar AI-native + dashboard combo, eroding differentiation.", 
-                 mitigation: "Speed to market: Launch public pricing + lead magnet by Week 5. Establish 'first mover' brand via thought leadership.", 
-                 owner: "Founder", 
-                 prob: "15%", 
-                 impact: "Med",
-                 contingency: "Double down on service quality and client relationships. Add unique IP: proprietary 'Growth Score' methodology."
-               }
-             ],
-             operational: [
-               { 
-                 id: "OPR-01", 
-                 vector: "R2: Dashboard Delay: Client Cockpit v1 delayed beyond Week 18, killing competitive differentiation timing.", 
-                 mitigation: "Use no-code tools (Retool, Softr) not custom dev. Hire dashboard contractor by Week 12.", 
-                 owner: "Founder + Contractor", 
-                 prob: "25%", 
-                 impact: "High",
-                 contingency: "Launch 'manual dashboard' (curated Notion page with embedded Dune charts) as v0.5. Provides transparency."
-               },
-               { 
-                 id: "OPR-02", 
-                 vector: "R3: Founder Bandwidth: Solo founder can't deliver pilots + build systems + sell simultaneously.", 
-                 mitigation: "Hire part-time contractor (15-20 hrs/week) by Week 4 for execution. Use AI tools to 3x output.", 
-                 owner: "Founder", 
-                 prob: "40%", 
-                 impact: "High",
-                 contingency: "Extend timeline by 4-8 weeks. Reduce pilot scope (1 pilot not 2). Accept lower MRR target for Q3."
-               },
-               { 
-                 id: "OPR-03", 
-                 vector: "R5: Case Study Failure: Case studies underperform or clients refuse testimonials (Weeks 25-32 deliverable at risk).", 
-                 mitigation: "Build case study rights into pilot SOWs. Offer incentives ($500 gift card). Set conservative success metrics.", 
-                 owner: "Founder", 
-                 prob: "25%", 
-                 impact: "High",
-                 contingency: "Focus on 'process case studies' (methodology) not pure metrics. Use anonymized data if client refuses attribution."
-               },
-               { 
-                 id: "OPR-04", 
-                 vector: "R10: Support Scalability: 8+ clients overwhelm founder's capacity by Month 9.", 
-                 mitigation: "Productize services: reusable templates, AI-automated workflows. Hire Client Success Manager (part-time).", 
-                 owner: "Founder", 
-                 prob: "35%", 
-                 impact: "Med",
-                 contingency: "Accept lower client count (5-6) for higher quality. Charge premium Growth tier. Margin covers hiring faster."
-               }
-             ],
-             financial: [
-               { 
-                 id: "FIN-01", 
-                 vector: "R4: On-Chain Complexity: On-chain analytics integration complexity exceeds estimates (Dune API, wallet linking).", 
-                 mitigation: "Start with manual reporting (Dune queries). Partner with Dune/Nansen for API access by Month 4.", 
-                 owner: "Founder + Tech", 
-                 prob: "30%", 
-                 impact: "Med",
-                 contingency: "Offer 'on-chain analytics consultation' (teach clients) not automated dashboard. Position as v2 roadmap feature."
-               },
-               { 
-                 id: "FIN-02", 
-                 vector: "R8: GDPR/CCPA Compliance: Compliance gaps in dashboard (wallet data = PII, tracking without consent).", 
-                 mitigation: "Legal review by Week 12. Implement explicit consent, data deletion workflows. Use Osano/Termly.", 
-                 owner: "Founder", 
-                 prob: "10%", 
-                 impact: "High",
-                 contingency: "Remove wallet-level tracking (use aggregated only). Still differentiated. Inform clients: 'We prioritize privacy'."
-               },
-               { 
-                 id: "FIN-03", 
-                 vector: "R9: Early Churn: Client churn in Months 1-3 due to unrealistic expectations or slow results.", 
-                 mitigation: "Explicit expectation-setting in sales: '90-Day Roadmap'. Monthly retro calls. 'Month 1 Progress Report'.", 
-                 owner: "Founder", 
-                 prob: "30%", 
-                 impact: "Med",
-                 contingency: "Offer 'satisfaction guarantee': refund Month 1 if not satisfied. Forces founder to over-deliver."
-               }
-             ]
+             strategic: [], // Data moved to cards
+             operational: [], 
+             financial: []
+          }
+        },
+        {
+          id: "section-risk-strategic",
+          title: "", // Title handled by card
+          type: "phase_card" as const,
+          content: "",
+          data: {
+            id: "CLUSTER 01",
+            title: "Strategic Risks",
+            subtitle: "Market positioning, competitive erosion, and core value proposition failure.",
+            timeline: "High Impact",
+            focus: "Market Fit",
+            status: "CRITICAL",
+            deliverables: [
+              "R1: AI visibility (SEO/GEO) fails to drive meaningful traffic in 30-60 days.",
+              "R6: Web3 market downturn reduces client budgets significantly.",
+              "R7: Competitors launch copycat AI-native dashboards."
+            ],
+            criteria: [
+              "Run 2 pilot case studies with explicit KPIs to validate AI value.",
+              "Adopt dual positioning (Web2/Web3) to diversify client base.",
+              "Accelerate launch timeline to establish 'first mover' brand authority."
+            ],
+            dependencies: "Founder execution speed. Market conditions.",
+            touchpoints: "High likelihood (30%)",
+            risk: {
+              name: "AI Value Proposition Failure",
+              mitigation: "Pivot to traditional SEO + Dashboard positioning if AI metrics fail."
+            }
+          }
+        },
+        {
+          id: "section-risk-operational",
+          title: "",
+          type: "phase_card" as const,
+          content: "",
+          data: {
+            id: "CLUSTER 02",
+            title: "Operational Risks",
+            subtitle: "Execution bottlenecks, resource constraints, and delivery failures.",
+            timeline: "High Impact",
+            focus: "Execution",
+            status: "CRITICAL",
+            deliverables: [
+              "R2: Client Cockpit v1 delayed beyond Week 18.",
+              "R3: Founder bandwidth bottleneck (sales vs delivery).",
+              "R5: Case studies underperform or clients refuse testimonials.",
+              "R10: Support scalability issues with 8+ clients."
+            ],
+            criteria: [
+              "Use no-code tools (Retool) to ensure delivery speed.",
+              "Hire part-time contractor by Week 4 to offload execution.",
+              "Incentivize case studies ($500 credit) in pilot contracts.",
+              "Productize services to reduce founder hours per client."
+            ],
+            dependencies: "Contractor availability. Tool reliability.",
+            touchpoints: "High likelihood (40%)",
+            risk: {
+              name: "Founder Burnout",
+              mitigation: "Extend timeline by 4-8 weeks and reduce pilot scope to 1 client."
+            }
+          }
+        },
+        {
+          id: "section-risk-financial",
+          title: "",
+          type: "phase_card" as const,
+          content: "",
+          data: {
+            id: "CLUSTER 03",
+            title: "Financial & Legal Risks",
+            subtitle: "Cash flow, compliance, and technical integration costs.",
+            timeline: "Medium Impact",
+            focus: "Viability",
+            status: "MODERATE",
+            deliverables: [
+              "R4: On-chain analytics integration complexity exceeds budget.",
+              "R8: GDPR/CCPA compliance gaps in dashboard handling wallet data.",
+              "R9: Early client churn due to unrealistic expectations."
+            ],
+            criteria: [
+              "Start with manual reporting before automating complex queries.",
+              "Conduct legal review by Week 12; implement consent flows.",
+              "Set explicit '90-Day Roadmap' expectations during sales."
+            ],
+            dependencies: "Legal counsel. 3rd party API pricing.",
+            touchpoints: "Medium likelihood (30%)",
+            risk: {
+              name: "Integration Cost Blowout",
+              mitigation: "Offer 'consultation' instead of automated dashboard for complex metrics."
+            }
           }
         },
         {

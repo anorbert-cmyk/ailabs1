@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
 
-/**
- * PROJECT X-01 DESIGN SYSTEM LIBRARY
- * ----------------------------------
- * This library exports the atomic components used to construct the
- * validation reports.
- */
-
 // --- 01. Typography ---
 
 export const DSHeader: React.FC<{ 
@@ -139,7 +132,6 @@ export const DSMetricTable: React.FC<{
   </div>
 );
 
-// New Generic Table for "Assumption Ledger" and other structured data
 export interface TableColumn {
   header: string;
   key: string;
@@ -156,8 +148,7 @@ export const DSGenericTable: React.FC<{
       <h4 className="font-mono text-xs font-bold uppercase tracking-widest text-charcoal">{title}</h4>
     </div>
     
-    {/* Desktop View */}
-    <div className="hidden md:block overflow-x-auto">
+    <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-charcoal/10 bg-white">
@@ -181,28 +172,10 @@ export const DSGenericTable: React.FC<{
         </tbody>
       </table>
     </div>
-
-    {/* Mobile Card View (Responsive Stack) */}
-    <div className="md:hidden">
-      {data.map((row, rIdx) => (
-        <div key={rIdx} className="p-6 border-b border-charcoal/10 bg-white last:border-0 hover:bg-off-white/20 transition-colors">
-          {columns.map((col, cIdx) => (
-            <div key={cIdx} className="mb-4 last:mb-0">
-               <span className="block text-[10px] font-bold font-mono text-charcoal-muted uppercase tracking-wider mb-1 opacity-70">
-                 {col.header}
-               </span>
-               <div className="text-sm font-sans text-charcoal leading-relaxed">
-                 {row[col.key]}
-               </div>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
   </div>
 );
 
-// --- 03. Badges & Indicators ---
+// --- 03. Badges ---
 
 export const DSStatusBadge: React.FC<{ 
   status: 'optimal' | 'warning' | 'critical' | 'neutral',
@@ -262,7 +235,6 @@ export interface CompetitorData {
 export const DSCompetitorAnalysis: React.FC<CompetitorData> = ({ name, website, info, strengths, weaknesses, opportunity }) => {
   return (
     <div className="mb-8 border border-border-hairline bg-white shadow-sm overflow-hidden">
-      {/* Header */}
       <div className="bg-off-white p-6 border-b border-border-hairline flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
            <h3 className="font-sans font-bold text-xl text-charcoal">{name}</h3>
@@ -272,8 +244,6 @@ export const DSCompetitorAnalysis: React.FC<CompetitorData> = ({ name, website, 
           {info}
         </div>
       </div>
-      
-      {/* Body */}
       <div className="grid md:grid-cols-2">
         <div className="p-6 border-b md:border-b-0 md:border-r border-border-hairline">
            <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-4 flex items-center gap-2">
@@ -300,8 +270,6 @@ export const DSCompetitorAnalysis: React.FC<CompetitorData> = ({ name, website, 
            </ul>
         </div>
       </div>
-      
-      {/* Footer: Opportunity */}
       <div className="p-6 bg-primary/5 border-t border-primary/10">
         <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-sm">lightbulb</span> Key Differentiator Opportunity
@@ -314,7 +282,7 @@ export const DSCompetitorAnalysis: React.FC<CompetitorData> = ({ name, website, 
   )
 };
 
-// --- 06. Visual Timeline (New) ---
+// --- 06. Visual Timeline ---
 
 export interface TimelineQuarter {
   id: string;
@@ -344,14 +312,12 @@ export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle
         </div>
 
         <div className="grid lg:grid-cols-12 gap-12 items-start">
-            {/* Context Box (Left) */}
             {context && (
                 <div className="lg:col-span-3 border border-charcoal p-6 bg-white shadow-sharp h-full">
                     <div className="mb-2 border-l-2 border-red-500 pl-2">
                         <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-red-500">Behind the Decision</span>
                     </div>
                     <h3 className="font-serif italic text-2xl text-charcoal mb-6">{context.title}</h3>
-                    
                     <div className="mb-6 opacity-50 grayscale">
                         <div className="flex items-center gap-2 mb-2">
                              <span className="material-symbols-outlined text-[14px] text-charcoal">close</span>
@@ -359,7 +325,6 @@ export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle
                         </div>
                         <p className="text-[10px] text-charcoal leading-relaxed">{context.rejected}</p>
                     </div>
-
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                              <span className="material-symbols-outlined text-[14px] text-red-500">check</span>
@@ -369,21 +334,15 @@ export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle
                     </div>
                 </div>
             )}
-
-            {/* Timeline Visualization (Right) */}
             <div className="lg:col-span-9 flex flex-col justify-center h-full min-h-[300px]">
-                {/* Mobile: Scrollable container */}
                 <div className="w-full overflow-x-auto pb-4 lg:pb-0">
                     <div className="grid grid-cols-3 w-full min-w-[600px] lg:min-w-0">
                          {quarters.map((q, i) => (
                              <div key={i} className={`relative border-l ${i === 0 ? 'border-charcoal' : 'border-charcoal/20'} ${i === 2 ? 'border-r border-charcoal/20' : ''} h-48`}>
-                                {/* Quarter Header */}
                                 <div className="absolute top-0 left-0 p-4 flex items-baseline gap-3">
                                     <span className="bg-charcoal text-white font-mono font-bold text-sm px-2 py-1">{q.id}</span>
                                     <span className="font-serif italic text-xl text-charcoal">{q.title}</span>
                                 </div>
-
-                                {/* Timeline Line */}
                                 <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal flex items-center justify-around">
                                     {q.months.map((m, mi) => (
                                         <div key={mi} className="relative group">
@@ -402,7 +361,7 @@ export const DSVisualTimeline: React.FC<VisualTimelineData> = ({ title, subtitle
   )
 }
 
-// --- 07. Roadmap Phase (Reusable) ---
+// --- 07. Roadmap Phase (Layout for Timeline) ---
 
 export interface RoadmapObjective {
   type: string;
@@ -431,13 +390,10 @@ export interface RoadmapPhaseData {
 
 export const DSRoadmapPhase: React.FC<RoadmapPhaseData> = ({ phase, timeline, objectives, deliverables, decisions }) => (
   <div className="mb-24 border-b border-charcoal/10 pb-12 last:border-0 last:mb-0 last:pb-0">
-    {/* Title Section */}
     <div className="mb-8 border-l-4 border-charcoal pl-6">
       <h2 className="text-3xl font-light tracking-tight text-charcoal mb-2">{phase}</h2>
       <span className="font-mono text-xs uppercase tracking-widest text-charcoal-muted bg-off-white px-2 py-1 rounded inline-block border border-border-hairline">{timeline}</span>
     </div>
-
-    {/* Objectives Grid */}
     <div className="grid md:grid-cols-2 gap-8 mb-12 bg-off-white p-6 border border-border-hairline">
       {objectives.map((obj, idx) => (
         <div key={idx} className="">
@@ -446,11 +402,7 @@ export const DSRoadmapPhase: React.FC<RoadmapPhaseData> = ({ phase, timeline, ob
         </div>
       ))}
     </div>
-
-    {/* Main Content Split: Deliverables vs Decisions */}
     <div className="grid lg:grid-cols-12 gap-12">
-      
-      {/* Deliverables (Left - Wider) */}
       <div className="lg:col-span-7">
         <h3 className="font-sans font-bold text-sm uppercase tracking-wider text-charcoal mb-6 flex items-center gap-2 border-b border-charcoal/10 pb-2">
           <span className="material-symbols-outlined text-[18px]">assignment</span>
@@ -474,8 +426,6 @@ export const DSRoadmapPhase: React.FC<RoadmapPhaseData> = ({ phase, timeline, ob
           ))}
         </div>
       </div>
-
-      {/* Critical Decisions (Right - Narrower) */}
       <div className="lg:col-span-5">
         <h3 className="font-sans font-bold text-sm uppercase tracking-wider text-rose-600 mb-6 flex items-center gap-2 border-b border-rose-100 pb-2">
           <span className="material-symbols-outlined text-[18px]">crisis_alert</span>
@@ -485,7 +435,6 @@ export const DSRoadmapPhase: React.FC<RoadmapPhaseData> = ({ phase, timeline, ob
           {decisions.map((dec, idx) => (
             <div key={idx} className="bg-rose-50/50 border border-rose-100 p-5 rounded-sm hover:border-rose-300 transition-colors">
               <h4 className="font-bold text-charcoal text-sm mb-3">{dec.title}</h4>
-              
               <div className="flex flex-col gap-2 mb-3">
                 <div className="flex justify-between items-center border-b border-rose-100 pb-2">
                   <span className="text-[9px] font-mono uppercase tracking-widest text-charcoal-muted">Deadline</span>
@@ -496,7 +445,6 @@ export const DSRoadmapPhase: React.FC<RoadmapPhaseData> = ({ phase, timeline, ob
                   <span className="text-xs text-charcoal text-right">{dec.stakeholders}</span>
                 </div>
               </div>
-
               <div className="pt-2 border-t border-rose-100">
                 <span className="font-bold text-rose-600 block mb-1 uppercase text-[9px] font-mono">Criteria</span>
                 <p className="text-[11px] text-charcoal-muted leading-relaxed italic">
@@ -511,7 +459,125 @@ export const DSRoadmapPhase: React.FC<RoadmapPhaseData> = ({ phase, timeline, ob
   </div>
 );
 
-// --- 08. Strategy 3-Column Grid ---
+// --- 07b. Phase Card (Layout for Risk Section) ---
+
+export interface PhaseCardData {
+  id: string;
+  title: string;
+  subtitle: string;
+  timeline: string;
+  focus: string;
+  status: 'CRITICAL' | 'MODERATE' | 'LOW';
+  deliverables: string[];
+  criteria: string[];
+  dependencies: string;
+  touchpoints: string;
+  risk: {
+    name: string;
+    mitigation: string;
+  }
+}
+
+export const DSPhaseCard: React.FC<PhaseCardData> = ({ 
+  id, 
+  title, 
+  subtitle, 
+  timeline, 
+  focus, 
+  status, 
+  deliverables, 
+  criteria, 
+  dependencies, 
+  touchpoints, 
+  risk 
+}) => {
+  const statusColors = {
+    'CRITICAL': 'text-rose-700 bg-rose-50 border-rose-200',
+    'MODERATE': 'text-amber-700 bg-amber-50 border-amber-200',
+    'LOW': 'text-emerald-700 bg-emerald-50 border-emerald-200'
+  };
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 border-b border-charcoal/10 py-16 lg:py-24 last:border-0">
+      <div className="lg:w-1/3 flex-shrink-0">
+        <div className="inline-block px-3 py-1 border border-charcoal text-[10px] font-mono font-bold uppercase tracking-widest mb-6">
+          {id}
+        </div>
+        <h2 className="text-4xl lg:text-5xl font-serif text-charcoal mb-4 leading-tight">{title}</h2>
+        <div className="text-lg font-serif italic text-charcoal-muted mb-10 leading-relaxed">
+          {subtitle}
+        </div>
+        <div className="space-y-3 font-mono text-[10px] uppercase tracking-widest text-charcoal-muted border-t border-charcoal/10 pt-6">
+          <div className="flex items-baseline justify-between">
+            <span className="opacity-50">Impact:</span>
+            <span className="font-bold text-charcoal">{timeline}</span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="opacity-50">Focus:</span>
+            <span className="font-bold text-charcoal text-right">{focus}</span>
+          </div>
+          <div className="flex items-baseline justify-between pt-2">
+            <span className="opacity-50">Risk Score:</span>
+            <span className={`px-2 py-0.5 border rounded-sm font-bold ${statusColors[status] || statusColors['LOW']}`}>
+              {status}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="lg:w-2/3 flex flex-col">
+        <div className="grid md:grid-cols-2 gap-12 mb-16 flex-grow">
+          <div>
+            <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-charcoal mb-6 border-b border-charcoal pb-2">
+              Risk Factors (Vectors)
+            </h4>
+            <ul className="space-y-4">
+              {deliverables.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm font-serif text-charcoal-muted leading-relaxed">
+                  <span className="material-symbols-outlined text-[16px] text-rose-600 flex-shrink-0 mt-0.5">warning</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-charcoal mb-6 border-b border-charcoal pb-2">
+              Mitigation Strategies
+            </h4>
+            <ul className="space-y-4">
+              {criteria.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm font-serif text-charcoal-muted leading-relaxed">
+                  <span className="material-symbols-outlined text-[16px] text-emerald-600 flex-shrink-0 mt-0.5">verified_user</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-dashed border-charcoal/30 pt-8 mt-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="border-l-2 border-transparent pl-0 md:pl-0">
+              <span className="block text-[9px] font-bold font-mono uppercase tracking-widest text-charcoal-muted mb-2">Owner</span>
+              <p className="text-xs font-serif text-charcoal leading-relaxed opacity-80">{dependencies}</p>
+            </div>
+            <div className="border-l-2 border-transparent md:border-charcoal/10 pl-0 md:pl-4">
+              <span className="block text-[9px] font-bold font-mono uppercase tracking-widest text-charcoal-muted mb-2">Likelihood</span>
+              <p className="text-xs font-serif text-charcoal leading-relaxed opacity-80">{touchpoints}</p>
+            </div>
+            <div className="border-l-2 border-red-500 pl-4 bg-red-50/50 -my-4 py-4 md:bg-transparent md:py-0 md:my-0">
+              <span className="block text-[9px] font-bold font-mono uppercase tracking-widest text-red-600 mb-2">Key Contingency Plan</span>
+              <div className="text-xs font-serif text-charcoal leading-relaxed">
+                <span className="font-bold block mb-1 text-red-800">"{risk.name}"</span>
+                <span className="italic text-charcoal-muted">{risk.mitigation}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- 08. Strategy Grid ---
 
 export interface PhaseDetail {
   id: string;
@@ -538,23 +604,18 @@ export const DSStrategyGrid: React.FC<{ phases: PhaseDetail[], mode?: 'grid' | '
           }
         `}
       >
-        {/* Render differently based on mode */}
         {mode === 'grid' ? (
-          // GRID LAYOUT
           <>
             <div className="mb-6">
               <span className="px-2 py-1 border border-charcoal/20 text-[9px] font-mono uppercase tracking-widest mb-4 inline-block">{p.id}</span>
               <h3 className="font-serif text-3xl italic text-charcoal mb-6">{p.title}</h3>
-              
               <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-2">Executive Summary</span>
               <p className="text-xs text-charcoal-muted leading-relaxed mb-8">{p.summary}</p>
             </div>
-
             <div className="mb-8">
               <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-2">Deep Dive: {p.deepDive.title}</span>
               <p className="text-[11px] text-charcoal leading-relaxed font-mono opacity-80">{p.deepDive.content}</p>
             </div>
-
             <div className="mb-8 flex-1">
               <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-3">Key Deliverables</span>
               <ul className="space-y-2">
@@ -566,7 +627,6 @@ export const DSStrategyGrid: React.FC<{ phases: PhaseDetail[], mode?: 'grid' | '
                 ))}
               </ul>
             </div>
-
             <div className="mb-6 pt-6 border-t border-border-hairline border-dashed">
               <div className="flex items-center gap-2 mb-2">
                 <span className="material-symbols-outlined text-[14px] text-charcoal">crisis_alert</span>
@@ -574,7 +634,6 @@ export const DSStrategyGrid: React.FC<{ phases: PhaseDetail[], mode?: 'grid' | '
               </div>
               <p className="text-[10px] text-charcoal-muted italic">{p.decision}</p>
             </div>
-
             <div className="space-y-3 pt-4 border-t border-border-hairline">
               <div className="flex gap-2">
                   <span className="material-symbols-outlined text-[12px] text-charcoal-muted">hub</span>
@@ -593,7 +652,6 @@ export const DSStrategyGrid: React.FC<{ phases: PhaseDetail[], mode?: 'grid' | '
             </div>
           </>
         ) : (
-          // LIST LAYOUT
           <div className="flex flex-col lg:flex-row gap-8">
              <div className="lg:w-1/4">
                 <div className="flex items-center gap-4 mb-4">
@@ -605,12 +663,10 @@ export const DSStrategyGrid: React.FC<{ phases: PhaseDetail[], mode?: 'grid' | '
                    <p className="text-[10px] text-charcoal leading-relaxed font-mono opacity-80">{p.deepDive.content}</p>
                 </div>
              </div>
-             
              <div className="lg:w-1/4 border-l border-border-hairline pl-0 lg:pl-8">
                 <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-3">Executive Summary</span>
                 <p className="text-sm text-charcoal leading-relaxed">{p.summary}</p>
              </div>
-
              <div className="lg:w-1/4 border-l border-border-hairline pl-0 lg:pl-8">
                 <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-3">Key Deliverables</span>
                 <ul className="space-y-3">
@@ -622,7 +678,6 @@ export const DSStrategyGrid: React.FC<{ phases: PhaseDetail[], mode?: 'grid' | '
                   ))}
                 </ul>
              </div>
-
              <div className="lg:w-1/4 bg-off-white p-4 border border-border-hairline">
                 <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-red-500 block mb-3 flex items-center gap-2">
                    <span className="material-symbols-outlined text-[14px]">crisis_alert</span>
@@ -665,20 +720,16 @@ export const DSResourceSplit: React.FC<{ solo: ResourceData; team: ResourceData 
       <div className="h-4 w-1 bg-red-500"></div>
       <h3 className="text-2xl font-light text-charcoal">Resource Requirements</h3>
     </div>
-    
     <div className="grid md:grid-cols-2 gap-8">
-      {/* Solo Path (Light) */}
       <div className="border border-charcoal p-8 bg-white relative">
         <div className="flex justify-between items-start mb-8">
            <h4 className="font-serif text-2xl italic text-charcoal">{solo.title}</h4>
            <span className="bg-charcoal text-white text-[9px] font-mono font-bold uppercase px-2 py-1 tracking-widest">Lean</span>
         </div>
-        
         <div className="flex justify-between items-end border-b border-charcoal pb-4 mb-6">
            <span className="text-[10px] font-mono uppercase tracking-widest text-charcoal-muted">Monthly Burn</span>
            <span className="font-mono text-xl font-bold text-charcoal">{solo.monthlyBurn}</span>
         </div>
-
         <div className="grid grid-cols-2 gap-4 mb-8">
           {solo.roles.map((r, i) => (
              <div key={i} className="border border-border-hairline p-3 bg-off-white">
@@ -687,25 +738,20 @@ export const DSResourceSplit: React.FC<{ solo: ResourceData; team: ResourceData 
              </div>
           ))}
         </div>
-        
         <p className="text-[10px] text-charcoal-muted leading-relaxed">
           <span className="font-bold text-charcoal">Implication: </span>{solo.implication}
         </p>
       </div>
-
-      {/* Optimal Team (Dark) */}
       <div className="border border-charcoal p-8 bg-charcoal text-white relative">
          <div className="absolute top-[-5px] right-[-5px] size-4 bg-red-500 rounded-full animate-pulse"></div>
          <div className="flex justify-between items-start mb-8">
            <h4 className="font-serif text-2xl italic text-white">{team.title}</h4>
            <span className="bg-red-600 text-white text-[9px] font-mono font-bold uppercase px-2 py-1 tracking-widest">Accelerated</span>
         </div>
-        
         <div className="flex justify-between items-end border-b border-white/20 pb-4 mb-6">
            <span className="text-[10px] font-mono uppercase tracking-widest text-white/60">Monthly Burn</span>
            <span className="font-mono text-xl font-bold text-white">{team.monthlyBurn}</span>
         </div>
-
         <div className="grid grid-cols-2 gap-4 mb-8">
           {team.roles.map((r, i) => (
              <div key={i} className="border border-white/20 p-3 bg-white/5">
@@ -714,7 +760,6 @@ export const DSResourceSplit: React.FC<{ solo: ResourceData; team: ResourceData 
              </div>
           ))}
         </div>
-        
         <p className="text-[10px] text-white/60 leading-relaxed">
           <span className="font-bold text-white">Implication: </span>{team.implication}
         </p>
@@ -723,145 +768,7 @@ export const DSResourceSplit: React.FC<{ solo: ResourceData; team: ResourceData 
   </div>
 );
 
-// --- 10. Milestone Table ---
-
-export interface MilestoneData {
-  id: string;
-  name: string;
-  targetDate: string;
-  owner: string;
-  criteria: string;
-  dependencies: string;
-}
-
-export const DSMilestoneTable: React.FC<{ data: MilestoneData[] }> = ({ data }) => (
-  <div className="mb-16">
-    <div className="flex items-center gap-2 mb-6">
-      <div className="h-4 w-1 bg-charcoal"></div>
-      <h3 className="text-2xl font-light text-charcoal">Milestone Tracking</h3>
-    </div>
-    
-    <div className="overflow-x-auto border border-border-hairline shadow-sm">
-      <table className="w-full text-left text-sm font-sans">
-        <thead className="bg-off-white text-xs uppercase font-mono text-charcoal-muted tracking-wider border-b border-border-hairline">
-          <tr>
-            <th className="px-6 py-4 font-bold">Milestone</th>
-            <th className="px-6 py-4">Target Date</th>
-            <th className="px-6 py-4">Owner</th>
-            <th className="px-6 py-4 w-1/3">Success Criteria</th>
-            <th className="px-6 py-4">Dependencies</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border-hairline bg-white">
-          {data.map((row) => (
-            <tr key={row.id} className="hover:bg-off-white/30 transition-colors">
-              <td className="px-6 py-4 font-bold text-charcoal">
-                <span className="text-[10px] bg-charcoal text-white px-2 py-0.5 rounded-sm mr-2">{row.id}</span>
-                {row.name}
-              </td>
-              <td className="px-6 py-4 text-charcoal-muted font-mono text-xs">{row.targetDate}</td>
-              <td className="px-6 py-4 text-charcoal">{row.owner}</td>
-              <td className="px-6 py-4 text-charcoal-muted text-xs leading-relaxed">{row.criteria}</td>
-              <td className="px-6 py-4 text-charcoal-muted text-xs font-mono">{row.dependencies}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
-
-// --- 11. Error Path ---
-
-export const DSErrorPathGrid: React.FC<{ items: ErrorPathData[] }> = ({ items }) => {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const toggleExpand = (id: string) => {
-    setExpandedId(prev => prev === id ? null : id);
-  };
-
-  return (
-    <div className="mb-16 border-t border-charcoal pt-12">
-      {/* Static Header with Explanation */}
-      <div className="mb-10 bg-off-white p-6 border border-border-hairline">
-        <h3 className="font-bold text-xl uppercase tracking-wider text-charcoal leading-none mb-2">3. Error Path Mapping</h3>
-        <p className="text-sm font-serif text-charcoal-muted">
-          This section maps potential failure states in the user journey and prescribes specific UX recovery patterns to mitigate churn risk. It details what goes wrong, the impact, and the exact solution (microcopy, interaction design) needed to fix it.
-        </p>
-      </div>
-
-      <div className="flex items-center gap-4 mb-8">
-          <div className="size-8 bg-red-600 flex items-center justify-center text-white rounded-sm shadow-sm">
-             <span className="material-symbols-outlined text-[18px]">warning</span>
-          </div>
-          <span className="text-[10px] font-mono font-bold text-charcoal uppercase tracking-widest">{items.length} Vulnerabilities Detected</span>
-      </div>
-
-    <div className="grid md:grid-cols-2 gap-4 items-start">
-      {items.map((item) => {
-        const isExpanded = expandedId === item.id;
-        return (
-          <div 
-            key={item.id} 
-            onClick={() => toggleExpand(item.id)}
-            className={`border transition-all duration-300 cursor-pointer group bg-white overflow-hidden ${
-              isExpanded ? 'border-red-600 shadow-xl ring-1 ring-red-600 z-10 scale-[1.01]' : 'border-border-hairline hover:border-red-500 hover:shadow-sharp'
-            }`}
-          >
-             <div className="p-6">
-                <div className="flex justify-between mb-4">
-                   <span className={`text-[9px] font-mono border px-1 py-0.5 transition-colors ${
-                     isExpanded ? 'text-white bg-red-600 border-red-600' : 'text-red-500 border-red-200'
-                   }`}>{item.id}</span>
-                   <span className={`material-symbols-outlined text-[16px] transition-colors ${
-                     isExpanded ? 'text-red-600' : 'text-charcoal-muted group-hover:text-red-500'
-                   }`}>
-                     {isExpanded ? 'expand_less' : 'expand_more'}
-                   </span>
-                </div>
-                
-                <h4 className="font-bold text-sm text-charcoal mb-4 leading-tight pr-4">{item.title}</h4>
-                
-                {/* Scenario */}
-                <div className="mb-4">
-                   <span className="text-[9px] font-mono text-charcoal-muted uppercase font-bold block mb-1">Failure Scenario:</span>
-                   <p className="text-[11px] text-charcoal leading-relaxed">{item.scenario}</p>
-                </div>
-
-                {/* Solution Preview */}
-                <div className="pt-3 border-t border-border-hairline border-dashed">
-                   <span className="text-[9px] font-mono text-emerald-600 uppercase font-bold block mb-1">Solution / Recovery:</span>
-                   <p className="text-[11px] font-bold text-charcoal leading-tight">{item.recovery}</p>
-                </div>
-             </div>
-             
-             {/* Expanded Detail View */}
-             <div className={`grid transition-all duration-300 ease-in-out bg-off-white ${
-               isExpanded ? 'grid-rows-[1fr] opacity-100 border-t border-red-200' : 'grid-rows-[0fr] opacity-0'
-             }`}>
-                <div className="overflow-hidden">
-                   <div className="p-6">
-                      <div className="mb-4">
-                        <span className="text-[9px] font-mono uppercase tracking-widest font-bold text-charcoal-muted mb-2 block">User Impact</span>
-                        <p className="text-[11px] text-charcoal leading-relaxed">{item.impact}</p>
-                      </div>
-                      
-                      <div>
-                        <span className="text-[9px] font-mono uppercase tracking-widest font-bold text-emerald-600 mb-2 block">Implementation Detail</span>
-                        <div className="p-3 bg-white border border-border-hairline text-[10px] font-mono text-charcoal leading-relaxed whitespace-pre-wrap">
-                           {item.details}
-                        </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-  );
-};
+// --- 10. Error Path ---
 
 export interface ErrorPathData {
   id: string;
@@ -871,6 +778,84 @@ export interface ErrorPathData {
   recovery: string;
   details?: string;
 }
+
+export const DSErrorPathGrid: React.FC<{ items: ErrorPathData[] }> = ({ items }) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const toggleExpand = (id: string) => {
+    setExpandedId(prev => prev === id ? null : id);
+  };
+
+  return (
+    <div className="mb-16 border-t border-charcoal pt-12">
+      <div className="mb-10 bg-off-white p-6 border border-border-hairline">
+        <h3 className="font-bold text-xl uppercase tracking-wider text-charcoal leading-none mb-2">3. Error Path Mapping</h3>
+        <p className="text-sm font-serif text-charcoal-muted">
+          This section maps potential failure states in the user journey.
+        </p>
+      </div>
+      <div className="flex items-center gap-4 mb-8">
+          <div className="size-8 bg-red-600 flex items-center justify-center text-white rounded-sm shadow-sm">
+             <span className="material-symbols-outlined text-[18px]">warning</span>
+          </div>
+          <span className="text-[10px] font-mono font-bold text-charcoal uppercase tracking-widest">{items.length} Vulnerabilities Detected</span>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4 items-start">
+        {items.map((item) => {
+          const isExpanded = expandedId === item.id;
+          return (
+            <div 
+              key={item.id} 
+              onClick={() => toggleExpand(item.id)}
+              className={`border transition-all duration-300 cursor-pointer group bg-white overflow-hidden ${
+                isExpanded ? 'border-red-600 shadow-xl ring-1 ring-red-600 z-10 scale-[1.01]' : 'border-border-hairline hover:border-red-500 hover:shadow-sharp'
+              }`}
+            >
+               <div className="p-6">
+                  <div className="flex justify-between mb-4">
+                     <span className={`text-[9px] font-mono border px-1 py-0.5 transition-colors ${
+                       isExpanded ? 'text-white bg-red-600 border-red-600' : 'text-red-500 border-red-200'
+                     }`}>{item.id}</span>
+                     <span className={`material-symbols-outlined text-[16px] transition-colors ${
+                       isExpanded ? 'text-red-600' : 'text-charcoal-muted group-hover:text-red-500'
+                     }`}>
+                       {isExpanded ? 'expand_less' : 'expand_more'}
+                     </span>
+                  </div>
+                  <h4 className="font-bold text-sm text-charcoal mb-4 leading-tight pr-4">{item.title}</h4>
+                  <div className="mb-4">
+                     <span className="text-[9px] font-mono text-charcoal-muted uppercase font-bold block mb-1">Failure Scenario:</span>
+                     <p className="text-[11px] text-charcoal leading-relaxed">{item.scenario}</p>
+                  </div>
+                  <div className="pt-3 border-t border-border-hairline border-dashed">
+                     <span className="text-[9px] font-mono text-emerald-600 uppercase font-bold block mb-1">Solution / Recovery:</span>
+                     <p className="text-[11px] font-bold text-charcoal leading-tight">{item.recovery}</p>
+                  </div>
+               </div>
+               <div className={`grid transition-all duration-300 ease-in-out bg-off-white ${
+                 isExpanded ? 'grid-rows-[1fr] opacity-100 border-t border-red-200' : 'grid-rows-[0fr] opacity-0'
+               }`}>
+                  <div className="overflow-hidden">
+                     <div className="p-6">
+                        <div className="mb-4">
+                          <span className="text-[9px] font-mono uppercase tracking-widest font-bold text-charcoal-muted mb-2 block">User Impact</span>
+                          <p className="text-[11px] text-charcoal leading-relaxed">{item.impact}</p>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-mono uppercase tracking-widest font-bold text-emerald-600 mb-2 block">Implementation Detail</span>
+                          <div className="p-3 bg-white border border-border-hairline text-[10px] font-mono text-charcoal leading-relaxed whitespace-pre-wrap">
+                             {item.details}
+                          </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 // --- 12. Blueprints ---
 
@@ -897,7 +882,6 @@ export const DSBlueprintCard: React.FC<BlueprintItem> = ({ id, title, descriptio
       className={`group bg-white border border-border-hairline hover:shadow-sharp hover:border-primary/30 transition-all duration-300 mb-4 cursor-pointer overflow-hidden ${isOpen ? 'ring-1 ring-primary/20' : ''}`}
       onClick={() => setIsOpen(!isOpen)}
     >
-      {/* Header Row */}
       <div className="p-6 lg:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col md:flex-row md:items-center gap-6 lg:gap-12 flex-1">
           <span className="text-primary font-mono text-xs font-bold">{id}</span>
@@ -906,7 +890,6 @@ export const DSBlueprintCard: React.FC<BlueprintItem> = ({ id, title, descriptio
             <p className="font-mono text-xs text-charcoal-muted">{description}</p>
           </div>
         </div>
-        
         <div className="flex items-center justify-between md:justify-end w-full md:w-auto mt-4 md:mt-0">
           <button 
             onClick={handleCopy}
@@ -915,14 +898,11 @@ export const DSBlueprintCard: React.FC<BlueprintItem> = ({ id, title, descriptio
             {copied ? 'Copied!' : 'Copy Prompt'}
             <span className="material-symbols-outlined text-[12px]">{copied ? 'check' : 'content_copy'}</span>
           </button>
-          
           <button className="ml-4 p-2 text-charcoal-muted hover:text-primary transition-colors">
               <span className={`material-symbols-outlined text-[20px] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
           </button>
         </div>
       </div>
-
-      {/* Expanded Content (The Markup) */}
       <div className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden">
           <div className="border-t border-border-hairline bg-off-white/50 p-6 lg:p-8">
@@ -941,30 +921,16 @@ export const DSBlueprintCard: React.FC<BlueprintItem> = ({ id, title, descriptio
   );
 };
 
-// --- 13. Risk Assessment Dossier (Phase 6 Specific) ---
-
-export interface RiskItem {
-  id: string;
-  vector: string;
-  mitigation: string;
-  owner: string;
-  prob: string;
-  impact: string;
-  contingency: string; // Add contingency
-}
+// --- 13. Risk Assessment Dossier (Phase 6 Specific Header) ---
 
 export interface RiskData {
   title: string;
   description: string;
   score: string;
-  strategic: RiskItem[];
-  operational: RiskItem[];
-  financial: RiskItem[];
 }
 
 export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, score }) => (
   <div className="mb-24 bg-white">
-    {/* Header Top Bar */}
     <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-charcoal/10 pb-6 mb-12 gap-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
         <h2 className="text-xl font-sans font-medium text-charcoal">Risk Assessment Dossier</h2>
@@ -981,9 +947,7 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
         </div>
       </div>
     </div>
-
     <div className="grid lg:grid-cols-12 gap-12">
-      {/* Left: Text Content */}
       <div className="lg:col-span-5">
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary block mb-3">/// Risk Matrix Visualization</span>
         <h1 className="text-4xl lg:text-6xl font-light tracking-tighter text-charcoal mb-6 leading-tight">
@@ -992,8 +956,6 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
         <p className="text-sm font-serif text-charcoal-muted leading-relaxed mb-12 max-w-md">
           {description}
         </p>
-
-        {/* Composite Score */}
         <div className="border-t border-charcoal/10 pt-6">
           <div className="flex justify-between items-end mb-2">
             <span className="font-mono text-[10px] uppercase tracking-widest text-charcoal-muted">Composite Risk Score</span>
@@ -1002,7 +964,6 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
           <div className="h-1.5 w-full bg-charcoal/10 rounded-full overflow-hidden mb-6">
             <div className="h-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500 w-[72%]"></div>
           </div>
-          
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="size-2 rounded-full bg-red-500"></div>
@@ -1019,20 +980,12 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
           </div>
         </div>
       </div>
-
-      {/* Right: Scatter Plot Visualization (CSS Grid) */}
       <div className="lg:col-span-7 relative h-[300px] lg:h-[400px] bg-off-white border border-charcoal/10 p-8 flex items-center justify-center">
-         {/* Grid Lines */}
          <div className="absolute inset-8 grid grid-cols-4 grid-rows-4 divide-x divide-y divide-charcoal/5 border border-charcoal/10">
-             {/* Cells generated by grid */}
              {[...Array(16)].map((_, i) => <div key={i} className=""></div>)}
          </div>
-         
-         {/* Axis Labels */}
          <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted">Probability of Occurrence</span>
          <span className="absolute left-3 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted">Impact Severity</span>
-
-         {/* Plot Points (Hardcoded relative positions based on mockup for specific effect) */}
          <div className="absolute top-[20%] right-[15%] group cursor-pointer">
             <div className="size-4 rounded-full border-2 border-red-500 bg-red-500/20 shadow-sm animate-pulse"></div>
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-charcoal text-white text-[8px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">R1: AI Visibility</div>
@@ -1054,122 +1007,6 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
   </div>
 );
 
-export const DSRiskTable: React.FC<{ 
-  number: string; 
-  title: string; 
-  rows: RiskItem[];
-  colorTheme: 'red' | 'amber' | 'emerald';
-}> = ({ number, title, rows, colorTheme }) => {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const colors = {
-    red: "text-red-500 bg-red-50 border-red-200",
-    amber: "text-amber-600 bg-amber-50 border-amber-200",
-    emerald: "text-emerald-600 bg-emerald-50 border-emerald-200"
-  };
-
-  const idColors = {
-     red: "text-red-500",
-     amber: "text-amber-600",
-     emerald: "text-emerald-600"
-  }
-
-  return (
-    <div className="mb-8 border-t border-charcoal/10 pt-8">
-      {/* Cluster Header */}
-      <div className="flex justify-between items-baseline mb-6 px-4">
-        <h3 className="font-sans text-sm font-bold uppercase tracking-widest text-charcoal">
-          <span className="text-charcoal-muted opacity-50 font-mono mr-2">{number}</span>
-          {title}
-        </h3>
-        <div className="text-[9px] font-mono text-charcoal-muted uppercase tracking-widest">
-          Entries: {rows.length}
-        </div>
-      </div>
-
-      {/* Grid Header (Desktop) */}
-      <div className="hidden lg:grid grid-cols-12 gap-4 px-4 pb-2 border-b border-charcoal/10 text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted">
-        <div className="col-span-1">ID</div>
-        <div className="col-span-3">Risk Vector</div>
-        <div className="col-span-4">Mitigation Strategy</div>
-        <div className="col-span-2">Owner</div>
-        <div className="col-span-1">Prob %</div>
-        <div className="col-span-1 text-right">Impact</div>
-      </div>
-
-      {/* Rows */}
-      <div className="divide-y divide-charcoal/5">
-        {rows.map((row) => {
-          const isExpanded = expandedId === row.id;
-          return (
-            <div 
-              key={row.id} 
-              className={`group bg-white hover:bg-off-white transition-colors cursor-pointer ${isExpanded ? 'bg-off-white' : ''}`}
-              onClick={() => setExpandedId(isExpanded ? null : row.id)}
-            >
-              <div className="lg:grid lg:grid-cols-12 gap-4 p-4 items-start">
-                
-                {/* ID */}
-                <div className={`col-span-1 font-mono text-xs font-bold mb-2 lg:mb-0 ${idColors[colorTheme]}`}>
-                  {row.id}
-                </div>
-
-                {/* Risk Vector */}
-                <div className="col-span-3 mb-2 lg:mb-0 pr-4">
-                  <h4 className="font-sans font-bold text-sm text-charcoal mb-1 leading-tight">{row.vector.split(':')[0]}</h4>
-                  <p className={`text-xs text-charcoal-muted leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                    {row.vector.split(':').slice(1).join(':').trim() || row.vector}
-                  </p>
-                </div>
-
-                {/* Mitigation */}
-                <div className="col-span-4 mb-2 lg:mb-0 pr-4">
-                   <h4 className="font-mono text-[10px] font-bold text-charcoal uppercase mb-1 lg:hidden">Strategy</h4>
-                   <p className={`text-xs text-charcoal-muted leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                     {row.mitigation}
-                   </p>
-                </div>
-
-                {/* Owner */}
-                <div className="col-span-2 text-xs font-mono text-charcoal mb-2 lg:mb-0 flex items-center gap-2 lg:block">
-                  <span className="lg:hidden text-[9px] text-charcoal-muted uppercase font-bold mr-2">Owner:</span>
-                  {row.owner}
-                </div>
-
-                {/* Prob */}
-                <div className="col-span-1 text-xs font-mono font-bold text-charcoal mb-2 lg:mb-0 flex items-center gap-2 lg:block">
-                  <span className="lg:hidden text-[9px] text-charcoal-muted uppercase font-bold mr-2">Prob:</span>
-                  {row.prob}
-                </div>
-
-                 {/* Impact */}
-                <div className="col-span-1 text-xs font-mono font-bold text-charcoal text-left lg:text-right flex items-center gap-2 lg:block">
-                  <span className="lg:hidden text-[9px] text-charcoal-muted uppercase font-bold mr-2">Impact:</span>
-                  {row.impact}
-                </div>
-              </div>
-
-              {/* Expanded Details (Contingency) */}
-              <div className={`overflow-hidden transition-all duration-300 bg-off-white/50 border-l-2 ${idColors[colorTheme]} ${isExpanded ? 'max-h-96 opacity-100 py-4 px-4 lg:ml-16 mr-4 mb-4' : 'max-h-0 opacity-0'}`}>
-                 <div className="grid lg:grid-cols-2 gap-8">
-                    <div>
-                       <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-2">Contingency Plan</span>
-                       <p className="text-xs font-serif text-charcoal leading-relaxed">{row.contingency}</p>
-                    </div>
-                    <div>
-                       <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-charcoal-muted block mb-2">Detailed Context</span>
-                       <p className="text-xs font-serif text-charcoal leading-relaxed opacity-80">Full analysis of {row.vector} requires constant monitoring. Owner {row.owner} is responsible for weekly checks.</p>
-                    </div>
-                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  )
-}
-
 // --- 14. ROI Analysis ---
 
 export interface ROIScenario {
@@ -1186,7 +1023,6 @@ export const DSROIAnalysis: React.FC<{ scenarios: ROIScenario[] }> = ({ scenario
       {scenarios.map((s, i) => (
         <div key={i} className="border border-charcoal/10 bg-white p-6 hover:shadow-sharp transition-shadow">
           <h4 className="font-sans font-bold text-sm text-charcoal uppercase tracking-wide mb-6 border-b border-charcoal/10 pb-4">{s.title}</h4>
-          
           <div className="space-y-4">
              <div className="flex justify-between items-center">
                 <span className="text-xs font-mono text-charcoal-muted">Investment</span>
