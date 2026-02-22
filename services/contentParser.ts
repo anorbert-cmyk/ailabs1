@@ -270,18 +270,26 @@ function splitByHeadings(markdown: string): RawBlock[] {
   let currentHeading = '';
   let currentBody: string[] = [];
   let insideCodeBlock = false;
+  let codeBlockLineCount = 0;
 
   for (const line of lines) {
     // Track fenced code blocks (``` or ~~~)
     if (/^(`{3,}|~{3,})/.test(line.trim())) {
       insideCodeBlock = !insideCodeBlock;
+      if (insideCodeBlock) codeBlockLineCount = 0;
       currentBody.push(line);
       continue;
     }
 
     if (insideCodeBlock) {
-      currentBody.push(line);
-      continue;
+      codeBlockLineCount++;
+      if (codeBlockLineCount > 100) {
+        insideCodeBlock = false;
+        codeBlockLineCount = 0;
+      } else {
+        currentBody.push(line);
+        continue;
+      }
     }
 
     // Match # or ## level headings as section boundaries
@@ -464,6 +472,7 @@ function parseAllListItems(body: string): string[] {
  */
 function extractParagraphs(body: string): string {
   let insideCodeBlock = false;
+  let codeBlockLineCount = 0;
   const cleaned = body
     .split('\n')
     .filter(l => {
@@ -471,9 +480,19 @@ function extractParagraphs(body: string): string {
       // Track fenced code blocks
       if (/^(`{3,}|~{3,})/.test(trimmed)) {
         insideCodeBlock = !insideCodeBlock;
+        if (insideCodeBlock) codeBlockLineCount = 0;
         return false;
       }
-      if (insideCodeBlock) return false;
+      if (insideCodeBlock) {
+        codeBlockLineCount++;
+        if (codeBlockLineCount > 100) {
+          insideCodeBlock = false;
+          codeBlockLineCount = 0;
+          // Fall through to normal processing for this line
+        } else {
+          return false;
+        }
+      }
       return (
         trimmed.length > 0 &&
         !trimmed.startsWith('|') &&
@@ -759,8 +778,9 @@ function parseBlueprints(heading: string, body: string): BlueprintItem[] {
     const rest = sectionLines.slice(1).join('\n');
     const descRaw = extractParagraphs(rest) || title;
     // Word-boundary-aware truncation
+    const truncateAt = descRaw.lastIndexOf(' ', 200);
     const description = descRaw.length > 200
-      ? descRaw.slice(0, descRaw.lastIndexOf(' ', 200)) + '...'
+      ? descRaw.slice(0, truncateAt > 0 ? truncateAt : 200) + '...'
       : descRaw;
     // Limit prompt size
     const prompt = rest.trim().slice(0, 2000);
@@ -795,7 +815,7 @@ function parseRoadmapPhase(heading: string, body: string): RoadmapPhaseData | nu
 
   // Expanded time pattern matching (months, weeks, quarters, dates, sprints)
   const timeMatch = body.match(
-    /(?:timeline|duration|time(?:frame)?|months?|weeks?|quarter|Q[1-4]|sprint|period)[:\s]*([^\n]+)/i
+    /(?:timeline|duration|time(?:frame)?|months?|weeks?|quarter|Q[1-4]|sprint|period)[:\s]*([^\n,;()]+?)\s*(?:[,;()\n]|$)/i
   );
   const timeline = timeMatch ? cleanText(timeMatch[1]) : '';
 
@@ -834,9 +854,25 @@ function parseRoadmapPhase(heading: string, body: string): RoadmapPhaseData | nu
       if (currentSection === 'objectives') {
         objectives.push({ type: 'Primary', content: text });
       } else if (currentSection === 'deliverables') {
-        deliverables.push({ title: text, items: [text] });
+        // Group deliverables: bold text starts a new group, plain text appends to last group
+        const boldMatch = itemMatch[1].match(/\*\*(.+?)\*\*/);
+        if (boldMatch) {
+          deliverables.push({ title: cleanText(boldMatch[1]), items: [] });
+        } else if (deliverables.length > 0) {
+          deliverables[deliverables.length - 1].items.push(text);
+        } else {
+          deliverables.push({ title: text, items: [text] });
+        }
       } else if (currentSection === 'decisions') {
-        decisions.push({ title: text, stakeholders: '', deadline: '', criteria: '' });
+        const stakeholderMatch = text.match(/stakeholders?[:\s]*([^,;]+)/i);
+        const deadlineMatch = text.match(/(?:deadline|by|due)[:\s]*([^,;]+)/i);
+        const criteriaMatch = text.match(/(?:criteria|if|when)[:\s]*([^,;]+)/i);
+        decisions.push({
+          title: text.replace(/stakeholders?[:\s]*[^,;]+/i, '').replace(/(?:deadline|by|due)[:\s]*[^,;]+/i, '').trim() || text,
+          stakeholders: stakeholderMatch ? stakeholderMatch[1].trim() : '',
+          deadline: deadlineMatch ? deadlineMatch[1].trim() : '',
+          criteria: criteriaMatch ? criteriaMatch[1].trim() : '',
+        });
       } else {
         // Default unclassified items to objectives (they tend to come first)
         objectives.push({ type: 'General', content: text });

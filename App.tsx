@@ -1331,11 +1331,9 @@ TYPE D: BADGES
 // Set to 'perplexity' to fetch live data, 'mock' to use hardcoded data
 type DataSource = 'perplexity' | 'mock';
 
-// Vite exposes env vars via import.meta.env (VITE_ prefix) or process.env (define'd)
+// Vite exposes env vars via import.meta.env (VITE_ prefix)
 const PERPLEXITY_API_KEY: string =
-  (import.meta as any).env?.VITE_PERPLEXITY_API_KEY
-  || (typeof process !== 'undefined' && process.env?.PERPLEXITY_API_KEY)
-  || '';
+  (import.meta as any).env?.VITE_PERPLEXITY_API_KEY || '';
 const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
 
 export default function App() {
@@ -1386,7 +1384,7 @@ export default function App() {
     try {
       const { content, citations } = await getPhaseContent(phaseIndex, {
         apiKey: PERPLEXITY_API_KEY,
-      });
+      }, undefined, controller.signal);
 
       // Check if this request was aborted (user switched phase)
       if (controller.signal.aborted) return;

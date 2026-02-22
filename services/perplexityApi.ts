@@ -131,14 +131,19 @@ Include quantified risk assessments with severity levels.${SYSTEM_SUFFIX}`,
  */
 function isRetryableError(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
-  const msg = err.message;
-  // Network-level errors
-  if (msg.includes('fetch failed') || msg.includes('network') ||
-      msg.includes('ECONNREFUSED') || msg.includes('ECONNRESET') ||
-      msg.includes('ETIMEDOUT') || msg.includes('UND_ERR')) {
+  // Check error code (Node.js errors)
+  const code = (err as any).code;
+  if (code && ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNABORTED', 'UND_ERR_SOCKET'].includes(code)) {
     return true;
   }
-  // HTTP 429 or 5xx (set by our own throw below)
+  // Check error message (case-insensitive)
+  const msg = err.message.toLowerCase();
+  if (msg.includes('fetch failed') || msg.includes('network') ||
+      msg.includes('econnrefused') || msg.includes('econnreset') ||
+      msg.includes('etimedout') || msg.includes('und_err')) {
+    return true;
+  }
+  // HTTP 429 or 5xx (set by our own throw)
   if (msg.includes('[retryable]')) return true;
   return false;
 }

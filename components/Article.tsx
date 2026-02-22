@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { PhaseData as BasePhaseData } from '../services/contentParser';
 import { 
   DSHeader, 
   DSSectionHeader, 
@@ -40,19 +41,12 @@ interface SectionData {
   content: string;
   type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'phase_card' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis' | 'task_list';
   // Flexible data union
-  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseCardData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | TaskItem[] | any; 
+  data?: unknown;
   columns?: { header: string; key: string; width?: string }[]; // For tables
 }
 
-interface PhaseData {
-  id: string;
-  badge: string;
-  title: string;
-  subtitle: string;
-  metadata: string[];
-  sources?: any[];
+interface PhaseData extends BasePhaseData {
   visualTimeline?: VisualTimelineData;
-  sections: SectionData[];
 }
 
 interface ArticleProps {
@@ -275,7 +269,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               )}
 
               {/* Occasional Blockquote */}
-              {idx === 2 && section.type === 'text' && (
+              {idx === 2 && section.type === 'text' && data.badge === 'Discovery Phase' && (
                  <div className="max-w-4xl">
                    <DSBlockquote author="Strategic Insight">
                       The intersection of AI automation and Web3 distinctiveness creates a defensible moat in a crowded agency market.
