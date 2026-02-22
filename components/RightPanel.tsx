@@ -15,7 +15,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ sources = [] }) => {
   return (
     // Changed: No longer hidden on mobile. Now displays as block everywhere, layout handled by parent flex container.
     <aside className="w-full lg:w-80 bg-off-white flex-shrink-0 lg:border-l border-t lg:border-t-0 border-border-hairline">
-      <div className="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto p-8 custom-scrollbar">
+      <div className="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto p-6 lg:p-8 custom-scrollbar">
         
         {/* Cited Sources */}
         <div className="mb-12">
@@ -40,7 +40,10 @@ export const RightPanel: React.FC<RightPanelProps> = ({ sources = [] }) => {
                         <span className="block font-bold text-charcoal mb-1 group-hover:text-primary transition-colors">{item.source}</span>
                         {item.title}
                       </div>
-                      <span className="material-symbols-outlined text-[14px] text-border-hairline group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 duration-300">
+                      <span className="material-symbols-outlined text-[14px] text-border-hairline group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 duration-300 hidden lg:inline-block">
+                        {item.icon || 'arrow_outward'}
+                      </span>
+                      <span className="material-symbols-outlined text-[14px] text-primary lg:hidden">
                         {item.icon || 'arrow_outward'}
                       </span>
                     </div>
