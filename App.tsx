@@ -1344,7 +1344,7 @@ export default function App() {
 
   // Async data loading state
   const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(DATA_SOURCE === 'perplexity');
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Cache for already-fetched phases (avoids re-fetching)
@@ -1450,12 +1450,15 @@ export default function App() {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       const sections = document.querySelectorAll('section[id^="section-"]');
       sections.forEach((section) => observer.observe(section));
     }, 100);
 
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
   }, [currentPhase, phaseData]);
 
   return (
