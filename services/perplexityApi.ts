@@ -1,10 +1,14 @@
 /**
- * Perplexity API Service (v2 — perfected)
+ * Perplexity API Service (v3 — Claude Sonnet 4.6 Thinking)
  *
- * Handles API calls to Perplexity's sonar model.
+ * Routes through Perplexity Agent API to Claude Sonnet 4.6 with extended thinking.
  * Returns raw text + markdown that gets parsed into PhaseData.
  *
- * Improvements:
+ * v3 changes:
+ * - Model switched from sonar-pro to anthropic/claude-sonnet-4-6 via Agent API
+ * - Added reasoning_effort parameter for extended thinking (low/medium/high)
+ *
+ * Retained from v2:
  * - Accepts external AbortSignal for cancellation (race condition prevention)
  * - Structured retry logic (not string-based error matching)
  * - Validates response.choices[0].message.content
@@ -41,12 +45,14 @@ export interface PerplexityApiConfig {
   model?: string;
   maxTokens?: number;
   temperature?: number;
+  reasoningEffort?: 'low' | 'medium' | 'high';
 }
 
 const DEFAULT_CONFIG: Partial<PerplexityApiConfig> = {
-  model: 'sonar-pro',
+  model: 'anthropic/claude-sonnet-4-6',
   maxTokens: 8192,
   temperature: 0.2,
+  reasoningEffort: 'high',
 };
 
 const REQUEST_TIMEOUT_MS = 60_000; // 60 second timeout
@@ -172,7 +178,7 @@ export async function fetchPerplexityData(
   customPrompt?: { system?: string; user?: string },
   signal?: AbortSignal
 ): Promise<PerplexityResponse> {
-  const { apiKey, model, maxTokens, temperature } = { ...DEFAULT_CONFIG, ...config };
+  const { apiKey, model, maxTokens, temperature, reasoningEffort } = { ...DEFAULT_CONFIG, ...config };
 
   if (!apiKey) {
     throw new Error('Perplexity API key is not configured');
@@ -196,6 +202,7 @@ export async function fetchPerplexityData(
     messages,
     max_tokens: maxTokens,
     temperature,
+    ...(reasoningEffort && { reasoning_effort: reasoningEffort }),
   });
 
   // Retry loop with exponential backoff
