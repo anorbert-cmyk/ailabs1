@@ -95,6 +95,25 @@ interface PhaseDetail {
   team: string;
 }
 
+// Matching DesignLibrary's TimelineQuarter and VisualTimelineData
+interface TimelineQuarter {
+  id: string;
+  title: string;
+  months: string[];
+  status: 'active' | 'completed' | 'upcoming';
+}
+
+interface VisualTimelineData {
+  title: string;
+  subtitle: string;
+  quarters: TimelineQuarter[];
+  context?: {
+    title: string;
+    rejected: string;
+    adopted: string;
+  };
+}
+
 interface BlueprintItem {
   id: string;
   title: string;
@@ -141,6 +160,7 @@ export interface PhaseData {
   metadata: string[];
   sources?: SourceItem[];
   sections: ParsedSection[];
+  visualTimeline?: VisualTimelineData;
 }
 
 // ── Phase metadata defaults ─────────────────────────────────────────
@@ -1071,6 +1091,131 @@ function capitalizeDomain(domain: string): string {
   return domain.charAt(0).toUpperCase() + domain.slice(1);
 }
 
+// ── Visual Timeline synthesis ────────────────────────────────────────
+
+const MONTH_ABBREV = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+const TIMELINE_STATUS: Array<'completed' | 'active' | 'upcoming'> = ['completed', 'active', 'upcoming'];
+
+/**
+ * Extract a short (max 7 char) activity label from text.
+ * Skips stop words and common verbs, returns the first meaningful keyword.
+ */
+function extractShortLabel(text: string): string {
+  const stripped = text.replace(/[^a-zA-Z\s]/g, '');
+  const words = stripped.split(/\s+/).filter(w => w.length > 2);
+  const skip = new Set([
+    'the', 'and', 'for', 'with', 'from', 'into', 'that', 'this',
+    'will', 'shall', 'must', 'can', 'our', 'their', 'your', 'its',
+    'each', 'all', 'are', 'has', 'have', 'been', 'more', 'any',
+    'also', 'key', 'core', 'main', 'full', 'based', 'using',
+    'create', 'ensure', 'develop', 'implement', 'define', 'identify',
+    'complete', 'establish', 'build', 'make', 'initial', 'first',
+  ]);
+  const meaningful = words.filter(w => !skip.has(w.toLowerCase()));
+  if (meaningful.length === 0) return words[0]?.toUpperCase().slice(0, 7) || 'BUILD';
+  return meaningful[0].toUpperCase().slice(0, 7);
+}
+
+/**
+ * Extract 3 short activity labels from a RoadmapPhaseData.
+ * Prioritizes deliverable titles, then objectives, then decisions.
+ */
+function extractActivityLabels(data: RoadmapPhaseData): [string, string, string] {
+  const labels: string[] = [];
+  const seen = new Set<string>();
+
+  const addLabel = (text: string) => {
+    if (labels.length >= 3) return;
+    const label = extractShortLabel(text);
+    if (!seen.has(label)) {
+      seen.add(label);
+      labels.push(label);
+    }
+  };
+
+  for (const d of data.deliverables) addLabel(d.title);
+  for (const o of data.objectives) addLabel(o.content);
+  for (const d of data.decisions) addLabel(d.title);
+
+  const defaults = ['BUILD', 'SHIP', 'LAUNCH', 'SCALE', 'GROW', 'OPTIM'];
+  while (labels.length < 3) {
+    const fallback = defaults[labels.length] || 'TASK';
+    if (!seen.has(fallback)) {
+      seen.add(fallback);
+      labels.push(fallback);
+    } else {
+      labels.push(`T${labels.length + 1}`);
+    }
+  }
+
+  return [labels[0], labels[1], labels[2]];
+}
+
+/**
+ * Synthesize a VisualTimelineData from parsed roadmap phase sections.
+ * Dynamically generates timeline quarters from the actual API content.
+ * Returns null if fewer than 2 roadmap phases are found.
+ */
+function synthesizeVisualTimeline(sections: ParsedSection[]): VisualTimelineData | null {
+  const roadmapSections = sections.filter(
+    s => s.type === 'roadmap_phase' && s.data
+  );
+
+  if (roadmapSections.length < 2) return null;
+
+  const phases = roadmapSections.slice(0, 3);
+
+  const quarters: TimelineQuarter[] = phases.map((section, i) => {
+    const data = section.data as RoadmapPhaseData;
+    const startMonth = i * 3;
+    const monthAbbrevs = [
+      MONTH_ABBREV[startMonth] || `M${startMonth + 1}`,
+      MONTH_ABBREV[startMonth + 1] || `M${startMonth + 2}`,
+      MONTH_ABBREV[startMonth + 2] || `M${startMonth + 3}`,
+    ];
+
+    const [l1, l2, l3] = extractActivityLabels(data);
+
+    return {
+      id: `Q${i + 1}`,
+      title: data.phase,
+      months: [
+        `${monthAbbrevs[0]}: ${l1}`,
+        `${monthAbbrevs[1]}: ${l2}`,
+        `${monthAbbrevs[2]}: ${l3}`,
+      ],
+      status: TIMELINE_STATUS[i] || ('upcoming' as const),
+    };
+  });
+
+  // Build context from the first text section (overview / timeline intro)
+  const overviewSection = sections.find(
+    s => s.type === 'text' && s.content.length > 30
+  );
+
+  const firstTitle = quarters[0]?.title.toLowerCase() || 'foundation';
+  const lastTitle = quarters[quarters.length - 1]?.title.toLowerCase() || 'optimization';
+
+  const context = overviewSection
+    ? {
+        title: 'Why This Roadmap?',
+        rejected: `Linear scaling without a dedicated ${firstTitle} phase. Sequential market entry without validated product-market fit risks resource waste and competitive disadvantage.`,
+        adopted: overviewSection.content.length > 300
+          ? overviewSection.content.slice(0, 297) + '...'
+          : overviewSection.content,
+      }
+    : undefined;
+
+  const totalMonths = quarters.length * 3;
+
+  return {
+    title: 'The Strategic Trajectory',
+    subtitle: `Visualizing the ${totalMonths}-month execution path from ${firstTitle} to ${lastTitle}.`,
+    quarters,
+    context,
+  };
+}
+
 /**
  * Parse a raw Perplexity markdown response into PhaseData.
  *
@@ -1136,6 +1281,11 @@ export function parsePerplexityResponse(
     });
   }
 
+  // Synthesize visual timeline for the Roadmap phase (phaseIndex 2)
+  const visualTimeline = phaseIndex === 2
+    ? synthesizeVisualTimeline(sections) ?? undefined
+    : undefined;
+
   return {
     id: `phase-${String(phaseIndex + 1).padStart(2, '0')}`,
     badge: meta.badge,
@@ -1144,6 +1294,7 @@ export function parsePerplexityResponse(
     metadata: meta.metadata,
     sources,
     sections,
+    visualTimeline,
   };
 }
 

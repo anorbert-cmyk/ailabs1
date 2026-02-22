@@ -88,13 +88,16 @@ For each competitor, include a subsection with strengths (bullet list), weakness
   },
   2: {
     system: `You are a project planning specialist. Return your analysis in well-structured markdown.
-Use numbered phases for the roadmap.${SYSTEM_SUFFIX}`,
+Use numbered phases for the roadmap. For each phase use ### sub-headings for Objectives, Deliverables, and Critical Decision Points.${SYSTEM_SUFFIX}`,
     user: `Create a 9-month phase-by-phase roadmap for launching an AI-native Web3 marketing agency. Cover:
-1. Timeline overview
-2. Phase 1: Foundation (months 1-3) - key deliverables, milestones
-3. Phase 2: Growth (months 4-6) - scaling activities
-4. Phase 3: Optimization (months 7-9) - market optimization
-Include resource requirements and critical dependencies.`
+1. Timeline overview (include strategic rationale — why this phased approach over alternatives)
+2. Phase 1: Foundation (months 1-3)
+   - Objectives (bullet list with **Type**: description)
+   - Key Deliverables (grouped with **Category** headers and sub-items)
+   - Critical Decision Points (include stakeholders, deadlines, criteria)
+3. Phase 2: Growth (months 4-6) — same structure as Phase 1
+4. Phase 3: Optimization (months 7-9) — same structure as Phase 1
+Include resource requirements and critical dependencies for each phase.`
   },
   3: {
     system: `You are a UX/product architect. Return your analysis in well-structured markdown.
