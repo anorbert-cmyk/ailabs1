@@ -1,0 +1,265 @@
+/**
+ * Shared types for the tier-based parser system.
+ *
+ * Tier model (mirrors validatestrategylive):
+ *   - Observer:  1-part quick validation
+ *   - Insider:   2-part deep dive (Discovery + Competitor)
+ *   - Syndicate: 6-part full strategic analysis (APEX)
+ */
+
+import type { SourceItem } from '../../components/RightPanel';
+export type { SourceItem };
+
+// ── Tier enum ────────────────────────────────────────────────────────
+
+export type AnalysisTier = 'observer' | 'insider' | 'syndicate';
+
+export const TIER_PART_COUNT: Record<AnalysisTier, number> = {
+  observer: 1,
+  insider: 2,
+  syndicate: 6,
+};
+
+// ── Section data interfaces ─────────────────────────────────────────
+
+export interface MetricRow {
+  name: string;
+  baseline: string;
+  stress: string;
+  variance: string;
+}
+
+export interface TableColumn {
+  header: string;
+  key: string;
+}
+
+export interface CardItem {
+  title: string;
+  text: string;
+  icon: string;
+  subLabel?: string;
+}
+
+export interface CompetitorData {
+  name: string;
+  website: string;
+  info: string;
+  strengths: string[];
+  weaknesses: string[];
+  opportunity: string;
+}
+
+export interface ROIScenario {
+  title: string;
+  investment: string;
+  mrr: string;
+  roi: string;
+  payback: string;
+}
+
+export interface TaskItem {
+  id: string;
+  content: string;
+  priority: 'High' | 'Medium' | 'Low';
+}
+
+export interface RoadmapObjective {
+  type: string;
+  content: string;
+}
+
+export interface RoadmapDeliverable {
+  title: string;
+  items: string[];
+}
+
+export interface RoadmapDecision {
+  title: string;
+  stakeholders: string;
+  deadline: string;
+  criteria: string;
+}
+
+export interface RoadmapPhaseData {
+  phase: string;
+  timeline: string;
+  objectives: RoadmapObjective[];
+  deliverables: RoadmapDeliverable[];
+  decisions: RoadmapDecision[];
+}
+
+export interface PhaseDetail {
+  id: string;
+  title: string;
+  summary: string;
+  deepDive: { title: string; content: string };
+  deliverables: string[];
+  decision: string;
+  dependencies: string;
+  team: string;
+}
+
+export interface TimelineQuarter {
+  id: string;
+  title: string;
+  months: string[];
+  status: 'active' | 'completed' | 'upcoming';
+}
+
+export interface VisualTimelineData {
+  title: string;
+  subtitle: string;
+  quarters: TimelineQuarter[];
+  context?: {
+    title: string;
+    rejected: string;
+    adopted: string;
+  };
+}
+
+export interface BlueprintItem {
+  id: string;
+  title: string;
+  description: string;
+  prompt: string;
+}
+
+// ── Observer-specific types ─────────────────────────────────────────
+
+export interface ViabilityScore {
+  score: number;
+  label: string;
+  emoji: string;
+  summary: string;
+}
+
+export interface PainPoint {
+  title: string;
+  text: string;
+  severity: 'high' | 'medium' | 'low';
+  icon: string;
+}
+
+export interface NextStep {
+  title: string;
+  whatToDo: string;
+  whyFirst: string;
+}
+
+// ── Section types ───────────────────────────────────────────────────
+
+export type SectionType =
+  | 'text'
+  | 'list'
+  | 'table'
+  | 'metrics'
+  | 'cards'
+  | 'competitor'
+  | 'roi_analysis'
+  | 'task_list'
+  | 'task_list_checkbox'
+  | 'risk_dossier_header'
+  | 'blueprints'
+  | 'roadmap_phase'
+  | 'phase_card'
+  | 'strategy_grid'
+  | 'resource_split'
+  | 'error_path_grid'
+  | 'viability_score'
+  | 'pain_points'
+  | 'next_step';
+
+export interface ParsedSection {
+  id: string;
+  title: string;
+  content: string;
+  type: SectionType;
+  data?: MetricRow[] | CardItem[] | CompetitorData | ROIScenario[] | TaskItem[]
+    | RoadmapPhaseData | PhaseDetail[] | BlueprintItem[] | string[]
+    | Record<string, string>[]
+    | PainPoint[] | ViabilityScore | NextStep
+    | { title: string; description: string; score: string };
+  columns?: TableColumn[];
+}
+
+export interface PhaseData {
+  id: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  metadata: string[];
+  sources?: SourceItem[];
+  sections: ParsedSection[];
+  visualTimeline?: VisualTimelineData;
+}
+
+// ── Phase metadata per tier ─────────────────────────────────────────
+
+export const OBSERVER_META = {
+  badge: 'Observer',
+  title: 'Quick Validation',
+  subtitle: 'Rapid viability assessment of your concept',
+  metadata: ['Tier: Observer', 'Parts: 1', 'Duration: ~30s'],
+};
+
+export const INSIDER_META: Record<number, { badge: string; title: string; subtitle: string; metadata: string[] }> = {
+  0: {
+    badge: 'Insider — Part 1',
+    title: 'Discovery & User Needs',
+    subtitle: 'Validation of core assumptions',
+    metadata: ['Tier: Insider', 'Part: 1/2', 'Status: Exploratory'],
+  },
+  1: {
+    badge: 'Insider — Part 2',
+    title: 'Competitor Deep-Dive',
+    subtitle: 'Landscape analysis and strategic gaps',
+    metadata: ['Tier: Insider', 'Part: 2/2', 'Status: Analysis'],
+  },
+};
+
+export const SYNDICATE_META: Record<number, { badge: string; title: string; subtitle: string; metadata: string[] }> = {
+  0: {
+    badge: 'Discovery Phase',
+    title: 'Discovery & User Needs',
+    subtitle: 'Validation of core assumptions',
+    metadata: ['Tier: Syndicate', 'Part: 1/6', 'Horizon: 3-6 Months'],
+  },
+  1: {
+    badge: 'Market Intelligence',
+    title: 'Competitor Deep-Dive',
+    subtitle: 'Landscape analysis and strategic gaps',
+    metadata: ['Tier: Syndicate', 'Part: 2/6', 'Market: Web3/AI'],
+  },
+  2: {
+    badge: 'Roadmap',
+    title: 'Phase-by-Phase Roadmap',
+    subtitle: 'Visualizing the 9-month execution path',
+    metadata: ['Tier: Syndicate', 'Part: 3/6', 'Horizon: 9 Months'],
+  },
+  3: {
+    badge: 'Core Design',
+    title: 'Core Design',
+    subtitle: 'Architectural directives for core application flows',
+    metadata: ['Tier: Syndicate', 'Part: 4/6', 'Type: UX/UI'],
+  },
+  4: {
+    badge: 'Advanced Screens',
+    title: 'Advanced Screens & Edge Cases',
+    subtitle: 'Comprehensive system states including error handling, empty states, and loading patterns',
+    metadata: ['Tier: Syndicate', 'Part: 5/6', 'Type: Edge Cases'],
+  },
+  5: {
+    badge: 'Risk & ROI',
+    title: 'Risk, Metrics & ROI',
+    subtitle: 'Critical exposure analysis, success metrics, and financial justification',
+    metadata: ['Tier: Syndicate', 'Part: 6/6', 'Type: Financial'],
+  },
+};
+
+// ── Raw block from heading split ────────────────────────────────────
+
+export interface RawBlock {
+  heading: string;
+  body: string;
+}

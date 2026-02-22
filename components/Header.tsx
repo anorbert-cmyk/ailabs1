@@ -3,26 +3,28 @@ import React from 'react';
 interface HeaderProps {
   currentPhase: number;
   setPhase: (phase: number) => void;
+  maxPhases?: number;
   toggleBlueprints?: () => void;
 }
 
 const phases = [
   "01: Discovery",
-  "02: Tech Audit",
+  "02: Competitor",
   "03: Timeline",
   "04: Core Design",
-  "05: Scale",
+  "05: Edge Cases",
   "06: Risk & ROI"
 ];
 
-export const Header: React.FC<HeaderProps> = ({ currentPhase, setPhase }) => {
+export const Header: React.FC<HeaderProps> = ({ currentPhase, setPhase, maxPhases = 6 }) => {
+  const visiblePhases = phases.slice(0, maxPhases);
   return (
     <header className="h-16 lg:h-20 px-4 lg:px-8 bg-white/95 backdrop-blur-md border-b border-charcoal/10 sticky top-0 z-50 flex items-center justify-between shadow-sm transition-all duration-200">
       
       {/* Navigation - Scrollable on Mobile */}
       <nav className="flex-1 overflow-x-auto no-scrollbar w-full mask-linear-fade">
         <div className="flex items-center gap-2 min-w-max pr-4">
-          {phases.map((phase, idx) => {
+          {visiblePhases.map((phase, idx) => {
             const isActive = currentPhase === idx;
             return (
               <button

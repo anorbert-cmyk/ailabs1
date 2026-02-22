@@ -5,7 +5,7 @@ import { Article } from './components/Article';
 import { RightPanel, SourceItem } from './components/RightPanel';
 import { FeedbackWidget } from './components/FeedbackWidget';
 import { useStreamingPhase } from './services/useStreamingPhase';
-import type { PhaseData } from './services/contentParser';
+import type { PhaseData, AnalysisTier } from './services/parsers';
 
 /* 
   =============================================================================
@@ -1336,8 +1336,15 @@ const PERPLEXITY_API_KEY: string =
   (import.meta as any).env?.VITE_PERPLEXITY_API_KEY || '';
 const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
 
+const TIER_LABELS: Record<AnalysisTier, { label: string; parts: number }> = {
+  observer: { label: 'Observer', parts: 1 },
+  insider: { label: 'Insider', parts: 2 },
+  syndicate: { label: 'Syndicate', parts: 6 },
+};
+
 export default function App() {
   const [activeSection, setActiveSection] = useState<string>('01');
+  const [currentTier, setCurrentTier] = useState<AnalysisTier>('syndicate');
   const [currentPhase, setCurrentPhase] = useState<number>(5);
 
   // Mock data state (used when no API key)
@@ -1354,6 +1361,7 @@ export default function App() {
   } = useStreamingPhase({
     apiKey: PERPLEXITY_API_KEY,
     enabled: DATA_SOURCE === 'perplexity',
+    tier: currentTier,
   });
 
   // Determine active phaseData (stream vs mock)
@@ -1424,9 +1432,31 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 ml-0 lg:ml-24 min-h-screen flex flex-col relative transition-opacity duration-300">
+        {/* Tier Selector */}
+        <div className="flex items-center gap-2 px-4 lg:px-12 py-2 bg-off-white border-b border-border-hairline">
+          <span className="text-xs font-mono text-charcoal-muted mr-2">Tier:</span>
+          {(Object.keys(TIER_LABELS) as AnalysisTier[]).map((tier) => (
+            <button
+              key={tier}
+              onClick={() => {
+                setCurrentTier(tier);
+                setCurrentPhase(0);
+              }}
+              className={`px-3 py-1 text-xs font-mono border transition-colors ${
+                currentTier === tier
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white text-charcoal border-border-hairline hover:border-primary/50'
+              }`}
+            >
+              {TIER_LABELS[tier].label} ({TIER_LABELS[tier].parts})
+            </button>
+          ))}
+        </div>
+
         <Header
           currentPhase={currentPhase}
           setPhase={setCurrentPhase}
+          maxPhases={TIER_LABELS[currentTier].parts}
         />
 
         <div className="flex-1 flex flex-col lg:flex-row">

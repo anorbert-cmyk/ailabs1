@@ -3,7 +3,7 @@
  *
  * Manages the full streaming lifecycle:
  *   - Starts an SSE stream via `streamPerplexityData()`
- *   - Accumulates text and debounce-parses it with `parsePerplexityResponse()`
+ *   - Accumulates text and debounce-parses it with `parseAnalysis()`
  *   - Caches completed phases to avoid re-fetching
  *   - Handles abort on phase switch, errors, and fallback
  *
@@ -15,7 +15,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { streamPerplexityData } from './perplexityApi';
-import { parsePerplexityResponse, PhaseData } from './contentParser';
+import { parseAnalysis, type PhaseData, type AnalysisTier } from './parsers';
 
 const DEBOUNCE_MS = 250;
 const MIN_CHARS_FOR_PARSE = 80;
@@ -24,10 +24,11 @@ const MIN_NEW_CHARS_FOR_REPARSE = 40;
 interface UseStreamingPhaseOptions {
   apiKey: string;
   enabled: boolean;
+  tier?: AnalysisTier;
 }
 
 export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
-  const { apiKey, enabled } = opts;
+  const { apiKey, enabled, tier = 'syndicate' } = opts;
 
   const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +62,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       if (text.length - lastParsedLengthRef.current < MIN_NEW_CHARS_FOR_REPARSE) return;
 
       try {
-        const parsed = parsePerplexityResponse(text, phaseIndex, []);
+        const parsed = parseAnalysis(tier, text, phaseIndex, []);
         // Re-check after potentially expensive parse
         if (requestIdRef.current !== reqId) return;
         lastParsedLengthRef.current = text.length;
@@ -70,7 +71,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
         console.warn('[Streaming] Intermediate parse error:', err);
       }
     }, DEBOUNCE_MS);
-  }, [clearDebounce]);
+  }, [clearDebounce, tier]);
 
   const loadPhase = useCallback((phaseIndex: number) => {
     // Abort any in-flight stream
@@ -129,7 +130,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
           abortRef.current = null;
 
           try {
-            const finalData = parsePerplexityResponse(fullText, phaseIndex, citations);
+            const finalData = parseAnalysis(tier, fullText, phaseIndex, citations);
             phaseCache.current.set(phaseIndex, finalData);
             setPhaseData(finalData);
           } catch (err) {
@@ -160,7 +161,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       undefined,
       controller.signal
     );
-  }, [apiKey, enabled, clearDebounce, debouncedParse]);
+  }, [apiKey, enabled, tier, clearDebounce, debouncedParse]);
 
   const retryPhase = useCallback((phaseIndex: number) => {
     phaseCache.current.delete(phaseIndex);
