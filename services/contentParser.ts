@@ -188,8 +188,9 @@ interface RawBlock {
 }
 
 /**
- * Split markdown into blocks by ## headings.
- * Content before the first ## heading is treated as an intro block.
+ * Split markdown into blocks by headings (# , ## , ###).
+ * Content before the first heading is treated as an intro block.
+ * ### sub-headings are merged into their parent ## block.
  */
 function splitByHeadings(markdown: string): RawBlock[] {
   const lines = markdown.split('\n');
@@ -198,8 +199,12 @@ function splitByHeadings(markdown: string): RawBlock[] {
   let currentBody: string[] = [];
 
   for (const line of lines) {
-    const headingMatch = line.match(/^##\s+(.+)/);
-    if (headingMatch) {
+    // Match # or ## level headings as section boundaries
+    const headingMatch = line.match(/^#{1,2}\s+(.+)/);
+    // Skip ### or deeper - those stay as body content
+    const isSubHeading = line.match(/^#{3,}\s+/);
+
+    if (headingMatch && !isSubHeading) {
       // Push previous block
       if (currentHeading || currentBody.length > 0) {
         blocks.push({ heading: currentHeading, body: currentBody.join('\n').trim() });
@@ -223,8 +228,10 @@ function splitByHeadings(markdown: string): RawBlock[] {
 
 function hasTable(body: string): boolean {
   const lines = body.split('\n').filter(l => l.trim().startsWith('|'));
-  // Need at least header + separator + 1 data row
-  return lines.length >= 3;
+  if (lines.length < 3) return false;
+  // Verify second pipe-line is a separator row (e.g., | --- | --- |)
+  const separatorLine = lines[1].trim();
+  return /^\|[\s:|-]+\|$/.test(separatorLine);
 }
 
 function hasBulletList(body: string): boolean {
@@ -336,6 +343,7 @@ function parseNumberedList(body: string): string[] {
 
 /**
  * Extract plain paragraph text (non-table, non-list lines).
+ * Sub-headings (###) are included as text; blockquotes (>) are included too.
  */
 function extractParagraphs(body: string): string {
   return body
@@ -347,12 +355,10 @@ function extractParagraphs(body: string): string {
         !trimmed.startsWith('|') &&
         !trimmed.startsWith('---') &&
         !/^\s*[-*]\s/.test(l) &&
-        !/^\s*\d+[.)]\s/.test(l) &&
-        !trimmed.startsWith('###') &&
-        !trimmed.startsWith('>')
+        !/^\s*\d+[.)]\s/.test(l)
       );
     })
-    .map(l => l.replace(/\*\*/g, '').trim())
+    .map(l => l.replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').replace(/^>\s*/, '').trim())
     .join(' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -492,7 +498,9 @@ function parseCards(body: string): CardItem[] | null {
   }
 
   // Also try numbered items: 1. **Title**: Description
+  // Reset to avoid mixing bullet + numbered duplicates
   if (cards.length < 2) {
+    cards.length = 0;
     for (const line of lines) {
       const numCardMatch = line.match(/^\s*\d+[.)]\s+\*\*(.+?)\*\*[:\-–]\s*(.+)/);
       if (numCardMatch) {
@@ -506,6 +514,162 @@ function parseCards(body: string): CardItem[] | null {
   }
 
   return cards.length >= 2 ? cards : null;
+}
+
+// ── Detection for additional section types ──────────────────────────
+
+function isBlueprintBlock(heading: string, body: string): boolean {
+  const lower = (heading + ' ' + body).toLowerCase();
+  return (
+    (lower.includes('blueprint') || lower.includes('wireframe') || lower.includes('design spec') ||
+     lower.includes('component spec') || lower.includes('prompt:') || lower.includes('design prompt')) &&
+    (hasBulletList(body) || lower.includes('type'))
+  );
+}
+
+function isRoadmapBlock(heading: string, body: string): boolean {
+  const lower = (heading + ' ' + body).toLowerCase();
+  return (
+    (lower.includes('phase') || lower.includes('roadmap')) &&
+    (lower.includes('month') || lower.includes('week') || lower.includes('timeline') || lower.includes('deliverable')) &&
+    (lower.includes('objective') || lower.includes('milestone') || lower.includes('deliverable'))
+  );
+}
+
+function isStrategyBlock(heading: string, body: string): boolean {
+  const lower = (heading + ' ' + body).toLowerCase();
+  return (
+    (lower.includes('strategy') || lower.includes('strategic')) &&
+    (lower.includes('phase') || lower.includes('pillar') || lower.includes('stream'))
+  );
+}
+
+/**
+ * Parse blueprint/design spec blocks into BlueprintItem array.
+ */
+function parseBlueprints(heading: string, body: string): any[] {
+  const items: any[] = [];
+  const sections = body.split(/###\s+/);
+
+  for (let i = 1; i < sections.length; i++) {
+    const lines = sections[i].split('\n');
+    const title = lines[0]?.replace(/\*\*/g, '').trim() || `Blueprint ${i}`;
+    const rest = lines.slice(1).join('\n');
+    const description = extractParagraphs(rest) || title;
+    const prompt = rest.trim();
+
+    items.push({
+      id: `bp-${i}`,
+      title,
+      description: description.slice(0, 200),
+      prompt,
+    });
+  }
+
+  // If no ### sub-sections, try to parse from bullet items
+  if (items.length === 0) {
+    const bulletItems = parseBulletList(body);
+    bulletItems.forEach((item, i) => {
+      const boldMatch = item.match(/\*\*(.+?)\*\*[:\-–]?\s*(.*)/);
+      items.push({
+        id: `bp-${i + 1}`,
+        title: boldMatch ? boldMatch[1] : `Blueprint ${i + 1}`,
+        description: boldMatch ? boldMatch[2] : item,
+        prompt: item,
+      });
+    });
+  }
+
+  return items;
+}
+
+/**
+ * Parse roadmap phase data from markdown.
+ */
+function parseRoadmapPhase(heading: string, body: string): any | null {
+  // Extract phase name and timeline from heading
+  const phaseMatch = heading.match(/(?:phase\s*\d*[:\s]*)?(.+)/i);
+  const timeMatch = body.match(/(?:timeline|duration|months?|weeks?)[:\s]*([^\n]+)/i);
+
+  const objectives: any[] = [];
+  const deliverables: any[] = [];
+
+  // Parse bullet items into objectives and deliverables
+  const lines = body.split('\n');
+  let currentSection: 'objectives' | 'deliverables' | 'none' = 'none';
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (lower.includes('objective') || lower.includes('goal')) {
+      currentSection = 'objectives';
+      continue;
+    }
+    if (lower.includes('deliverable') || lower.includes('output') || lower.includes('milestone')) {
+      currentSection = 'deliverables';
+      continue;
+    }
+
+    const bulletMatch = line.match(/^\s*[-*]\s+(.+)/);
+    if (bulletMatch) {
+      const text = bulletMatch[1].replace(/\*\*/g, '').trim();
+      if (currentSection === 'objectives') {
+        objectives.push({ title: text, description: '' });
+      } else if (currentSection === 'deliverables') {
+        deliverables.push({ item: text, status: 'Planned' });
+      } else {
+        // Default to deliverables
+        deliverables.push({ item: text, status: 'Planned' });
+      }
+    }
+  }
+
+  if (objectives.length === 0 && deliverables.length === 0) return null;
+
+  return {
+    phase: phaseMatch ? phaseMatch[1].trim() : heading,
+    timeline: timeMatch ? timeMatch[1].trim() : '',
+    objectives,
+    deliverables,
+    decisions: [],
+  };
+}
+
+/**
+ * Parse strategy grid from markdown.
+ */
+function parseStrategyGrid(body: string): any[] {
+  const phases: any[] = [];
+  const sections = body.split(/###\s+/);
+
+  for (let i = 1; i < sections.length; i++) {
+    const lines = sections[i].split('\n');
+    const title = lines[0]?.replace(/\*\*/g, '').trim() || `Phase ${i}`;
+    const rest = lines.slice(1).join('\n');
+    const bullets = parseBulletList(rest);
+
+    phases.push({
+      id: `strategy-${i}`,
+      title,
+      items: bullets.map(b => ({
+        label: b,
+        description: '',
+      })),
+    });
+  }
+
+  // Fallback: try numbered items
+  if (phases.length === 0) {
+    const numbered = parseNumberedList(body);
+    numbered.forEach((item, i) => {
+      phases.push({
+        id: `strategy-${i + 1}`,
+        title: item.slice(0, 60),
+        items: [{ label: item, description: '' }],
+      });
+    });
+  }
+
+  return phases;
 }
 
 // ── Main classification & parsing ───────────────────────────────────
@@ -558,8 +722,8 @@ function classifyAndParse(heading: string, body: string, sectionIndex: number): 
 
   // 4. Risk dossier
   if (isRiskBlock(heading, body) && !hasTable(body)) {
-    // Simple risk header - extract score if present
-    const scoreMatch = body.match(/(?:score|severity|level)[:\s]*(\d+)/i);
+    // Extract score as string to match DesignLibrary's RiskData.score: string
+    const scoreMatch = body.match(/(?:score|severity|level)[:\s]*([^\n,.]+)/i);
     return {
       id,
       title: heading,
@@ -568,7 +732,7 @@ function classifyAndParse(heading: string, body: string, sectionIndex: number): 
       data: {
         title: heading,
         description: paragraphText || 'Risk assessment overview.',
-        score: scoreMatch ? parseInt(scoreMatch[1]) : 7,
+        score: scoreMatch ? scoreMatch[1].trim() : 'MEDIUM',
       },
     };
   }
@@ -587,7 +751,49 @@ function classifyAndParse(heading: string, body: string, sectionIndex: number): 
     }
   }
 
-  // 6. Cards (structured bullet items with bold titles)
+  // 6a. Blueprints (design specs, wireframe descriptions, component specs)
+  if (isBlueprintBlock(heading, body)) {
+    const blueprints = parseBlueprints(heading, body);
+    if (blueprints.length > 0) {
+      return {
+        id,
+        title: heading,
+        content: paragraphText || 'Design specifications and component blueprints.',
+        type: 'blueprints',
+        data: blueprints,
+      };
+    }
+  }
+
+  // 6b. Roadmap phase (timeline phases with objectives/deliverables)
+  if (isRoadmapBlock(heading, body)) {
+    const roadmapData = parseRoadmapPhase(heading, body);
+    if (roadmapData) {
+      return {
+        id,
+        title: heading,
+        content: paragraphText || heading,
+        type: 'roadmap_phase',
+        data: roadmapData,
+      };
+    }
+  }
+
+  // 6c. Strategy grid (phases with details)
+  if (isStrategyBlock(heading, body)) {
+    const phases = parseStrategyGrid(body);
+    if (phases.length > 0) {
+      return {
+        id,
+        title: heading,
+        content: paragraphText || heading,
+        type: 'strategy_grid',
+        data: phases,
+      };
+    }
+  }
+
+  // 6d. Cards (structured bullet items with bold titles)
   const cards = parseCards(body);
   if (cards && cards.length >= 2) {
     return {
@@ -654,20 +860,22 @@ export function parsePerplexityResponse(
   const meta = PHASE_META[phaseIndex] || PHASE_META[0];
   const blocks = splitByHeadings(markdown);
 
-  const sections: ParsedSection[] = blocks
-    .filter(block => block.heading || block.body.trim().length > 0)
-    .map((block, idx) => {
-      // Intro block (before first heading) becomes lead text
-      if (!block.heading && idx === 0) {
-        return {
-          id: 'section-00',
-          title: 'Overview',
-          content: extractParagraphs(block.body) || block.body.trim(),
-          type: 'text' as SectionType,
-        };
-      }
-      return classifyAndParse(block.heading, block.body, idx);
-    });
+  const filteredBlocks = blocks.filter(block => block.heading || block.body.trim().length > 0);
+  let sectionCounter = 0;
+
+  const sections: ParsedSection[] = filteredBlocks.map((block) => {
+    const currentIndex = sectionCounter++;
+    // Intro block (before first heading) becomes lead text
+    if (!block.heading && currentIndex === 0) {
+      return {
+        id: `section-${String(currentIndex + 1).padStart(2, '0')}`,
+        title: 'Overview',
+        content: extractParagraphs(block.body) || block.body.trim(),
+        type: 'text' as SectionType,
+      };
+    }
+    return classifyAndParse(block.heading, block.body, currentIndex);
+  });
 
   // Build sources from citations
   const sources: SourceItem[] = (citations || []).map((url, i) => {

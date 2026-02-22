@@ -1315,208 +1315,6 @@ TYPE D: BADGES
     };
   }
 
-  // PHASE 06: RISK, METRICS & ROI
-  if (phaseIndex === 5) {
-    return {
-      id: "phase-06",
-      badge: "Strategic Analysis",
-      title: "Risk, Metrics & ROI Justification",
-      subtitle: "Critical exposure analysis, success metrics, and financial justification.",
-      metadata: ["Input: Syndicate Part 6", "Status: Critical Review", "Model: Gemini 3.1 Pro Preview"],
-      sources: [
-         { source: 'Perplexity', title: 'Syndicate Part 6: Risk & ROI', icon: 'description' },
-         { source: 'Stripe', title: 'MRR Projections', icon: 'payments' },
-         { source: 'PostHog', title: 'UX Metrics', icon: 'analytics' }
-      ],
-      sections: [
-        // 1. Risk Matrix
-        {
-           id: "section-risk-matrix",
-           title: "1. Comprehensive Risk Matrix",
-           type: "risk_dossier_header" as const,
-           data: {
-             title: "Strategic Risk Assessment",
-             description: "Analysis of 10 critical risk vectors across strategic, operational, and financial dimensions.",
-             score: "MEDIUM-HIGH"
-           }
-        },
-        {
-           id: "section-risk-table",
-           title: "Risk Detail",
-           type: "table" as const,
-           content: "Detailed mitigation strategies for identified risks.",
-           columns: [
-             { header: "ID", key: "id", width: "w-16" },
-             { header: "Risk Description", key: "desc", width: "w-1/4" },
-             { header: "Likelihood", key: "prob", width: "w-24" },
-             { header: "Impact", key: "impact", width: "w-24" },
-             { header: "Score", key: "score", width: "w-24" },
-             { header: "Mitigation Strategy", key: "mitigation", width: "w-1/3" },
-             { header: "Owner", key: "owner", width: "w-24" },
-             { header: "Contingency", key: "contingency", width: "w-1/4" }
-           ],
-           data: [
-             { id: "R1", desc: "AI visibility/GEO doesn't drive meaningful traffic; clients don't see value in 30-60 days", prob: "Medium (30%)", impact: "High", score: "HIGH", mitigation: "Run 2 pilot case studies (Weeks 6-12) with explicit AI visibility KPIs. Set realistic 60-90 day expectations. Track AI citations weekly.", owner: "Founder", contingency: "Pivot to proven SEO + dashboard positioning. Reframe AI visibility as 'future-proof bonus'." },
-             { id: "R2", desc: "Client Cockpit v1 delayed beyond Week 18, killing competitive differentiation timing", prob: "Medium (25%)", impact: "High", score: "HIGH", mitigation: "Use no-code tools (Retool, Softr) not custom dev. Embed existing analytics (Dune). Hire dashboard contractor by Week 12.", owner: "Founder + Dev", contingency: "Launch 'manual dashboard' (Notion + embeds) as v0.5. Still provides transparency." },
-             { id: "R3", desc: "Founder bandwidth bottleneck: Solo founder can't deliver pilots + build systems + sell simultaneously", prob: "High (40%)", impact: "High", score: "HIGH", mitigation: "Hire part-time contractor (15-20 hrs/week) by Week 4. Founder focuses on strategy. Use AI tools to 3x output.", owner: "Founder", contingency: "Extend timeline by 4-8 weeks. Reduce pilot scope (1 pilot not 2). Accept lower MRR target." },
-             { id: "R4", desc: "On-chain analytics integration complexity exceeds estimates (Dune API, wallet linking)", prob: "Medium (30%)", impact: "Medium", score: "MEDIUM", mitigation: "Start with manual on-chain reporting. Partner with Dune/Nansen for API access by Month 4. Budget $2K-$5K for dev.", owner: "Founder + Dev", contingency: "Offer 'on-chain analytics consultation' (teach clients) not automated dashboard." },
-             { id: "R5", desc: "Case studies underperform or clients refuse testimonials", prob: "Medium (25%)", impact: "High", score: "MEDIUM", mitigation: "Build case study rights into pilot SOWs. Offer incentives ($500 gift card). Set conservative success metrics.", owner: "Founder", contingency: "Focus on 'process case studies' (methodology). Use anonymized data." },
-             { id: "R6", desc: "Web3 market downturn reduces client budgets", prob: "Low (15%)", impact: "High", score: "MEDIUM", mitigation: "Dual positioning: 'Web2/Web3'. Target 50% Web2 clients (SaaS, fintech) for diversification.", owner: "Founder", contingency: "Increase Web2 focus to 80%. Drop 'Web3' from primary positioning." },
-             { id: "R7", desc: "Competitors (Coinbound, RZLT) launch similar AI-native + dashboard combo", prob: "Low (15%)", impact: "Medium", score: "LOW", mitigation: "Speed to market: Launch public pricing + lead magnet by Week 5. Establish 'first mover' brand via thought leadership.", owner: "Founder", contingency: "Double down on service quality and client relationships. Add unique IP (Growth Score)." },
-             { id: "R8", desc: "GDPR/CCPA compliance gaps in dashboard (wallet data = PII)", prob: "Low (10%)", impact: "High", score: "MEDIUM", mitigation: "Legal review by Week 12. Implement explicit consent, data deletion workflows. Use Osano/Termly.", owner: "Founder", contingency: "Remove wallet-level tracking (use aggregated only). Inform clients: 'We prioritize privacy'." },
-             { id: "R9", desc: "Client churn in Months 1-3 due to unrealistic expectations", prob: "Medium (30%)", impact: "Medium", score: "MEDIUM", mitigation: "Explicit '90-Day Roadmap' in sales. Monthly retro calls. 'Month 1 Progress Report' at Day 25.", owner: "Founder", contingency: "If churn >20%, offer 'satisfaction guarantee' (refund Month 1)." },
-             { id: "R10", desc: "Support/operational scalability: 8+ clients overwhelm founder", prob: "High (35%)", impact: "Medium", score: "MEDIUM", mitigation: "Productize services: reusable templates, AI workflows. Hire Client Success Manager (part-time) by Month 6.", owner: "Founder", contingency: "Accept lower client count (5-6) for higher quality/premium price." }
-           ]
-        },
-        // 2. Success Metrics
-        {
-          id: "section-kpis",
-          title: "2. Success Metrics Dashboard",
-          type: "table" as const,
-          content: "Primary KPIs (North Star Metrics)",
-          columns: [
-            { header: "Metric", key: "metric", width: "w-1/4" },
-            { header: "Baseline", key: "baseline", width: "w-1/6" },
-            { header: "Target (Month 3)", key: "m3", width: "w-1/6" },
-            { header: "Target (Month 9)", key: "m9", width: "w-1/6" },
-            { header: "Measurement Method", key: "method", width: "w-1/4" }
-          ],
-          data: [
-            { metric: "Monthly Recurring Revenue (MRR)", baseline: "$0", m3: "$15,000 (2-3 clients)", m9: "$50,000 (6-8 clients)", method: "Stripe dashboard" },
-            { metric: "Client NPS", baseline: "N/A", m3: "≥40 (acceptable)", m9: "≥60 (excellent)", method: "Quarterly Typeform survey" },
-            { metric: "Dashboard Login Frequency", baseline: "N/A", m3: "≥3x per week", m9: "≥5x per week", method: "PostHog event tracking" },
-            { metric: "Pilot Client Success Rate", baseline: "N/A", m3: "100% (2/2 pilots)", m9: "N/A", method: "Binary yes/no per pilot" },
-            { metric: "Thought Leadership Reach", baseline: "0", m3: "+500 followers", m9: "+2,000 followers", method: "LinkedIn analytics" }
-          ]
-        },
-        {
-          id: "section-secondary-metrics",
-          title: "Secondary Metrics",
-          type: "cards" as const,
-          content: "Supporting Indicators",
-          data: [
-            { title: "Client Acquisition", text: "Lead gen rate: 10+ qualified leads/month. Conversion rate: ≥30%. Sales cycle: ≤4 weeks.", icon: "filter_alt" },
-            { title: "Client Engagement", text: "Onboarding completion: 100% within 7 days. Experiment launch rate: ≥1/client/month. Check-in attendance: ≥90%.", icon: "handshake" },
-            { title: "Service Quality", text: "Experiment success: ≥60%. AI citations: ≥10/client. On-chain attribution: ≥50% tracked.", icon: "high_quality" },
-            { title: "Retention", text: "Churn rate: ≤10%. Expansion revenue: ≥20%. Contract renewal: 100% of pilots.", icon: "loop" },
-            { title: "Operational Efficiency", text: "Founder hours: ≤15 hrs/client/week. Support tickets: ≤5/client/month. Uptime: ≥99.5%.", icon: "speed" },
-            { title: "UX Metrics", text: "Task completion: ≥95%. Error rate: ≤2%. Accessibility: WCAG 2.1 AA. Mobile usage: ≥20%.", icon: "touch_app" }
-          ]
-        },
-        // 3. OKRs
-        {
-          id: "section-okrs",
-          title: "3. Business OKR Alignment",
-          type: "cards" as const,
-          content: "Strategic Objectives",
-          data: [
-            { title: "Obj 1: Product-Market Fit", text: "KR 1.1: Close 2 pilots (≥8/10 sat). KR 1.2: $15K MRR (M3) -> $50K (M9). KR 1.3: Validate AI visibility with 3 case studies.", icon: "ads_click" },
-            { title: "Obj 2: Market Leadership", text: "KR 2.1: 2,000+ followers, 2-3 speaking slots. KR 2.2: Top 3 Google results for 'AI marketing Web3'. KR 2.3: ≥10 leads/month.", icon: "campaign" },
-            { title: "Obj 3: Scalable Operations", text: "KR 3.1: Reduce founder hours to ≤15/week. KR 3.2: ≥90% retention. KR 3.3: Productize 3 reusable systems.", icon: "precision_manufacturing" }
-          ]
-        },
-        // 4. Alignment Matrix
-        {
-          id: "section-alignment",
-          title: "Strategic Alignment Matrix",
-          type: "table" as const,
-          content: "Connecting Business Priority to UX Contribution",
-          columns: [
-            { header: "Priority", key: "priority", width: "w-1/4" },
-            { header: "UX Contribution", key: "ux", width: "w-1/3" },
-            { header: "Measurement", key: "measure", width: "w-1/4" },
-            { header: "Timeline", key: "time", width: "w-1/6" }
-          ],
-          data: [
-            { priority: "Revenue Growth", ux: "Transparent pricing reduces friction; dashboard justifies premium pricing.", measure: "MRR, Close rate (≥30%)", time: "Month 1-9" },
-            { priority: "Client Retention", ux: "Real-time dashboard eliminates anxiety; 90-Day Roadmap sets expectations.", measure: "Churn rate, NPS (≥60)", time: "Month 3-9" },
-            { priority: "Market Differentiation", ux: "Client Cockpit = only Web3 agency with real-time dashboard.", measure: "Thought leadership, Inbound leads", time: "Month 6-9" },
-            { priority: "Operational Efficiency", ux: "AI insights reduce manual reporting; self-serve UX reduces support.", measure: "Founder hours (≤15), Tickets (≤5)", time: "Month 6-9" }
-          ]
-        },
-        // 5. ROI
-        {
-          id: "section-roi-invest",
-          title: "4. ROI Justification",
-          type: "table" as const,
-          content: "Investment Required",
-          columns: [
-            { header: "Category", key: "cat", width: "w-1/4" },
-            { header: "Cost", key: "cost", width: "w-1/4" },
-            { header: "Timeframe", key: "time", width: "w-1/4" },
-            { header: "Notes", key: "notes", width: "w-1/4" }
-          ],
-          data: [
-            { cat: "Design Resources", cost: "$0", time: "Weeks 1-18", notes: "Founder execution (AI tools + Figma)" },
-            { cat: "Development (Cockpit)", cost: "$3K-$5K", time: "Weeks 8-18", notes: "No-code (Retool/Softr)" },
-            { cat: "Research/Testing", cost: "$1,000", time: "Weeks 1-12", notes: "Incentives & Tools" },
-            { cat: "Tools/Infrastructure", cost: "$3,600/yr", time: "Ongoing", notes: "Perplexity, Dune, PostHog" },
-            { cat: "Legal/Compliance", cost: "$1,500", time: "Week 12", notes: "Contracts, Privacy Policy" },
-            { cat: "Contractor", cost: "$15K-$20K", time: "Weeks 4-36", notes: "Content/Community support" },
-            { cat: "Marketing", cost: "$2,000", time: "Weeks 16-36", notes: "Lead magnet, Ads" },
-            { cat: "Pilot Discounts", cost: "$6,000 (Opp. Cost)", time: "Weeks 6-12", notes: "Discounted rates" },
-            { cat: "Founder Salary", cost: "$45,000 (Opp. Cost)", time: "9 Months", notes: "Foregone salary" },
-            { cat: "TOTAL CASH", cost: "$32K-$39K", time: "9 Months", notes: "Excludes opportunity cost" },
-            { cat: "TOTAL ECONOMIC", cost: "$77K-$84K", time: "9 Months", notes: "Includes opportunity cost" }
-          ]
-        },
-        {
-          id: "section-roi-calc",
-          title: "ROI Calculation",
-          type: "roi_analysis" as const,
-          content: "Financial Scenarios",
-          data: [
-            { title: "Scenario 1: Cash-Only", investment: "$32K - $39K", mrr: "$50K ($600K ARR)", roi: "820 - 1,020%", payback: "1 Month" },
-            { title: "Scenario 2: Full Economic", investment: "$77K - $84K", mrr: "$50K ($600K ARR)", roi: "330 - 370%", payback: "1.5 - 2 Months" }
-          ]
-        },
-        // 6. Compliance
-        {
-          id: "section-compliance",
-          title: "5. Compliance & Legal",
-          type: "table" as const,
-          content: "Regulatory Checkpoints",
-          columns: [
-            { header: "Regulation", key: "reg", width: "w-1/6" },
-            { header: "Applicability", key: "apply", width: "w-1/6" },
-            { header: "Status", key: "status", width: "w-1/6" },
-            { header: "Actions", key: "action", width: "w-1/3" },
-            { header: "Deadline", key: "deadline", width: "w-1/6" }
-          ],
-          data: [
-            { reg: "GDPR (EU)", apply: "Yes", status: "Gap", action: "Privacy policy, Consent, DPA, Deletion workflow", deadline: "Week 12" },
-            { reg: "CCPA (CA)", apply: "Yes", status: "Gap", action: "Do Not Sell link, Privacy update", deadline: "Week 12" },
-            { reg: "WCAG 2.1 AA", apply: "Yes", status: "Partial", action: "Audit, Fix contrast/nav issues", deadline: "Week 18" },
-            { reg: "PCI-DSS", apply: "No", status: "Compliant", action: "Use Stripe hosted pages", deadline: "N/A" },
-            { reg: "CAN-SPAM", apply: "Yes", status: "Gap", action: "Address in emails, Unsubscribe link", deadline: "Week 16" },
-            { reg: "Cookie Law", apply: "Yes", status: "Gap", action: "Consent banner, Block analytics", deadline: "Week 5" }
-          ]
-        },
-        // 7. Strategic Notes
-        {
-          id: "section-strategy-notes",
-          title: "6. Strategic Notes",
-          type: "cards" as const,
-          content: "Behind the Decision",
-          data: [
-            { title: "Hybrid Positioning", text: "Chose Dual Web2/Web3 positioning to mitigate market risk and access larger TAM ($50B+).", icon: "alt_route" },
-            { title: "Build (No-Code)", text: "Chose to build Client Cockpit via Retool/Softr for differentiation and control, vs buying generic dashboards.", icon: "build" },
-            { title: "Pilots First", text: "Chose lean validation with 2 pilots before full buildout to de-risk capital.", icon: "flight_takeoff" },
-            { title: "AI Visibility", text: "Positioned AI SEO/GEO as primary differentiator (Blue Ocean) vs nice-to-have.", icon: "visibility" },
-            { title: "Transparent Pricing", text: "Public pricing tiers to reduce sales friction and align with 'transparency' brand.", icon: "payments" }
-          ]
-        },
-        // 8. Summary
-        {
-          id: "section-exec-summary",
-          title: "7. Final Executive Summary",
-          type: "text" as const,
-          content: "The Web3 marketing agency market is professionalizing rapidly. We recommend launching a lean, founder-led agency using a hybrid Service Design + Lean Validation approach. Key deliverables: Web3 Growth Score lead magnet, 2 pilot engagements, and Client Cockpit Dashboard v1. With ~$35K cash investment and expected $50K MRR by Month 9, this initiative offers high ROI (820% cash-only) and a defensible moat."
-        }
-      ]
-    };
-  }
-
   // Fallback for future phases
   return {
     id: `phase-0${phaseIndex + 1}`,
@@ -1533,7 +1331,11 @@ TYPE D: BADGES
 // Set to 'perplexity' to fetch live data, 'mock' to use hardcoded data
 type DataSource = 'perplexity' | 'mock';
 
-const PERPLEXITY_API_KEY = (typeof process !== 'undefined' && process.env?.PERPLEXITY_API_KEY) || '';
+// Vite exposes env vars via import.meta.env (VITE_ prefix) or process.env (define'd)
+const PERPLEXITY_API_KEY: string =
+  (import.meta as any).env?.VITE_PERPLEXITY_API_KEY
+  || (typeof process !== 'undefined' && process.env?.PERPLEXITY_API_KEY)
+  || '';
 const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
 
 export default function App() {
@@ -1548,8 +1350,17 @@ export default function App() {
   // Cache for already-fetched phases (avoids re-fetching)
   const phaseCache = useRef<Map<number, PhaseData>>(new Map());
 
+  // AbortController ref for cancelling in-flight requests on phase switch
+  const abortRef = useRef<AbortController | null>(null);
+
   // ── Load phase data ─────────────────────────────────────────────
   const loadPhaseData = useCallback(async (phaseIndex: number) => {
+    // Cancel any in-flight request
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+
     // Check cache first
     if (phaseCache.current.has(phaseIndex)) {
       setPhaseData(phaseCache.current.get(phaseIndex)!);
@@ -1567,6 +1378,8 @@ export default function App() {
     }
 
     // Fetch from Perplexity
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsLoading(true);
     setLoadError(null);
 
@@ -1575,25 +1388,39 @@ export default function App() {
         apiKey: PERPLEXITY_API_KEY,
       });
 
+      // Check if this request was aborted (user switched phase)
+      if (controller.signal.aborted) return;
+
       const parsed = parsePerplexityResponse(content, phaseIndex, citations);
       phaseCache.current.set(phaseIndex, parsed);
       setPhaseData(parsed);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load content';
-      console.error(`[Perplexity] Phase ${phaseIndex} error:`, message);
+      // Ignore abort errors (user switched phase)
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+
+      const rawMessage = err instanceof Error ? err.message : 'Failed to load content';
+      // Sanitize error message - strip potential API key leaks
+      const message = rawMessage.length > 200 ? rawMessage.slice(0, 200) + '...' : rawMessage;
+      console.error(`[Perplexity] Phase ${phaseIndex} load failed`);
       setLoadError(message);
 
       // Fallback to mock data on error
       const fallback = generatePhaseData(phaseIndex) as PhaseData;
       setPhaseData(fallback);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
   // Load data when phase changes
   useEffect(() => {
     loadPhaseData(currentPhase);
+    return () => {
+      // Cleanup: abort on unmount or phase change
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, [currentPhase, loadPhaseData]);
 
   // Extract section IDs for the Sidebar (Dynamic Navigation)
@@ -1664,7 +1491,7 @@ export default function App() {
               <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-4">
                 <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 text-sm font-mono text-amber-800">
                   <span className="material-symbols-outlined text-[18px]">warning</span>
-                  <span>API error: {loadError}. Showing cached data.</span>
+                  <span>API error. Showing fallback data.</span>
                   <button
                     onClick={() => {
                       phaseCache.current.delete(currentPhase);
