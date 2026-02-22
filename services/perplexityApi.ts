@@ -326,3 +326,206 @@ export async function getPhaseContent(
   const response = await fetchPerplexityData(phaseIndex, config, customPrompt, signal);
   return extractContent(response);
 }
+
+// ── Streaming API ────────────────────────────────────────────────────
+
+export interface StreamCallbacks {
+  onChunk: (chunkText: string, accumulated: string) => void;
+  onComplete: (fullText: string, citations: string[]) => void;
+  onError: (error: Error) => void;
+}
+
+/**
+ * Stream a Perplexity API response using Server-Sent Events.
+ *
+ * Sends `stream: true` in the request body. Reads the response as an SSE
+ * stream, calling `onChunk` for each content delta, `onComplete` when the
+ * stream finishes, and `onError` on failure.
+ *
+ * Includes the same retry logic as `fetchPerplexityData` (max 2 retries
+ * with exponential backoff for network/429/5xx errors).
+ */
+export async function streamPerplexityData(
+  phaseIndex: number,
+  config: PerplexityApiConfig,
+  callbacks: StreamCallbacks,
+  customPrompt?: { system?: string; user?: string },
+  signal?: AbortSignal
+): Promise<void> {
+  const { apiKey, model, maxTokens, temperature, reasoningEffort } = { ...DEFAULT_CONFIG, ...config };
+
+  if (!apiKey) {
+    callbacks.onError(new Error('Perplexity API key is not configured'));
+    return;
+  }
+
+  const phasePrompt = PHASE_PROMPTS[phaseIndex] || PHASE_PROMPTS[0];
+  const systemPrompt = customPrompt?.system || phasePrompt.system;
+  const userPrompt = customPrompt?.user || phasePrompt.user;
+
+  const messages: PerplexityMessage[] = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ];
+
+  const requestBody = JSON.stringify({
+    model,
+    messages,
+    max_tokens: maxTokens,
+    temperature,
+    stream: true,
+    ...(reasoningEffort && { reasoning_effort: reasoningEffort }),
+  });
+
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (signal?.aborted) {
+      callbacks.onError(new Error('Request cancelled'));
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const controller = new AbortController();
+
+    try {
+      timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      if (signal) {
+        signal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+
+      const response = await fetch(PERPLEXITY_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: requestBody,
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const status = response.status;
+        const errorBody = await response.text().catch(() => '');
+        const safeError = errorBody.length > 200 ? errorBody.slice(0, 200) + '...' : errorBody;
+
+        if ((status === 429 || status >= 500) && attempt < MAX_RETRIES) {
+          lastError = new Error(`[retryable] Perplexity API error ${status}`);
+          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        throw new Error(`Perplexity API error ${status}: ${safeError}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is not readable (streaming not supported)');
+      }
+
+      // Read SSE stream
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let accumulated = '';
+      let citations: string[] = [];
+
+      try {
+        while (true) {
+          if (signal?.aborted) {
+            reader.cancel();
+            callbacks.onError(new Error('Request cancelled'));
+            return;
+          }
+
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          // Keep the last potentially incomplete line in the buffer
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith(':')) continue; // skip empty lines and comments
+
+            if (trimmed === 'data: [DONE]') {
+              // Stream is complete
+              if (timeoutId !== undefined) clearTimeout(timeoutId);
+              callbacks.onComplete(accumulated, citations);
+              return;
+            }
+
+            if (trimmed.startsWith('data: ')) {
+              const jsonStr = trimmed.slice(6); // remove "data: " prefix
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta && typeof delta === 'string') {
+                  accumulated += delta;
+                  callbacks.onChunk(delta, accumulated);
+                }
+
+                // Capture citations from the final chunk
+                if (parsed.citations && Array.isArray(parsed.citations)) {
+                  citations = parsed.citations.filter(
+                    (c: unknown) => typeof c === 'string' && c.length > 0
+                  );
+                }
+
+                // Check finish_reason
+                const finishReason = parsed.choices?.[0]?.finish_reason;
+                if (finishReason === 'stop') {
+                  if (timeoutId !== undefined) clearTimeout(timeoutId);
+                  callbacks.onComplete(accumulated, citations);
+                  return;
+                }
+              } catch {
+                // Malformed JSON in SSE line — skip
+                console.warn('[Streaming] Skipping malformed SSE data line');
+              }
+            }
+          }
+        }
+
+        // If we reach here without [DONE] or finish_reason=stop,
+        // treat whatever we have as complete
+        if (accumulated.length > 0) {
+          callbacks.onComplete(accumulated, citations);
+        } else {
+          callbacks.onError(new Error('Stream ended without content'));
+        }
+      } catch (readErr) {
+        reader.cancel().catch(() => {});
+        throw readErr;
+      }
+
+      return; // Success — exit retry loop
+
+    } catch (err) {
+      if (isAbortError(err)) {
+        if (signal?.aborted) {
+          callbacks.onError(new Error('Request cancelled'));
+          return;
+        }
+        callbacks.onError(new Error('Perplexity API request timed out'));
+        return;
+      }
+
+      if (isRetryableError(err) && attempt < MAX_RETRIES) {
+        lastError = err instanceof Error ? err : new Error('Unknown error');
+        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      callbacks.onError(err instanceof Error ? err : new Error('Unknown streaming error'));
+      return;
+    } finally {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    }
+  }
+
+  callbacks.onError(lastError || new Error('Streaming request failed after retries'));
+}

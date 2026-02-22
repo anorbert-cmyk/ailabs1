@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Article } from './components/Article';
 import { RightPanel, SourceItem } from './components/RightPanel';
 import { FeedbackWidget } from './components/FeedbackWidget';
-import { getPhaseContent } from './services/perplexityApi';
-import { parsePerplexityResponse, PhaseData } from './services/contentParser';
+import { useStreamingPhase } from './services/useStreamingPhase';
+import type { PhaseData } from './services/contentParser';
 
 /* 
   =============================================================================
@@ -1340,94 +1340,51 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<string>('01');
   const [currentPhase, setCurrentPhase] = useState<number>(5);
 
-  // Async data loading state
-  const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(DATA_SOURCE === 'perplexity');
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // Mock data state (used when no API key)
+  const [mockPhaseData, setMockPhaseData] = useState<PhaseData | null>(null);
 
-  // Cache for already-fetched phases (avoids re-fetching)
-  const phaseCache = useRef<Map<number, PhaseData>>(new Map());
+  // Streaming hook (active when API key is present)
+  const {
+    phaseData: streamPhaseData,
+    isLoading,
+    isStreaming,
+    loadError,
+    loadPhase,
+    retryPhase,
+  } = useStreamingPhase({
+    apiKey: PERPLEXITY_API_KEY,
+    enabled: DATA_SOURCE === 'perplexity',
+  });
 
-  // AbortController ref for cancelling in-flight requests on phase switch
-  const abortRef = useRef<AbortController | null>(null);
+  // Determine active phaseData (stream vs mock)
+  const phaseData = DATA_SOURCE === 'perplexity' ? streamPhaseData : mockPhaseData;
 
-  // ── Load phase data ─────────────────────────────────────────────
-  const loadPhaseData = useCallback(async (phaseIndex: number) => {
-    // Cancel any in-flight request
-    if (abortRef.current) {
-      abortRef.current.abort();
-      abortRef.current = null;
-    }
-
-    // Check cache first
-    if (phaseCache.current.has(phaseIndex)) {
-      setPhaseData(phaseCache.current.get(phaseIndex)!);
-      setLoadError(null);
-      return;
-    }
-
-    // Use mock data if no API key
-    if (DATA_SOURCE === 'mock') {
-      const data = generatePhaseData(phaseIndex) as PhaseData;
-      phaseCache.current.set(phaseIndex, data);
-      setPhaseData(data);
-      setLoadError(null);
-      return;
-    }
-
-    // Fetch from Perplexity
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setIsLoading(true);
-    setLoadError(null);
-
-    try {
-      const { content, citations } = await getPhaseContent(phaseIndex, {
-        apiKey: PERPLEXITY_API_KEY,
-      }, undefined, controller.signal);
-
-      // Check if this request was aborted (user switched phase)
-      if (controller.signal.aborted) return;
-
-      const parsed = parsePerplexityResponse(content, phaseIndex, citations);
-      phaseCache.current.set(phaseIndex, parsed);
-      setPhaseData(parsed);
-    } catch (err) {
-      // Ignore abort errors (user switched phase)
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-
-      const rawMessage = err instanceof Error ? err.message : 'Failed to load content';
-      // Sanitize error message - strip potential API key leaks
-      const message = rawMessage.length > 200 ? rawMessage.slice(0, 200) + '...' : rawMessage;
-      console.error(`[Perplexity] Phase ${phaseIndex} load failed`);
-      setLoadError(message);
-
-      // Fallback to mock data on error
-      const fallback = generatePhaseData(phaseIndex) as PhaseData;
-      setPhaseData(fallback);
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsLoading(false);
-      }
-    }
-  }, []);
+  // Fallback: if streaming errors and no stream data, show mock data
+  const effectivePhaseData = phaseData || (loadError ? mockPhaseData : null);
 
   // Load data when phase changes
   useEffect(() => {
-    loadPhaseData(currentPhase);
-    return () => {
-      // Cleanup: abort on unmount or phase change
-      if (abortRef.current) abortRef.current.abort();
-    };
-  }, [currentPhase, loadPhaseData]);
+    if (DATA_SOURCE === 'mock') {
+      setMockPhaseData(generatePhaseData(currentPhase) as PhaseData);
+    } else {
+      loadPhase(currentPhase);
+    }
+  }, [currentPhase, loadPhase]);
+
+  // Generate mock fallback when streaming fails
+  useEffect(() => {
+    if (loadError && !streamPhaseData && DATA_SOURCE === 'perplexity') {
+      setMockPhaseData(generatePhaseData(currentPhase) as PhaseData);
+    }
+  }, [loadError, streamPhaseData, currentPhase]);
 
   // Extract section IDs for the Sidebar (Dynamic Navigation)
-  const sectionIds = phaseData?.sections
-    ? phaseData.sections.map(section => section.id.replace('section-', ''))
+  const sectionIds = effectivePhaseData?.sections
+    ? effectivePhaseData.sections.map(section => section.id.replace('section-', ''))
     : [];
 
   useEffect(() => {
-    if (!phaseData) return;
+    if (!effectivePhaseData) return;
 
     const observerOptions = {
       root: null,
@@ -1457,7 +1414,7 @@ export default function App() {
       clearTimeout(timeoutId);
       observer.disconnect();
     };
-  }, [currentPhase, phaseData]);
+  }, [currentPhase, effectivePhaseData]);
 
   return (
     <div className="flex min-h-screen bg-off-white text-charcoal font-sans selection:bg-technical-blue selection:text-primary relative">
@@ -1475,29 +1432,36 @@ export default function App() {
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Scrollable Article Content */}
           <div className="flex-1 bg-white min-w-0">
-            {/* Loading State */}
+            {/* Loading State — before first chunk arrives */}
             {isLoading && (
               <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                   <div className="inline-flex items-center gap-3 px-6 py-4 bg-off-white border border-border-hairline">
                     <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                    <span className="text-sm font-mono text-charcoal-muted">Loading analysis...</span>
+                    <span className="text-sm font-mono text-charcoal-muted">Connecting to AI...</span>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Streaming Indicator — while chunks are arriving */}
+            {isStreaming && effectivePhaseData && (
+              <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-4">
+                <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-200 text-sm font-mono text-blue-700">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <span>Streaming analysis...</span>
+                </div>
+              </div>
+            )}
+
             {/* Error Banner (shows above content when falling back) */}
-            {loadError && phaseData && (
+            {loadError && effectivePhaseData && (
               <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-4">
                 <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 text-sm font-mono text-amber-800">
                   <span className="material-symbols-outlined text-[18px]">warning</span>
                   <span>API error. Showing fallback data.</span>
                   <button
-                    onClick={() => {
-                      phaseCache.current.delete(currentPhase);
-                      loadPhaseData(currentPhase);
-                    }}
+                    onClick={() => retryPhase(currentPhase)}
                     className="ml-auto px-3 py-1 border border-amber-300 hover:bg-amber-100 transition-colors text-xs"
                   >
                     Retry
@@ -1506,14 +1470,14 @@ export default function App() {
               </div>
             )}
 
-            {/* Article Content */}
-            {phaseData && !isLoading && (
-              <Article key={currentPhase} data={phaseData} />
+            {/* Article Content — shows as soon as first parsed data is available */}
+            {effectivePhaseData && !isLoading && (
+              <Article key={currentPhase} data={effectivePhaseData} />
             )}
           </div>
 
           {/* Fixed/Sticky Right Panel for Desktop */}
-          {currentPhase !== 5 && <RightPanel sources={phaseData?.sources} />}
+          {currentPhase !== 5 && <RightPanel sources={effectivePhaseData?.sources} />}
         </div>
 
         <FeedbackWidget />
