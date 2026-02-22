@@ -114,8 +114,9 @@ function parsePainPointsSection(body: string): ParsedSection {
 }
 
 function parseViabilitySection(body: string): ParsedSection {
-  // Extract score number (0-100)
-  const scoreMatch = body.match(/\b(\d{1,3})\s*(?:\/\s*100|%|out of 100)?\b/);
+  // Extract score number (0-100) — require a qualifier to avoid matching arbitrary numbers
+  const scoreMatch = body.match(/\b(\d{1,3})\s*(?:\/\s*100|%|out of 100)\b/)
+    || body.match(/(?:score|viability|rating|assessment)[:\s]*(\d{1,3})\b/i);
   const score = scoreMatch ? Math.min(100, Math.max(0, parseInt(scoreMatch[1], 10))) : 50;
 
   let emoji: string;
@@ -290,8 +291,9 @@ export function parseObserverAnalysis(
   if (viabilityBlock) {
     sections.push(parseViabilitySection(viabilityBlock.body));
   } else {
-    // Try to find a score anywhere in the markdown
-    const globalScoreMatch = markdown.match(/\b(\d{1,3})\s*(?:\/\s*100|out of 100)\b/);
+    // Try to find a score anywhere in the markdown (require qualifier)
+    const globalScoreMatch = markdown.match(/\b(\d{1,3})\s*(?:\/\s*100|out of 100)\b/)
+      || markdown.match(/(?:score|viability|rating)[:\s]*(\d{1,3})\b/i);
     if (globalScoreMatch) {
       sections.push(parseViabilitySection(globalScoreMatch[0]));
     }

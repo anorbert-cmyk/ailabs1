@@ -141,8 +141,12 @@ export function splitByHeadings(markdown: string): RawBlock[] {
 export function hasTable(body: string): boolean {
   const lines = body.split('\n').filter(l => l.trim().startsWith('|'));
   if (lines.length < 3) return false;
-  const separatorLine = lines[1].trim();
-  return /^\|[\s:|-]+\|?$/.test(separatorLine) && separatorLine.includes('-');
+  // Find a separator line anywhere in the first few pipe-delimited lines
+  const hasSeparator = lines.slice(1, 3).some(l => {
+    const trimmed = l.trim();
+    return /^\|[\s:|-]+\|?$/.test(trimmed) && trimmed.includes('-');
+  });
+  return hasSeparator;
 }
 
 export function hasBulletList(body: string): boolean {
@@ -364,7 +368,7 @@ export function parseCompetitor(heading: string, body: string): CompetitorData |
       }
     }
 
-    const bulletMatch = line.match(/^\s*(?:[-*]|\d+[.)]) \s*(.+)/);
+    const bulletMatch = line.match(/^\s*(?:[-*]|\d+[.)])\s+(.+)/);
     if (bulletMatch) {
       const text = cleanText(bulletMatch[1]);
       if (currentList === 'strengths') strengths.push(text);
@@ -600,7 +604,7 @@ export function parseRoadmapPhase(heading: string, body: string): RoadmapPhaseDa
       }
     }
 
-    const itemMatch = line.match(/^\s*(?:[-*]|\d+[.)]) \s*(.+)/);
+    const itemMatch = line.match(/^\s*(?:[-*]|\d+[.)])\s+(.+)/);
     if (itemMatch) {
       const text = cleanText(itemMatch[1]);
       if (currentSection === 'objectives') {

@@ -35,7 +35,8 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const phaseCache = useRef<Map<number, PhaseData>>(new Map());
+  const phaseCache = useRef<Map<string, PhaseData>>(new Map());
+  const cachedTierRef = useRef<AnalysisTier>(tier);
   const abortRef = useRef<AbortController | null>(null);
   const currentPhaseRef = useRef<number>(-1);
   const accumulatedRef = useRef('');
@@ -89,9 +90,16 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
     accumulatedRef.current = '';
     lastParsedLengthRef.current = 0;
 
-    // Check cache
-    if (phaseCache.current.has(phaseIndex)) {
-      setPhaseData(phaseCache.current.get(phaseIndex)!);
+    // Clear cache if tier changed
+    if (cachedTierRef.current !== tier) {
+      phaseCache.current.clear();
+      cachedTierRef.current = tier;
+    }
+
+    // Check cache (composite key: tier + phaseIndex)
+    const cacheKey = `${tier}:${phaseIndex}`;
+    if (phaseCache.current.has(cacheKey)) {
+      setPhaseData(phaseCache.current.get(cacheKey)!);
       setLoadError(null);
       setIsLoading(false);
       setIsStreaming(false);
@@ -131,7 +139,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
 
           try {
             const finalData = parseAnalysis(tier, fullText, phaseIndex, citations);
-            phaseCache.current.set(phaseIndex, finalData);
+            phaseCache.current.set(`${tier}:${phaseIndex}`, finalData);
             setPhaseData(finalData);
           } catch (err) {
             console.error('[Streaming] Final parse error:', err);
@@ -164,9 +172,9 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
   }, [apiKey, enabled, tier, clearDebounce, debouncedParse]);
 
   const retryPhase = useCallback((phaseIndex: number) => {
-    phaseCache.current.delete(phaseIndex);
+    phaseCache.current.delete(`${tier}:${phaseIndex}`);
     loadPhase(phaseIndex);
-  }, [loadPhase]);
+  }, [loadPhase, tier]);
 
   // Cleanup on unmount
   useEffect(() => {

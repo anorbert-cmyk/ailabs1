@@ -68,11 +68,22 @@ export function parseInsiderAnalysis(
     sections.push(parsed);
   }
 
-  // 4. Build sources from citations
+  // 4. Fallback: if no sections were produced, add a text section from the raw markdown
+  if (sections.length === 0 && markdown.trim().length > 0) {
+    const content = extractParagraphs(markdown) || cleanText(markdown);
+    sections.push({
+      id: 'section-01',
+      title: meta.title,
+      content: content.slice(0, 2000) || 'Analysis content could not be parsed.',
+      type: 'text' as SectionType,
+    });
+  }
+
+  // 5. Build sources from citations
   const fallbackLabel = `${meta.title} — AI Analysis`;
   const sources = buildSources(citations, fallbackLabel);
 
-  // 5. Assemble PhaseData
+  // 6. Assemble PhaseData
   return {
     id: `insider-part-${partIndex + 1}`,
     badge: meta.badge,

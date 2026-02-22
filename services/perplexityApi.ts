@@ -400,8 +400,14 @@ export async function streamPerplexityData(
     const controller = new AbortController();
     const handleAbort = () => controller.abort();
 
-    try {
+    /** Reset the inactivity timeout — called on each received chunk during streaming. */
+    const resetTimeout = () => {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    };
+
+    try {
+      resetTimeout(); // Initial timeout for connection
       if (signal) {
         signal.addEventListener('abort', handleAbort, { once: true });
       }
@@ -479,6 +485,8 @@ export async function streamPerplexityData(
           }
 
           const { done, value } = await reader.read();
+          // Reset inactivity timeout on each received chunk
+          resetTimeout();
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });

@@ -1502,12 +1502,12 @@ export default function App() {
 
             {/* Article Content — shows as soon as first parsed data is available */}
             {effectivePhaseData && !isLoading && (
-              <Article key={currentPhase} data={effectivePhaseData} />
+              <Article key={`${currentTier}-${currentPhase}`} data={effectivePhaseData} />
             )}
           </div>
 
           {/* Fixed/Sticky Right Panel for Desktop */}
-          {currentPhase !== 5 && <RightPanel sources={effectivePhaseData?.sources} />}
+          {currentPhase !== TIER_LABELS[currentTier].parts - 1 && <RightPanel sources={effectivePhaseData?.sources} />}
         </div>
 
         <FeedbackWidget />
