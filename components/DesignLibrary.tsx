@@ -266,7 +266,9 @@ export const DSCompetitorAnalysis: React.FC<CompetitorData> = ({ name, website, 
       <div className="bg-off-white p-4 lg:p-6 border-b border-border-hairline flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
            <h3 className="font-sans font-bold text-xl text-charcoal break-words">{name}</h3>
-           <a href={website} target="_blank" rel="noreferrer" className="text-xs font-mono text-primary hover:underline break-all block mt-1">{website}</a>
+           {website && (
+             <a href={website} target="_blank" rel="noreferrer" className="text-xs font-mono text-primary hover:underline break-all block mt-1">{website}</a>
+           )}
         </div>
         <div className="text-xs text-charcoal-muted font-mono max-w-full md:max-w-md text-left md:text-right break-words">
           {info}
@@ -1002,7 +1004,19 @@ export interface RiskData {
   score: string;
 }
 
-export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, score }) => (
+export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, score }) => {
+  const getScorePercent = (score: string): number => {
+    const upper = score.toUpperCase().trim();
+    if (upper === 'CRITICAL' || upper === 'EXTREME') return 90;
+    if (upper === 'HIGH') return 75;
+    if (upper === 'MEDIUM') return 50;
+    if (upper === 'LOW') return 25;
+    const num = parseFloat(score);
+    if (!isNaN(num)) return Math.min(Math.max(num, 5), 95);
+    return 50;
+  };
+
+  return (
   <div className="mb-16 lg:mb-24 bg-white">
     <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-charcoal/10 pb-6 mb-12 gap-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -1035,7 +1049,7 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
             <span className="font-mono text-xl font-bold text-charcoal">{score}</span>
           </div>
           <div className="h-1.5 w-full bg-charcoal/10 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500 w-[72%]"></div>
+            <div className="h-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500" style={{ width: `${getScorePercent(score)}%` }}></div>
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -1078,7 +1092,8 @@ export const DSRiskDossierHeader: React.FC<RiskData> = ({ title, description, sc
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // --- 14. ROI Analysis ---
 

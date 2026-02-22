@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { PhaseData as BasePhaseData } from '../services/contentParser';
 import { 
   DSHeader, 
   DSSectionHeader, 
@@ -40,19 +41,12 @@ interface SectionData {
   content: string;
   type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'phase_card' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis' | 'task_list';
   // Flexible data union
-  data?: MetricRow[] | { title: string; text: string; icon: string; subLabel?: string }[] | BlueprintItem[] | any[] | string[] | CompetitorData | RoadmapPhaseData | PhaseCardData | PhaseDetail[] | ResourceData | ErrorPathData[] | RiskData | ROIScenario[] | TaskItem[] | any; 
+  data?: unknown;
   columns?: { header: string; key: string; width?: string }[]; // For tables
 }
 
-interface PhaseData {
-  id: string;
-  badge: string;
-  title: string;
-  subtitle: string;
-  metadata: string[];
-  sources?: any[];
+interface PhaseData extends BasePhaseData {
   visualTimeline?: VisualTimelineData;
-  sections: SectionData[];
 }
 
 interface ArticleProps {
@@ -102,7 +96,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
         {data.sections.map((section, idx) => {
           
           // --- FULL WIDTH SECTIONS ---
-          if (section.type === 'risk_dossier_header') {
+          if (section.type === 'risk_dossier_header' && section.data) {
              return (
                <section key={section.id} id={section.id} className="scroll-mt-32">
                  <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-12 lg:pt-24 mb-16">
@@ -119,7 +113,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               {/* Special Header Handling for Strategy Grid to include Toggle */}
               {section.type === 'strategy_grid' ? (
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-                   {section.title && <DSSectionHeader number={`0${idx + (isRoadmapLayout ? 0 : 1)}`} title={section.title} />}
+                   {section.title && <DSSectionHeader number={String(idx + (isRoadmapLayout ? 0 : 1)).padStart(2, '0')} title={section.title} />}
                    
                    {/* Layout Toggle Switch */}
                    <div className="flex items-center gap-2 bg-off-white p-1 rounded-sm border border-border-hairline self-start md:self-auto">
@@ -143,7 +137,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                 /* Standard Header */
                 section.title && (
                   <DSSectionHeader 
-                    number={`0${idx + (isRoadmapLayout ? 0 : 1)}`} // Adjust numbering if header is skipped
+                    number={String(idx + (isRoadmapLayout ? 0 : 1)).padStart(2, '0')}
                     title={section.title} 
                   />
                 )
@@ -151,7 +145,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               
               {/* Note: Removed mx-auto from inner containers to keep elements left-aligned within the 1100px block */}
               
-              {section.type === 'text' && (
+              {section.type === 'text' && section.content && (
                 <div className="max-w-4xl">
                   <DSParagraph isLead={idx === (isRoadmapLayout ? 1 : 0)}>
                     {section.content}
@@ -161,7 +155,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
 
               {section.type === 'list' && section.data && (
                 <div className="max-w-4xl">
-                   <DSParagraph>{section.content}</DSParagraph>
+                   {section.content && <DSParagraph>{section.content}</DSParagraph>}
                    <DSList items={section.data as string[]} />
                 </div>
               )}
@@ -224,10 +218,10 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                 <DSStrategyGrid phases={section.data as PhaseDetail[]} mode={strategyLayoutMode} />
               )}
 
-              {section.type === 'resource_split' && section.data && (
-                 <DSResourceSplit 
-                   solo={(section.data as any).solo as ResourceData} 
-                   team={(section.data as any).team as ResourceData} 
+              {section.type === 'resource_split' && section.data && (section.data as any).solo && (section.data as any).team && (
+                 <DSResourceSplit
+                   solo={(section.data as any).solo as ResourceData}
+                   team={(section.data as any).team as ResourceData}
                  />
               )}
 
@@ -275,7 +269,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               )}
 
               {/* Occasional Blockquote */}
-              {idx === 2 && section.type === 'text' && (
+              {idx === 2 && section.type === 'text' && data.badge === 'Discovery Phase' && (
                  <div className="max-w-4xl">
                    <DSBlockquote author="Strategic Insight">
                       The intersection of AI automation and Web3 distinctiveness creates a defensible moat in a crowded agency market.
