@@ -370,21 +370,23 @@ await updateAnalysisResult(sessionId, {
 
 ```sql
 -- Uj oszlopok (mindegyik nullable, backward compatible)
-ALTER TABLE analysis_results ADD COLUMN part1_structured JSONB;
-ALTER TABLE analysis_results ADD COLUMN part1_confidence REAL;
-ALTER TABLE analysis_results ADD COLUMN part2_structured JSONB;
-ALTER TABLE analysis_results ADD COLUMN part2_confidence REAL;
-ALTER TABLE analysis_results ADD COLUMN part3_structured JSONB;
-ALTER TABLE analysis_results ADD COLUMN part3_confidence REAL;
-ALTER TABLE analysis_results ADD COLUMN part4_structured JSONB;
-ALTER TABLE analysis_results ADD COLUMN part4_confidence REAL;
-ALTER TABLE analysis_results ADD COLUMN part5_structured JSONB;
-ALTER TABLE analysis_results ADD COLUMN part5_confidence REAL;
-ALTER TABLE analysis_results ADD COLUMN part6_structured JSONB;
-ALTER TABLE analysis_results ADD COLUMN part6_confidence REAL;
+-- FONTOS: A VSL MySQL-t hasznal (PlanetScale), NEM PostgreSQL-t!
+ALTER TABLE analysis_results ADD COLUMN part1_structured JSON;
+ALTER TABLE analysis_results ADD COLUMN part1_confidence FLOAT;
+ALTER TABLE analysis_results ADD COLUMN part2_structured JSON;
+ALTER TABLE analysis_results ADD COLUMN part2_confidence FLOAT;
+ALTER TABLE analysis_results ADD COLUMN part3_structured JSON;
+ALTER TABLE analysis_results ADD COLUMN part3_confidence FLOAT;
+ALTER TABLE analysis_results ADD COLUMN part4_structured JSON;
+ALTER TABLE analysis_results ADD COLUMN part4_confidence FLOAT;
+ALTER TABLE analysis_results ADD COLUMN part5_structured JSON;
+ALTER TABLE analysis_results ADD COLUMN part5_confidence FLOAT;
+ALTER TABLE analysis_results ADD COLUMN part6_structured JSON;
+ALTER TABLE analysis_results ADD COLUMN part6_confidence FLOAT;
 ```
 
-**Miert JSONB:** A PostgreSQL JSONB tamogatja a JSON ertekek indexeleset es lekerdezeset.
+**Miert JSON:** A MySQL 8.0 JSON tipusa tamogatja a strukturalt adatok tarolasat.
+A Drizzle ORM schema.ts-ben: `json('part1_structured')` es `float('part1_confidence')`.
 
 ---
 
