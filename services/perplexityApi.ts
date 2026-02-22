@@ -141,7 +141,7 @@ Include quantified risk assessments with severity levels.${SYSTEM_SUFFIX}`,
 function isRetryableError(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
   // Check error code (Node.js errors)
-  const code = (err as any).code;
+  const code = (err as Error & { code?: string }).code;
   if (code && ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNABORTED', 'UND_ERR_SOCKET'].includes(code)) {
     return true;
   }
@@ -215,12 +215,13 @@ export async function fetchPerplexityData(
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const controller = new AbortController();
+    const handleAbort = () => controller.abort();
 
     try {
       // Combine external signal with timeout signal
       timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       if (signal) {
-        signal.addEventListener('abort', () => controller.abort(), { once: true });
+        signal.addEventListener('abort', handleAbort, { once: true });
       }
 
       const response = await fetch(PERPLEXITY_API_URL, {
@@ -242,7 +243,7 @@ export async function fetchPerplexityData(
         // Retry on 429 (rate limit) or 5xx (server error)
         if ((status === 429 || status >= 500) && attempt < MAX_RETRIES) {
           lastError = new Error(`[retryable] Perplexity API error ${status}`);
-          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt) + Math.random() * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -285,7 +286,7 @@ export async function fetchPerplexityData(
       // Retry on retryable errors
       if (isRetryableError(err) && attempt < MAX_RETRIES) {
         lastError = err instanceof Error ? err : new Error('Unknown error');
-        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt) + Math.random() * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -295,6 +296,7 @@ export async function fetchPerplexityData(
       throw new Error('Unknown error during Perplexity API call');
     } finally {
       if (timeoutId !== undefined) clearTimeout(timeoutId);
+      if (signal) signal.removeEventListener('abort', handleAbort);
     }
   }
 
@@ -333,6 +335,15 @@ export interface StreamCallbacks {
   onChunk: (chunkText: string, accumulated: string) => void;
   onComplete: (fullText: string, citations: string[]) => void;
   onError: (error: Error) => void;
+}
+
+/** Shape of a single SSE chunk from the streaming API. */
+interface StreamChunk {
+  choices?: {
+    delta?: { content?: string };
+    finish_reason?: string | null;
+  }[];
+  citations?: unknown[];
 }
 
 /**
@@ -387,11 +398,12 @@ export async function streamPerplexityData(
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const controller = new AbortController();
+    const handleAbort = () => controller.abort();
 
     try {
       timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       if (signal) {
-        signal.addEventListener('abort', () => controller.abort(), { once: true });
+        signal.addEventListener('abort', handleAbort, { once: true });
       }
 
       const response = await fetch(PERPLEXITY_API_URL, {
@@ -411,7 +423,7 @@ export async function streamPerplexityData(
 
         if ((status === 429 || status >= 500) && attempt < MAX_RETRIES) {
           lastError = new Error(`[retryable] Perplexity API error ${status}`);
-          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt) + Math.random() * 1000;
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -429,6 +441,34 @@ export async function streamPerplexityData(
       let buffer = '';
       let accumulated = '';
       let citations: string[] = [];
+
+      /** Parse a single SSE data line and update accumulated/citations state. */
+      const processDataLine = (jsonStr: string): 'stop' | 'continue' => {
+        try {
+          const parsed: StreamChunk = JSON.parse(jsonStr);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta && typeof delta === 'string') {
+            accumulated += delta;
+            callbacks.onChunk(delta, accumulated);
+          }
+
+          // Capture citations from the final chunk
+          if (parsed.citations && Array.isArray(parsed.citations)) {
+            citations = parsed.citations.filter(
+              (c): c is string => typeof c === 'string' && c.length > 0
+            );
+          }
+
+          // Check finish_reason
+          if (parsed.choices?.[0]?.finish_reason === 'stop') {
+            return 'stop';
+          }
+        } catch {
+          // Malformed JSON in SSE line — skip
+          console.warn('[Streaming] Skipping malformed SSE data line');
+        }
+        return 'continue';
+      };
 
       try {
         while (true) {
@@ -458,34 +498,32 @@ export async function streamPerplexityData(
             }
 
             if (trimmed.startsWith('data: ')) {
-              const jsonStr = trimmed.slice(6); // remove "data: " prefix
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const delta = parsed.choices?.[0]?.delta?.content;
-                if (delta && typeof delta === 'string') {
-                  accumulated += delta;
-                  callbacks.onChunk(delta, accumulated);
-                }
-
-                // Capture citations from the final chunk
-                if (parsed.citations && Array.isArray(parsed.citations)) {
-                  citations = parsed.citations.filter(
-                    (c: unknown) => typeof c === 'string' && c.length > 0
-                  );
-                }
-
-                // Check finish_reason
-                const finishReason = parsed.choices?.[0]?.finish_reason;
-                if (finishReason === 'stop') {
-                  if (timeoutId !== undefined) clearTimeout(timeoutId);
-                  callbacks.onComplete(accumulated, citations);
-                  return;
-                }
-              } catch {
-                // Malformed JSON in SSE line — skip
-                console.warn('[Streaming] Skipping malformed SSE data line');
+              if (processDataLine(trimmed.slice(6)) === 'stop') {
+                if (timeoutId !== undefined) clearTimeout(timeoutId);
+                callbacks.onComplete(accumulated, citations);
+                return;
               }
             }
+          }
+        }
+
+        // Flush remaining buffer — may contain a final data line without trailing newline
+        if (buffer.length > 0) {
+          const trimmed = buffer.trim();
+          if (trimmed === 'data: [DONE]') {
+            // handled below
+          } else if (trimmed.startsWith('data: ')) {
+            processDataLine(trimmed.slice(6));
+          }
+          buffer = '';
+        }
+
+        // Flush any trailing bytes from the decoder
+        const trailing = decoder.decode();
+        if (trailing.length > 0) {
+          const trimmed = trailing.trim();
+          if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
+            processDataLine(trimmed.slice(6));
           }
         }
 
@@ -515,7 +553,7 @@ export async function streamPerplexityData(
 
       if (isRetryableError(err) && attempt < MAX_RETRIES) {
         lastError = err instanceof Error ? err : new Error('Unknown error');
-        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt) + Math.random() * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -524,6 +562,7 @@ export async function streamPerplexityData(
       return;
     } finally {
       if (timeoutId !== undefined) clearTimeout(timeoutId);
+      if (signal) signal.removeEventListener('abort', handleAbort);
     }
   }
 

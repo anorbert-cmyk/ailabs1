@@ -6,6 +6,11 @@
  *   - Accumulates text and debounce-parses it with `parsePerplexityResponse()`
  *   - Caches completed phases to avoid re-fetching
  *   - Handles abort on phase switch, errors, and fallback
+ *
+ * Race condition safety:
+ *   Uses a monotonically increasing `requestId` to guard all callbacks.
+ *   This prevents stale updates both when switching between phases AND
+ *   when retrying the same phase (where phaseIndex alone would be ambiguous).
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -35,6 +40,8 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
   const accumulatedRef = useRef('');
   const lastParsedLengthRef = useRef(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Monotonically increasing ID — guards all callbacks against stale streams. */
+  const requestIdRef = useRef(0);
 
   const clearDebounce = useCallback(() => {
     if (debounceTimerRef.current !== null) {
@@ -43,19 +50,22 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
     }
   }, []);
 
-  const debouncedParse = useCallback((phaseIndex: number) => {
+  const debouncedParse = useCallback((reqId: number, phaseIndex: number) => {
     clearDebounce();
     debounceTimerRef.current = setTimeout(() => {
+      // Stale request — phase switched or retried since this timer was set
+      if (requestIdRef.current !== reqId) return;
+
       const text = accumulatedRef.current;
       if (text.length < MIN_CHARS_FOR_PARSE) return;
       if (text.length - lastParsedLengthRef.current < MIN_NEW_CHARS_FOR_REPARSE) return;
 
       try {
         const parsed = parsePerplexityResponse(text, phaseIndex, []);
+        // Re-check after potentially expensive parse
+        if (requestIdRef.current !== reqId) return;
         lastParsedLengthRef.current = text.length;
-        if (currentPhaseRef.current === phaseIndex) {
-          setPhaseData(parsed);
-        }
+        setPhaseData(parsed);
       } catch (err) {
         console.warn('[Streaming] Intermediate parse error:', err);
       }
@@ -69,6 +79,10 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       abortRef.current = null;
     }
     clearDebounce();
+
+    // Increment request ID — invalidates all in-flight callbacks
+    requestIdRef.current += 1;
+    const reqId = requestIdRef.current;
 
     currentPhaseRef.current = phaseIndex;
     accumulatedRef.current = '';
@@ -97,7 +111,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       { apiKey },
       {
         onChunk: (_chunkText: string, accumulated: string) => {
-          if (currentPhaseRef.current !== phaseIndex) return;
+          if (requestIdRef.current !== reqId) return;
 
           accumulatedRef.current = accumulated;
 
@@ -105,13 +119,14 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
           setIsLoading(false);
           setIsStreaming(true);
 
-          debouncedParse(phaseIndex);
+          debouncedParse(reqId, phaseIndex);
         },
 
         onComplete: (fullText: string, citations: string[]) => {
-          if (currentPhaseRef.current !== phaseIndex) return;
+          if (requestIdRef.current !== reqId) return;
 
           clearDebounce();
+          abortRef.current = null;
 
           try {
             const finalData = parsePerplexityResponse(fullText, phaseIndex, citations);
@@ -127,10 +142,11 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
         },
 
         onError: (error: Error) => {
-          if (currentPhaseRef.current !== phaseIndex) return;
+          if (requestIdRef.current !== reqId) return;
           if (error.message === 'Request cancelled') return;
 
           clearDebounce();
+          abortRef.current = null;
 
           const message = error.message.length > 200
             ? error.message.slice(0, 200) + '...'
@@ -154,7 +170,10 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (abortRef.current) abortRef.current.abort();
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
       clearDebounce();
     };
   }, [clearDebounce]);
