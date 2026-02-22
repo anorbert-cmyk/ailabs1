@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Article } from './components/Article';
 import { RightPanel, SourceItem } from './components/RightPanel';
 import { FeedbackWidget } from './components/FeedbackWidget';
+import { getPhaseContent } from './services/perplexityApi';
+import { parsePerplexityResponse, PhaseData } from './services/contentParser';
 
 /* 
   =============================================================================
@@ -1527,18 +1529,81 @@ TYPE D: BADGES
   };
 };
 
+// ── Data source mode ────────────────────────────────────────────────
+// Set to 'perplexity' to fetch live data, 'mock' to use hardcoded data
+type DataSource = 'perplexity' | 'mock';
+
+const PERPLEXITY_API_KEY = (typeof process !== 'undefined' && process.env?.PERPLEXITY_API_KEY) || '';
+const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
+
 export default function App() {
   const [activeSection, setActiveSection] = useState<string>('01');
   const [currentPhase, setCurrentPhase] = useState<number>(5);
-  
-  // Current Data based on Phase
-  const phaseData = generatePhaseData(currentPhase);
-  
+
+  // Async data loading state
+  const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Cache for already-fetched phases (avoids re-fetching)
+  const phaseCache = useRef<Map<number, PhaseData>>(new Map());
+
+  // ── Load phase data ─────────────────────────────────────────────
+  const loadPhaseData = useCallback(async (phaseIndex: number) => {
+    // Check cache first
+    if (phaseCache.current.has(phaseIndex)) {
+      setPhaseData(phaseCache.current.get(phaseIndex)!);
+      setLoadError(null);
+      return;
+    }
+
+    // Use mock data if no API key
+    if (DATA_SOURCE === 'mock') {
+      const data = generatePhaseData(phaseIndex) as PhaseData;
+      phaseCache.current.set(phaseIndex, data);
+      setPhaseData(data);
+      setLoadError(null);
+      return;
+    }
+
+    // Fetch from Perplexity
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      const { content, citations } = await getPhaseContent(phaseIndex, {
+        apiKey: PERPLEXITY_API_KEY,
+      });
+
+      const parsed = parsePerplexityResponse(content, phaseIndex, citations);
+      phaseCache.current.set(phaseIndex, parsed);
+      setPhaseData(parsed);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load content';
+      console.error(`[Perplexity] Phase ${phaseIndex} error:`, message);
+      setLoadError(message);
+
+      // Fallback to mock data on error
+      const fallback = generatePhaseData(phaseIndex) as PhaseData;
+      setPhaseData(fallback);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Load data when phase changes
+  useEffect(() => {
+    loadPhaseData(currentPhase);
+  }, [currentPhase, loadPhaseData]);
+
   // Extract section IDs for the Sidebar (Dynamic Navigation)
-  // We filter out null IDs just in case
-  const sectionIds = phaseData.sections ? phaseData.sections.map(section => section.id.replace('section-', '')) : [];
+  const sectionIds = phaseData?.sections
+    ? phaseData.sections.map(section => section.id.replace('section-', ''))
+    : [];
 
   useEffect(() => {
+    if (!phaseData) return;
+
     const observerOptions = {
       root: null,
       rootMargin: '-30% 0px -50% 0px',
@@ -1557,38 +1622,72 @@ export default function App() {
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
-    
+
     setTimeout(() => {
       const sections = document.querySelectorAll('section[id^="section-"]');
       sections.forEach((section) => observer.observe(section));
     }, 100);
 
     return () => observer.disconnect();
-  }, [currentPhase]);
+  }, [currentPhase, phaseData]);
 
   return (
     <div className="flex min-h-screen bg-off-white text-charcoal font-sans selection:bg-technical-blue selection:text-primary relative">
-      
+
       {/* Fixed Left Navigation (Intra-page) */}
       <Sidebar activeSection={activeSection} sectionIds={sectionIds} />
 
       {/* Main Content Area */}
       <main className="flex-1 ml-0 lg:ml-24 min-h-screen flex flex-col relative transition-opacity duration-300">
-        <Header 
-          currentPhase={currentPhase} 
-          setPhase={setCurrentPhase} 
+        <Header
+          currentPhase={currentPhase}
+          setPhase={setCurrentPhase}
         />
-        
+
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Scrollable Article Content */}
-          <div className="flex-1 bg-white min-w-0"> 
-            <Article key={currentPhase} data={phaseData} />
+          <div className="flex-1 bg-white min-w-0">
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-3 px-6 py-4 bg-off-white border border-border-hairline">
+                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    <span className="text-sm font-mono text-charcoal-muted">Loading analysis...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Banner (shows above content when falling back) */}
+            {loadError && phaseData && (
+              <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-4">
+                <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 text-sm font-mono text-amber-800">
+                  <span className="material-symbols-outlined text-[18px]">warning</span>
+                  <span>API error: {loadError}. Showing cached data.</span>
+                  <button
+                    onClick={() => {
+                      phaseCache.current.delete(currentPhase);
+                      loadPhaseData(currentPhase);
+                    }}
+                    className="ml-auto px-3 py-1 border border-amber-300 hover:bg-amber-100 transition-colors text-xs"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Article Content */}
+            {phaseData && !isLoading && (
+              <Article key={currentPhase} data={phaseData} />
+            )}
           </div>
 
           {/* Fixed/Sticky Right Panel for Desktop */}
-          {currentPhase !== 5 && <RightPanel sources={phaseData.sources} />}
+          {currentPhase !== 5 && <RightPanel sources={phaseData?.sources} />}
         </div>
-        
+
         <FeedbackWidget />
       </main>
     </div>
