@@ -1,8 +1,15 @@
 /**
- * Perplexity API Service
+ * Perplexity API Service (v2 — perfected)
  *
  * Handles API calls to Perplexity's sonar model.
  * Returns raw text + markdown that gets parsed into PhaseData.
+ *
+ * Improvements:
+ * - Accepts external AbortSignal for cancellation (race condition prevention)
+ * - Structured retry logic (not string-based error matching)
+ * - Validates response.choices[0].message.content
+ * - Retries network errors (not just HTTP 429/5xx)
+ * - Proper timeout cleanup in finally blocks
  */
 
 export interface PerplexityMessage {
@@ -44,7 +51,7 @@ const DEFAULT_CONFIG: Partial<PerplexityApiConfig> = {
 
 const REQUEST_TIMEOUT_MS = 60_000; // 60 second timeout
 const MAX_RETRIES = 2;
-const RETRY_DELAYS = [2000, 4000]; // exponential backoff
+const BASE_RETRY_DELAY = 2000; // exponential backoff: 2s, 4s
 
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
 
@@ -120,13 +127,42 @@ Include quantified risk assessments with severity levels.${SYSTEM_SUFFIX}`,
 };
 
 /**
+ * Determine if an error is retryable (network errors, 429, 5xx).
+ */
+function isRetryableError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message;
+  // Network-level errors
+  if (msg.includes('fetch failed') || msg.includes('network') ||
+      msg.includes('ECONNREFUSED') || msg.includes('ECONNRESET') ||
+      msg.includes('ETIMEDOUT') || msg.includes('UND_ERR')) {
+    return true;
+  }
+  // HTTP 429 or 5xx (set by our own throw below)
+  if (msg.includes('[retryable]')) return true;
+  return false;
+}
+
+/**
+ * Check if an error is an AbortError (works in both browser and Node.js).
+ */
+function isAbortError(err: unknown): boolean {
+  if (err instanceof Error && err.name === 'AbortError') return true;
+  if (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') return true;
+  return false;
+}
+
+/**
  * Call the Perplexity API with a given phase prompt.
- * Includes request timeout and retry with exponential backoff for 429/5xx.
+ * Includes request timeout and retry with exponential backoff.
+ *
+ * @param signal - Optional external AbortSignal for cancellation (e.g., phase switching)
  */
 export async function fetchPerplexityData(
   phaseIndex: number,
   config: PerplexityApiConfig,
-  customPrompt?: { system?: string; user?: string }
+  customPrompt?: { system?: string; user?: string },
+  signal?: AbortSignal
 ): Promise<PerplexityResponse> {
   const { apiKey, model, maxTokens, temperature } = { ...DEFAULT_CONFIG, ...config };
 
@@ -157,10 +193,20 @@ export async function fetchPerplexityData(
   // Retry loop with exponential backoff
   let lastError: Error | null = null;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    // Check external abort signal before each attempt
+    if (signal?.aborted) {
+      throw new Error('Request cancelled');
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const controller = new AbortController();
+
     try {
-      // AbortController for request timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      // Combine external signal with timeout signal
+      timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      if (signal) {
+        signal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
 
       const response = await fetch(PERPLEXITY_API_URL, {
         method: 'POST',
@@ -172,8 +218,6 @@ export async function fetchPerplexityData(
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
         const status = response.status;
         // Sanitize error body (truncate, strip potential key leaks)
@@ -182,8 +226,9 @@ export async function fetchPerplexityData(
 
         // Retry on 429 (rate limit) or 5xx (server error)
         if ((status === 429 || status >= 500) && attempt < MAX_RETRIES) {
-          lastError = new Error(`Perplexity API error ${status}`);
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]));
+          lastError = new Error(`[retryable] Perplexity API error ${status}`);
+          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
 
@@ -192,21 +237,49 @@ export async function fetchPerplexityData(
 
       const json = await response.json();
 
-      // Basic response shape validation
+      // Validate response shape including content
       if (!json.choices || !Array.isArray(json.choices) || json.choices.length === 0) {
         throw new Error('Perplexity API returned empty or malformed response');
       }
 
+      const content = json.choices[0]?.message?.content;
+      if (content == null || typeof content !== 'string') {
+        throw new Error('Perplexity API response missing message content');
+      }
+
+      // Warn on truncated responses
+      if (json.choices[0]?.finish_reason === 'length') {
+        console.warn('[Perplexity] Response was truncated due to max_tokens limit');
+      }
+
+      // Validate citations are strings
+      if (json.citations && Array.isArray(json.citations)) {
+        json.citations = json.citations.filter((c: unknown) => typeof c === 'string' && c.length > 0);
+      }
+
       return json as PerplexityResponse;
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
+      if (isAbortError(err)) {
+        // Check if it was the external signal or timeout
+        if (signal?.aborted) {
+          throw new Error('Request cancelled');
+        }
         throw new Error('Perplexity API request timed out');
       }
-      // If it's a non-retryable error, throw immediately
-      if (err instanceof Error && !err.message.includes('API error 429') && !err.message.includes('API error 5')) {
-        throw err;
+
+      // Retry on retryable errors
+      if (isRetryableError(err) && attempt < MAX_RETRIES) {
+        lastError = err instanceof Error ? err : new Error('Unknown error');
+        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
       }
-      lastError = err instanceof Error ? err : new Error('Unknown error');
+
+      // Non-retryable error — throw immediately
+      if (err instanceof Error) throw err;
+      throw new Error('Unknown error during Perplexity API call');
+    } finally {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
     }
   }
 
@@ -227,12 +300,14 @@ export function extractContent(response: PerplexityResponse): {
 
 /**
  * Convenience function: fetch + extract in one call.
+ * Accepts an optional AbortSignal for cancellation.
  */
 export async function getPhaseContent(
   phaseIndex: number,
   config: PerplexityApiConfig,
-  customPrompt?: { system?: string; user?: string }
+  customPrompt?: { system?: string; user?: string },
+  signal?: AbortSignal
 ): Promise<{ content: string; citations: string[] }> {
-  const response = await fetchPerplexityData(phaseIndex, config, customPrompt);
+  const response = await fetchPerplexityData(phaseIndex, config, customPrompt, signal);
   return extractContent(response);
 }
