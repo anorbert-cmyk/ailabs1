@@ -29,8 +29,8 @@ export const RightPanel: React.FC<RightPanelProps> = ({ sources = [] }) => {
             <ul className="space-y-6">
               {sources.map((item, idx) => (
                 <li key={idx} className="group cursor-pointer">
-                  <a 
-                    href={item.url || '#'} 
+                  <a
+                    href={item.url && /^https?:\/\//i.test(item.url) ? item.url : '#'}
                     target={item.url ? "_blank" : "_self"}
                     rel="noopener noreferrer"
                     className="block"

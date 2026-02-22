@@ -819,12 +819,20 @@ export function capitalizeDomain(domain: string): string {
   return domain.charAt(0).toUpperCase() + domain.slice(1);
 }
 
+/** Check that a URL uses a safe protocol (http/https only). */
+export function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 export function buildSources(citations: string[] | undefined, fallbackLabel: string): import('./types').SourceItem[] {
   const uniqueCitations = [...new Set(citations || [])];
   const sources: import('./types').SourceItem[] = uniqueCitations
-    .filter(url => {
-      try { new URL(url); return true; } catch { return false; }
-    })
+    .filter(isSafeUrl)
     .map((url, i) => {
       const domain = extractDomainName(url);
       return {

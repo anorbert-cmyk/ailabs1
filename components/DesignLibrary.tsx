@@ -267,7 +267,7 @@ export const DSCompetitorAnalysis: React.FC<CompetitorData> = ({ name, website, 
         <div>
            <h3 className="font-sans font-bold text-xl text-charcoal break-words">{name}</h3>
            {website && (
-             <a href={website} target="_blank" rel="noreferrer" className="text-xs font-mono text-primary hover:underline break-all block mt-1">{website}</a>
+             <a href={/^https?:\/\//i.test(website) ? website : '#'} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-primary hover:underline break-all block mt-1">{website}</a>
            )}
         </div>
         <div className="text-xs text-charcoal-muted font-mono max-w-full md:max-w-md text-left md:text-right break-words">
