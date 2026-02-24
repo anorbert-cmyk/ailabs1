@@ -34,16 +34,36 @@ import {
   TaskItem
 } from './DesignLibrary';
 
-// Types for the AI Generated Data Structure
-interface SectionData {
+// Types for the AI Generated Data Structure — discriminated union for type safety
+interface CardItem {
+  title: string;
+  text: string;
+  icon: string;
+  subLabel?: string;
+}
+
+type SectionBase = {
   id: string;
   title: string;
   content: string;
-  type: 'text' | 'metrics' | 'cards' | 'blueprints' | 'table' | 'list' | 'competitor' | 'roadmap_phase' | 'phase_card' | 'strategy_grid' | 'resource_split' | 'error_path_grid' | 'risk_dossier_header' | 'roi_analysis' | 'task_list';
-  // Flexible data union
-  data?: unknown;
-  columns?: { header: string; key: string; width?: string }[]; // For tables
-}
+};
+
+type SectionData =
+  | (SectionBase & { type: 'text' })
+  | (SectionBase & { type: 'list'; data: string[] })
+  | (SectionBase & { type: 'metrics'; data: MetricRow[] })
+  | (SectionBase & { type: 'table'; data: Record<string, string>[]; columns: { header: string; key: string; width?: string }[] })
+  | (SectionBase & { type: 'cards'; data: CardItem[] })
+  | (SectionBase & { type: 'competitor'; data: CompetitorData })
+  | (SectionBase & { type: 'strategy_grid'; data: PhaseDetail[] })
+  | (SectionBase & { type: 'resource_split'; data: { solo: ResourceData; team: ResourceData } })
+  | (SectionBase & { type: 'error_path_grid'; data: ErrorPathData[] })
+  | (SectionBase & { type: 'blueprints'; data: BlueprintItem[] })
+  | (SectionBase & { type: 'roadmap_phase'; data: RoadmapPhaseData })
+  | (SectionBase & { type: 'phase_card'; data: PhaseCardData })
+  | (SectionBase & { type: 'roi_analysis'; data: ROIScenario[] })
+  | (SectionBase & { type: 'task_list'; data: TaskItem[] })
+  | (SectionBase & { type: 'risk_dossier_header'; data: RiskData });
 
 interface PhaseData extends BasePhaseData {
   visualTimeline?: VisualTimelineData;
@@ -96,11 +116,11 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
         {data.sections.map((section, idx) => {
           
           // --- FULL WIDTH SECTIONS ---
-          if (section.type === 'risk_dossier_header' && section.data) {
+          if (section.type === 'risk_dossier_header') {
              return (
                <section key={section.id} id={section.id} className="scroll-mt-32">
                  <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-12 lg:pt-24 mb-16">
-                    <DSRiskDossierHeader {...(section.data as RiskData)} />
+                    <DSRiskDossierHeader {...section.data} />
                  </div>
                </section>
              )
@@ -153,10 +173,10 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                 </div>
               )}
 
-              {section.type === 'list' && section.data && (
+              {section.type === 'list' && (
                 <div className="max-w-4xl">
                    {section.content && <DSParagraph>{section.content}</DSParagraph>}
-                   <DSList items={section.data as string[]} />
+                   <DSList items={section.data} />
                 </div>
               )}
 
