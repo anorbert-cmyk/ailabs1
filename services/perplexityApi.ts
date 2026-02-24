@@ -59,7 +59,7 @@ const REQUEST_TIMEOUT_MS = 60_000; // 60 second timeout
 const MAX_RETRIES = 2;
 const BASE_RETRY_DELAY = 2000; // exponential backoff: 2s, 4s
 
-const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
+const PERPLEXITY_API_URL = '/api/perplexity';
 
 /**
  * Phase-specific system prompts that guide Perplexity to return
@@ -224,12 +224,16 @@ export async function fetchPerplexityData(
         signal.addEventListener('abort', handleAbort, { once: true });
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (apiKey && apiKey !== 'proxy') {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
       const response = await fetch(PERPLEXITY_API_URL, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: requestBody,
         signal: controller.signal,
       });
@@ -412,12 +416,16 @@ export async function streamPerplexityData(
         signal.addEventListener('abort', handleAbort, { once: true });
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (apiKey && apiKey !== 'proxy') {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
       const response = await fetch(PERPLEXITY_API_URL, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: requestBody,
         signal: controller.signal,
       });

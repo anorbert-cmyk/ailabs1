@@ -8,14 +8,28 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+        },
+        proxy: {
+          '/api/perplexity': {
+            target: 'https://api.perplexity.ai',
+            changeOrigin: true,
+            rewrite: (path: string) => '/chat/completions',
+            configure: (proxy) => {
+              const apiKey = env.PERPLEXITY_API_KEY;
+              proxy.on('proxyReq', (proxyReq) => {
+                if (apiKey) {
+                  proxyReq.setHeader('Authorization', `Bearer ${apiKey}`);
+                }
+              });
+            },
+          },
+        },
       },
       plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.PERPLEXITY_API_KEY': JSON.stringify(env.PERPLEXITY_API_KEY),
-        'import.meta.env.VITE_PERPLEXITY_API_KEY': JSON.stringify(env.VITE_PERPLEXITY_API_KEY || env.PERPLEXITY_API_KEY)
-      },
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),

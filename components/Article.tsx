@@ -63,7 +63,11 @@ type SectionData =
   | (SectionBase & { type: 'phase_card'; data: PhaseCardData })
   | (SectionBase & { type: 'roi_analysis'; data: ROIScenario[] })
   | (SectionBase & { type: 'task_list'; data: TaskItem[] })
-  | (SectionBase & { type: 'risk_dossier_header'; data: RiskData });
+  | (SectionBase & { type: 'risk_dossier_header'; data: RiskData })
+  | (SectionBase & { type: 'task_list_checkbox'; data: TaskItem[] })
+  | (SectionBase & { type: 'viability_score'; data: { score: number; label: string; emoji: string; summary: string } })
+  | (SectionBase & { type: 'pain_points'; data: Array<{ title: string; text: string; severity: 'high' | 'medium' | 'low'; icon: string }> })
+  | (SectionBase & { type: 'next_step'; data: { title: string; whatToDo: string; whyFirst: string } });
 
 interface PhaseData extends BasePhaseData {
   visualTimeline?: VisualTimelineData;
@@ -113,7 +117,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
 
       {/* Content Sections */}
       <div className="prose prose-slate prose-lg max-w-none font-serif text-charcoal-muted leading-loose">
-        {data.sections.map((section, idx) => {
+        {(data.sections as SectionData[]).map((section, idx) => {
           
           // --- FULL WIDTH SECTIONS ---
           if (section.type === 'risk_dossier_header') {
@@ -187,7 +191,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                   </div>
                   <DSMetricTable 
                     title={`Table ${idx + 1}.1: Financial Metrics`}
-                    data={section.data as MetricRow[]}
+                    data={section.data}
                   />
                  </>
               )}
@@ -200,7 +204,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                   <DSGenericTable 
                     title={`Table ${idx + 1}.1: ${section.title}`}
                     columns={section.columns}
-                    data={section.data as any[]}
+                    data={section.data}
                   />
                 </>
               )}
@@ -211,10 +215,10 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                     <DSParagraph>{section.content}</DSParagraph>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
-                    {(section.data as any[]).map((card: any, cIdx: number) => (
-                      <DSInfoCard 
-                        key={cIdx} 
-                        title={card.title} 
+                    {section.data.map((card, cIdx) => (
+                      <DSInfoCard
+                        key={cIdx}
+                        title={card.title}
                         icon={card.icon}
                         subLabel={card.subLabel}
                       >
@@ -230,23 +234,23 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                   <div className="max-w-4xl">
                     <DSParagraph>{section.content}</DSParagraph>
                   </div>
-                  <DSCompetitorAnalysis {...(section.data as CompetitorData)} />
+                  <DSCompetitorAnalysis {...section.data} />
                 </>
               )}
 
               {section.type === 'strategy_grid' && section.data && (
-                <DSStrategyGrid phases={section.data as PhaseDetail[]} mode={strategyLayoutMode} />
+                <DSStrategyGrid phases={section.data} mode={strategyLayoutMode} />
               )}
 
-              {section.type === 'resource_split' && section.data && (section.data as any).solo && (section.data as any).team && (
+              {section.type === 'resource_split' && section.data && section.data.solo && section.data.team && (
                  <DSResourceSplit
-                   solo={(section.data as any).solo as ResourceData}
-                   team={(section.data as any).team as ResourceData}
+                   solo={section.data.solo}
+                   team={section.data.team}
                  />
               )}
 
               {section.type === 'error_path_grid' && section.data && (
-                <DSErrorPathGrid items={section.data as ErrorPathData[]} />
+                <DSErrorPathGrid items={section.data} />
               )}
 
               {section.type === 'blueprints' && section.data && (
@@ -255,7 +259,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                      <DSParagraph>{section.content}</DSParagraph>
                    </div>
                    <div className="mt-8">
-                     {(section.data as BlueprintItem[]).map((bp) => (
+                     {section.data.map((bp) => (
                        <DSBlueprintCard key={bp.id} {...bp} />
                      ))}
                    </div>
@@ -263,11 +267,11 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               )}
               
               {section.type === 'roadmap_phase' && section.data && (
-                <DSRoadmapPhase {...(section.data as RoadmapPhaseData)} />
+                <DSRoadmapPhase {...section.data} />
               )}
 
               {section.type === 'phase_card' && section.data && (
-                <DSPhaseCard {...(section.data as PhaseCardData)} />
+                <DSPhaseCard {...section.data} />
               )}
 
               {section.type === 'roi_analysis' && section.data && (
@@ -275,7 +279,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                    <div className="max-w-4xl">
                      <DSParagraph>{section.content}</DSParagraph>
                    </div>
-                   <DSROIAnalysis scenarios={section.data as ROIScenario[]} />
+                   <DSROIAnalysis scenarios={section.data} />
                  </>
               )}
 
@@ -284,8 +288,59 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
                    <div className="max-w-4xl">
                      <DSParagraph>{section.content}</DSParagraph>
                    </div>
-                   <DSTaskList initialTasks={section.data as TaskItem[]} />
+                   <DSTaskList initialTasks={section.data} />
                  </>
+              )}
+
+              {section.type === 'viability_score' && (
+                <div className="max-w-4xl text-center py-8">
+                  <div className="text-6xl mb-2">{section.data.emoji}</div>
+                  <div className="text-4xl font-bold font-mono text-charcoal">{section.data.score}<span className="text-lg text-charcoal-muted">/100</span></div>
+                  <div className="text-sm font-bold font-mono uppercase tracking-widest text-charcoal-muted mt-2">{section.data.label}</div>
+                  <p className="text-sm text-charcoal-muted mt-4 max-w-lg mx-auto">{section.data.summary}</p>
+                </div>
+              )}
+
+              {section.type === 'pain_points' && (
+                <>
+                  {section.content && <div className="max-w-4xl"><DSParagraph>{section.content}</DSParagraph></div>}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+                    {section.data.map((point, pIdx) => (
+                      <div key={pIdx} className={`p-6 rounded-sm border-l-4 bg-off-white ${
+                        point.severity === 'high' ? 'border-red-500' : point.severity === 'medium' ? 'border-yellow-500' : 'border-green-500'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="material-symbols-outlined text-[18px]">{point.icon}</span>
+                          <span className="font-bold font-mono text-sm text-charcoal">{point.title}</span>
+                        </div>
+                        <p className="text-xs text-charcoal-muted">{point.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {section.type === 'next_step' && (
+                <div className="max-w-4xl bg-technical-blue p-8 rounded-sm my-8">
+                  <h4 className="font-bold font-mono text-sm uppercase tracking-widest text-charcoal mb-4">{section.data.title || 'Recommended Next Step'}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <span className="text-xs font-bold font-mono uppercase text-charcoal-muted">What to do</span>
+                      <p className="text-sm text-charcoal mt-1">{section.data.whatToDo}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold font-mono uppercase text-charcoal-muted">Why first</span>
+                      <p className="text-sm text-charcoal mt-1">{section.data.whyFirst}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {section.type === 'task_list_checkbox' && (
+                <>
+                  {section.content && <div className="max-w-4xl"><DSParagraph>{section.content}</DSParagraph></div>}
+                  <DSTaskList initialTasks={section.data} />
+                </>
               )}
 
               {/* Occasional Blockquote */}
@@ -309,7 +364,7 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
             <span className="font-bold text-charcoal">Generated by Valid8 Agent</span>. Timestamp: {new Date().toISOString()}.
           </li>
           <li>
-            <span className="font-bold text-charcoal">Model Version:</span> Gemini 3.1 Pro Preview.
+            <span className="font-bold text-charcoal">Model Version:</span> Claude Sonnet 4.6 via Perplexity.
           </li>
           <li>
             <span className="font-bold text-charcoal">Data Source:</span> Perplexity Syndicate Part 3.
