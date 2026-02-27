@@ -44,6 +44,7 @@ import {
   isSafeUrl,
   buildSources,
   synthesizeVisualTimeline,
+  extractTLDR,
 } from './common';
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1162,5 +1163,141 @@ describe('synthesizeVisualTimeline', () => {
     const result = synthesizeVisualTimeline(sections);
     expect(result).not.toBeNull();
     expect(result!.quarters).toHaveLength(2);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// extractTLDR
+// ═══════════════════════════════════════════════════════════════════════
+describe('extractTLDR', () => {
+  it('extracts a TL;DR block and removes it from remaining blocks', () => {
+    const blocks = [
+      { heading: 'TL;DR', body: 'This is a comprehensive summary of the full analysis with enough text to pass the threshold.' },
+      { heading: 'Section One', body: 'Content of section one.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toContain('comprehensive summary');
+    expect(result.remainingBlocks).toHaveLength(1);
+    expect(result.remainingBlocks[0].heading).toBe('Section One');
+  });
+
+  it('returns null summary when no TL;DR heading is found', () => {
+    const blocks = [
+      { heading: 'Introduction', body: 'Some content here with enough length.' },
+      { heading: 'Details', body: 'More details about the topic.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(2);
+  });
+
+  it('returns null summary when only one block exists (streaming guard)', () => {
+    const blocks = [
+      { heading: 'TL;DR', body: 'This would be a valid summary but there is only one block during streaming.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(1);
+  });
+
+  it('returns null summary when TL;DR body is too short (<20 chars)', () => {
+    const blocks = [
+      { heading: 'TL;DR', body: 'Short.' },
+      { heading: 'Content', body: 'Real content here.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(2);
+  });
+
+  it('returns null for empty blocks array', () => {
+    const result = extractTLDR([]);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(0);
+  });
+
+  it('matches case-insensitive TL;DR variations', () => {
+    const variations = ['TL;DR', 'tl;dr', 'TLDR', 'tldr', 'TL DR', 'tl dr'];
+    for (const heading of variations) {
+      const blocks = [
+        { heading, body: 'This is a valid summary text that passes the minimum length requirement for extraction.' },
+        { heading: 'Content', body: 'Real content.' },
+      ];
+      const result = extractTLDR(blocks);
+      expect(result.summary).not.toBeNull();
+    }
+  });
+
+  it('does NOT match bare "Summary" heading (prevents collision with section parsers)', () => {
+    const blocks = [
+      { heading: 'Summary', body: 'This is a problem statement summary that should not be consumed as TL;DR.' },
+      { heading: 'Pain Points', body: 'Various pain points listed here.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(2);
+  });
+
+  it('does NOT match "Executive Summary" heading', () => {
+    const blocks = [
+      { heading: 'Executive Summary', body: 'A comprehensive executive overview that should remain as a content section.' },
+      { heading: 'Details', body: 'More details.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(2);
+  });
+
+  it('only checks the first 2 blocks (ignores TL;DR later in content)', () => {
+    const blocks = [
+      { heading: 'Overview', body: 'Introduction text here.' },
+      { heading: 'Analysis', body: 'Analysis content here.' },
+      { heading: 'TL;DR', body: 'This TL;DR is at position 2, should be ignored because it is too deep in the content.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(3);
+  });
+
+  it('extracts TL;DR at position 1 (second block)', () => {
+    const blocks = [
+      { heading: '', body: 'Intro text without heading.' },
+      { heading: 'TL;DR', body: 'This summary is at position 1 and should still be extracted as a valid TL;DR block.' },
+      { heading: 'Content', body: 'Real content here.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).not.toBeNull();
+    expect(result.remainingBlocks).toHaveLength(2);
+  });
+
+  it('truncates excessively long summaries to MAX_SUMMARY_LENGTH', () => {
+    const longBody = 'This is a very long sentence that repeats. '.repeat(50);
+    const blocks = [
+      { heading: 'TL;DR', body: longBody },
+      { heading: 'Content', body: 'Real content.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).not.toBeNull();
+    expect(result.summary!.length).toBeLessThanOrEqual(1010); // 1000 + '...'
+    expect(result.summary!.endsWith('...')).toBe(true);
+  });
+
+  it('handles TL;DR with embellished heading like "TL;DR — Key Findings"', () => {
+    const blocks = [
+      { heading: 'TL;DR — Key Findings', body: 'This summary contains key findings from the analysis that are important.' },
+      { heading: 'Content', body: 'Real content.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).not.toBeNull();
+  });
+
+  it('handles bullet-list-style TL;DR body via parseBulletList fallback', () => {
+    const blocks = [
+      { heading: 'TL;DR', body: '- Revenue potential is $2M ARR in 12 months\n- Risk level is moderate due to regulatory uncertainty\n- Recommendation is to start with Phase 1 MVP' },
+      { heading: 'Content', body: 'Real content.' },
+    ];
+    const result = extractTLDR(blocks);
+    expect(result.summary).not.toBeNull();
+    expect(result.summary!.length).toBeGreaterThan(20);
   });
 });

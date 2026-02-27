@@ -27,6 +27,21 @@ export default defineConfig(({ mode }) => {
               });
             },
           },
+          '/api/anthropic': {
+            target: 'https://api.anthropic.com',
+            changeOrigin: true,
+            rewrite: (_path: string) => '/v1/messages',
+            configure: (proxy) => {
+              const apiKey = env.ANTHROPIC_API_KEY;
+              proxy.on('proxyReq', (proxyReq) => {
+                if (apiKey) {
+                  proxyReq.setHeader('x-api-key', apiKey);
+                }
+                proxyReq.setHeader('anthropic-version', '2023-06-01');
+                proxyReq.removeHeader('anthropic-dangerous-direct-browser-access');
+              });
+            },
+          },
         },
       },
       plugins: [react()],

@@ -67,6 +67,7 @@ const PERPLEXITY_API_URL = '/api/perplexity';
  */
 const SYSTEM_SUFFIX = `
 Do not include conversational text, preamble, or sign-offs. Return only the structured analysis.
+Begin your response with a "## TL;DR" section containing a 3-5 sentence executive summary of all key findings in the analysis that follows. This summary should highlight the most actionable insights.
 Keep each section concise (150-300 words max). Use ## for section headings.
 Use bullet lists with - for enumerations. Use markdown tables with | for structured data.
 For key findings, use bold **Title**: Description pattern for categorized items.`;
@@ -74,10 +75,9 @@ For key findings, use bold **Title**: Description pattern for categorized items.
 const PHASE_PROMPTS: Record<number, { system: string; user: string }> = {
   0: {
     system: `You are a strategic business analyst. Return your analysis in well-structured markdown.
-Keep sections clearly separated. Include an Executive Summary first.${SYSTEM_SUFFIX}`,
+Keep sections clearly separated.${SYSTEM_SUFFIX}`,
     user: `Analyze this Web2/Web3 AI-native marketing agency concept. Cover:
-1. Executive Summary (2-3 paragraphs)
-2. Adaptive Problem Analysis - categorize task type, user base, complexity
+1. Adaptive Problem Analysis - categorize task type, user base, complexity
 3. Key Constraints - timeline, budget, tech platform, regulatory
 4. Core JTBD Statement
 5. Jobs To Be Done Breakdown (bullet list)

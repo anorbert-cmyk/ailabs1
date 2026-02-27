@@ -78,6 +78,7 @@ const generatePhaseData = (phaseIndex: number) => {
       title: titles[0],
       subtitle: subtitles[0],
       metadata: ["Input: PDF Brief", "Status: Exploratory", "Horizon: 3-6 Months"],
+      summary: "This analysis validates a Web2/Web3 AI-native marketing agency concept positioned as a \"systems-first\" growth partner. The opportunity lies at the intersection of AI marketing, Web3, and performance-driven B2B services. Key constraints include a 6-month runway, need for AI/blockchain technical fluency, and regulatory ambiguity in crypto markets. The core JTBD is helping crypto-native and AI-curious B2B clients achieve measurable growth through integrated AI marketing systems and on-chain analytics.",
       sources: [
          { source: 'Perplexity', title: 'Syndicate Part 1: Executive Summary', icon: 'description' },
          { source: 'JSEO', title: 'AI Marketing Systems Analysis', url: 'https://jseo.polteksci.ac.id/index.php/Jseo/article/view/28' },
@@ -198,6 +199,7 @@ const generatePhaseData = (phaseIndex: number) => {
       title: titles[1],
       subtitle: subtitles[1],
       metadata: ["Input: Syndicate Part 2", "Status: Analysis", "Market: Web3/AI"],
+      summary: "The Web3 marketing landscape is dominated by 5 key players (RZLT, Coinbound, Lunar Strategy, theKOLLAB, Ninja Promo) with pricing ranging from $5K-$50K/month. The critical gap is AI-native execution — all competitors rely on traditional campaign models. Your differentiation through integrated AI systems, on-chain analytics, and performance attribution represents a defensible moat that none of the incumbents currently address.",
       sources: [
         { source: 'RZLT', title: 'Competitor Website', url: 'https://www.rzlt.io' },
         { source: 'Coinbound', title: 'Competitor Website', url: 'https://coinbound.io' },
@@ -366,6 +368,7 @@ const generatePhaseData = (phaseIndex: number) => {
        title: titles[2],
        subtitle: subtitles[2],
        metadata: ["Input: Syndicate Part 3", "Status: Execution", "Timeline: 9 Months"],
+       summary: "The 9-month execution roadmap spans three phases: Foundation (months 1-3) focuses on core infrastructure, AI pipeline setup, and first 3 pilot clients. Growth (months 4-6) scales to 10+ clients with automated campaign management and on-chain reporting. Optimization (months 7-9) introduces advanced AI models, self-serve dashboards, and partnership revenue streams. Critical path dependencies include AI model training data availability and blockchain API stability.",
        sources: [
          { source: 'Syndicate Part 3', title: 'Strategic Roadmap PDF', icon: 'picture_as_pdf' }
        ],
@@ -509,6 +512,7 @@ const generatePhaseData = (phaseIndex: number) => {
       title: "Core Design & UI Prompts",
       subtitle: "Architectural directives for the core application flows, defined as generative prompts.",
       metadata: ["Input: Syndicate Part 4", "Status: Ready for Generation", "Format: Prompt Engineering"],
+      summary: "The core design architecture defines 4 primary application flows: client onboarding (3-step wizard with AI brief analysis), campaign dashboard (real-time metrics with on-chain/off-chain toggle), AI campaign builder (prompt-driven generation with human review gates), and analytics hub (attribution modeling across Web2/Web3 channels). The design system uses a dark-mode-first approach with glassmorphism accents, optimized for data-dense interfaces.",
       sources: [],
       sections: [
         {
@@ -720,6 +724,7 @@ TAB 5 - NOTIFICATIONS:
       title: "Advanced Screens & Edge Cases",
       subtitle: "Comprehensive system states including error handling, empty states, and loading patterns.",
       metadata: ["Input: Syndicate Part 5", "Status: Specification", "Scope: UX Resilience"],
+      summary: "This specification covers 12 critical edge case categories across error handling (API failures, blockchain RPC timeouts, wallet disconnections), empty states (new user, no campaigns, zero analytics), and loading patterns (skeleton screens, progressive disclosure, optimistic updates). Key architectural decisions include circuit-breaker patterns for external API calls, graceful degradation for blockchain data, and offline-first caching for dashboard views.",
       sources: [],
       sections: [
         {
@@ -907,6 +912,7 @@ TYPE D: BADGES
       title: "Risk Assessment, Metrics & ROI",
       subtitle: subtitles[5],
       metadata: ["Input: Syndicate Part 6", "Status: Review Pending", "Scope: Validation & Finance"],
+      summary: "The financial model projects 3 scenarios: Conservative ($180K investment, 14-month payback, 127% ROI), Moderate ($250K investment, 9-month payback, 340% ROI), and Aggressive ($400K investment, 6-month payback, 580% ROI). Top 3 risks: regulatory uncertainty in crypto advertising (severity: high), AI model hallucination in client deliverables (severity: critical), and client concentration risk with <5 accounts (severity: medium). Success hinges on achieving $25K MRR within 6 months.",
       sources: [
         { source: 'Perplexity', title: 'Syndicate Part 6', icon: 'description' }
       ],
@@ -1334,8 +1340,8 @@ type DataSource = 'perplexity' | 'mock';
 // Vite exposes env vars via import.meta.env (VITE_ prefix)
 const PERPLEXITY_API_KEY: string =
   (import.meta as any).env?.VITE_PERPLEXITY_API_KEY || '';
-const ANTHROPIC_API_KEY: string =
-  (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || '';
+const CLASSIFIER_ENABLED: boolean =
+  (import.meta as any).env?.VITE_CLASSIFIER_ENABLED === 'true';
 const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
 
 const TIER_LABELS: Record<AnalysisTier, { label: string; parts: number }> = {
@@ -1365,7 +1371,7 @@ export default function App() {
     apiKey: PERPLEXITY_API_KEY,
     enabled: DATA_SOURCE === 'perplexity',
     tier: currentTier,
-    classifierApiKey: ANTHROPIC_API_KEY,
+    classifierEnabled: CLASSIFIER_ENABLED,
   });
 
   // Determine active phaseData (stream vs mock)

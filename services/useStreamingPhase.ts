@@ -26,12 +26,12 @@ interface UseStreamingPhaseOptions {
   apiKey: string;
   enabled: boolean;
   tier?: AnalysisTier;
-  /** Anthropic API key for Haiku classifier. If empty, classification is skipped. */
-  classifierApiKey?: string;
+  /** Enable Haiku classifier for AI-powered section type refinement. */
+  classifierEnabled?: boolean;
 }
 
 export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
-  const { apiKey, enabled, tier = 'syndicate', classifierApiKey = '' } = opts;
+  const { apiKey, enabled, tier = 'syndicate', classifierEnabled = false } = opts;
 
   const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +92,9 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       haikuAbortRef.current.abort();
       haikuAbortRef.current = null;
     }
+    // Reset classification state synchronously — prevents stale .finally() from
+    // clearing isClassifying for a NEW classification on a different phase
+    setIsClassifying(false);
     clearDebounce();
 
     // Increment request ID — invalidates all in-flight callbacks
@@ -163,14 +166,13 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
           setIsLoading(false);
 
           // ── Haiku classification (async, non-blocking) ────────
-          if (classifierApiKey && finalData && finalData.sections.length > 0) {
+          if (classifierEnabled && finalData && finalData.sections.length > 0) {
             const haikuController = new AbortController();
             haikuAbortRef.current = haikuController;
             setIsClassifying(true);
             classifySections(
               finalData.sections,
               fullText,
-              classifierApiKey,
               haikuController.signal
             )
               .then(result => {
@@ -218,7 +220,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       undefined,
       controller.signal
     );
-  }, [apiKey, enabled, tier, classifierApiKey, clearDebounce, debouncedParse]);
+  }, [apiKey, enabled, tier, classifierEnabled, clearDebounce, debouncedParse]);
 
   const retryPhase = useCallback((phaseIndex: number) => {
     phaseCache.current.delete(`${tier}:${phaseIndex}`);
