@@ -7,18 +7,29 @@
  *
  * Flow:
  *   1. Regex parser produces PhaseData instantly (<5ms)
- *   2. This service sends the raw markdown + regex results to Haiku
- *   3. Haiku returns corrected section types + confidence scores
+ *   2. This service sends the raw markdown + regex results to Haiku via server-side proxy
+ *   3. Haiku returns corrected section types + confidence scores (via tool_use for guaranteed JSON)
  *   4. enhanceWithClassification() merges the results
  *
+ * Security:
+ *   - API key is NEVER exposed to the browser
+ *   - Requests go through Vite dev server proxy (/api/anthropic → api.anthropic.com)
+ *   - Proxy injects x-api-key and anthropic-version headers server-side
+ *
+ * Reliability:
+ *   - Retry logic for transient errors (429, 503, 504, network)
+ *   - Rate limiting (min 500ms between requests)
+ *   - Structured output via tool_use (guaranteed valid JSON schema)
+ *   - 8s timeout per attempt
+ *
  * Error handling:
- *   - Timeout (5s) → regex result stands
- *   - Bad JSON → regex result stands
+ *   - Timeout → regex result stands
+ *   - Bad response → regex result stands
  *   - Low confidence → regex result stands for that section
  *   - Phase switch during classification → requestId guard in caller
  */
 
-import type { SectionType, ParsedSection, PhaseData, TableColumn } from './parsers/types';
+import type { SectionType, ParsedSection, PhaseData } from './parsers/types';
 import {
   parseCompetitor, parseMetricsTable, parseROIScenarios,
   parseTaskList, parseCheckboxTaskList, parseCards,
@@ -31,7 +42,15 @@ import {
 const CLASSIFIER_TIMEOUT_MS = 8_000;
 const CONFIDENCE_THRESHOLD = 0.7;
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const CLASSIFIER_PROXY_URL = '/api/anthropic';
+
+// Retry configuration
+const MAX_CLASSIFIER_RETRIES = 1;          // Total 2 attempts (initial + 1 retry)
+const BASE_CLASSIFIER_RETRY_DELAY = 1000;  // 1s base, 2s second attempt
+
+// Rate limiting
+const MIN_REQUEST_GAP_MS = 500;
+let lastClassifierRequestTime = 0;
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -54,7 +73,7 @@ export interface ClassificationResult {
   totalTokens: number;
 }
 
-// ── Valid section types (for Haiku prompt) ───────────────────────────
+// ── Valid section types (for Haiku prompt + tool schema) ────────────
 
 const VALID_SECTION_TYPES: SectionType[] = [
   'text', 'list', 'table', 'metrics', 'cards', 'competitor',
@@ -63,6 +82,37 @@ const VALID_SECTION_TYPES: SectionType[] = [
   'phase_card', 'strategy_grid', 'resource_split',
   'error_path_grid', 'viability_score', 'pain_points', 'next_step',
 ];
+
+// ── Tool schema for structured output ──────────────────────────────
+
+const CLASSIFY_TOOL = {
+  name: 'classify_sections',
+  description: 'Classify document sections by their content type for rendering.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      sections: {
+        type: 'array' as const,
+        items: {
+          type: 'object' as const,
+          properties: {
+            sectionIndex: { type: 'number' as const, description: '0-based section index' },
+            title: { type: 'string' as const, description: 'Section heading' },
+            suggestedType: {
+              type: 'string' as const,
+              enum: VALID_SECTION_TYPES,
+              description: 'The classified section type',
+            },
+            confidence: { type: 'number' as const, description: 'Confidence 0.0-1.0' },
+            reasoning: { type: 'string' as const, description: 'Brief classification reasoning' },
+          },
+          required: ['sectionIndex', 'title', 'suggestedType', 'confidence', 'reasoning'] as const,
+        },
+      },
+    },
+    required: ['sections'] as const,
+  },
+};
 
 // ── System prompt ───────────────────────────────────────────────────
 
@@ -114,7 +164,7 @@ CLASSIFICATION RULES:
    The system will automatically filter low-confidence changes.
 4. Do NOT default to the regex parser's original classification — your job is to improve it.
 
-Respond with ONLY valid JSON. No markdown, no explanation outside the JSON.`;
+Use the classify_sections tool to submit your classifications.`;
 
 // ── User prompt builder ─────────────────────────────────────────────
 
@@ -132,30 +182,18 @@ function buildUserPrompt(
 
     const safeTitle = escapeContent(s.title.slice(0, 256));
     const safeContent = escapeContent(s.content.slice(0, 200));
+    const safeSnippet = rawSnippet ? escapeContent(rawSnippet) : '';
 
     return `[Section ${i}]
 Title: "${safeTitle}"
 Current type (regex): "${s.type}"
 Content preview: "${safeContent}"
-${rawSnippet ? `Raw markdown:\n${rawSnippet}` : ''}`;
+${safeSnippet ? `Raw markdown:\n<raw_content>${safeSnippet}</raw_content>` : ''}`;
   }).join('\n\n---\n\n');
 
-  return `Classify each section. Here are ${sections.length} sections to classify:
+  return `Classify each of the following ${sections.length} sections:
 
-${sectionDescriptions}
-
-Respond with this exact JSON structure:
-{
-  "sections": [
-    {
-      "sectionIndex": 0,
-      "title": "section title",
-      "suggestedType": "one of the valid types",
-      "confidence": 0.95,
-      "reasoning": "brief reason"
-    }
-  ]
-}`;
+${sectionDescriptions}`;
 }
 
 function escapeRegex(str: string): string {
@@ -174,138 +212,215 @@ function extractRawSnippet(title: string, rawMarkdown: string): string {
   let snippet = nextHeading > 0
     ? afterHeading.slice(0, nextHeading + 1).trim()
     : afterHeading.trim();
-  if (snippet.length > 500) {
-    snippet = snippet.slice(0, 500) + '...';
+  if (snippet.length > 1000) {
+    snippet = snippet.slice(0, 1000) + '...';
   }
   return snippet;
+}
+
+// ── Retry helpers ───────────────────────────────────────────────────
+
+function isRetryableStatus(status: number): boolean {
+  return status === 429 || status === 502 || status === 503 || status === 504;
+}
+
+function isRetryableError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.name === 'AbortError') return false;
+  const msg = err.message.toLowerCase();
+  return msg.includes('fetch failed') || msg.includes('network') ||
+    msg.includes('econnrefused') || msg.includes('econnreset') ||
+    msg.includes('etimedout');
+}
+
+function retryDelay(attempt: number): number {
+  return BASE_CLASSIFIER_RETRY_DELAY * Math.pow(2, attempt) + Math.random() * 500;
 }
 
 // ── Main classification function ────────────────────────────────────
 
 /**
  * Send sections to Claude Haiku for intelligent classification.
+ * Uses server-side proxy (/api/anthropic) — no API key in browser.
  *
  * @param sections - The regex-parsed sections
  * @param rawMarkdown - The original markdown text (for context)
- * @param apiKey - Anthropic API key
  * @param signal - Optional AbortSignal for cancellation
  * @returns Classification result, or null if classification fails
  */
 export async function classifySections(
   sections: ParsedSection[],
   rawMarkdown: string,
-  apiKey: string,
   signal?: AbortSignal
 ): Promise<ClassificationResult | null> {
-  if (!apiKey || sections.length === 0) return null;
+  if (sections.length === 0) return null;
 
-  const timeoutController = new AbortController();
-  const timeoutId = setTimeout(() => timeoutController.abort(), CLASSIFIER_TIMEOUT_MS);
-
-  // Combine external signal with our timeout
-  const combinedSignal = signal
-    ? combineAbortSignals(signal, timeoutController.signal)
-    : timeoutController.signal;
-
-  try {
-    const userPrompt = buildUserPrompt(sections, rawMarkdown);
-
-    const response = await fetch(ANTHROPIC_API_URL, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: HAIKU_MODEL,
-        max_tokens: 4096,
-        temperature: 0,
-        system: CLASSIFIER_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-      signal: combinedSignal,
-    });
-
-    if (!response.ok) {
-      console.warn(`[Classifier] Haiku API returned ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    const content = data?.content?.[0]?.text;
-    if (!content) {
-      console.warn('[Classifier] Empty response from Haiku');
-      return null;
-    }
-
-    // Parse the JSON response
-    const parsed = parseClassificationJSON(content);
-    if (!parsed) return null;
-
-    return {
-      sections: parsed,
-      modelUsed: HAIKU_MODEL,
-      totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
-    };
-  } catch (err: unknown) {
-    if (err instanceof Error && err.name === 'AbortError') {
-      console.debug('[Classifier] Classification aborted (timeout or phase switch)');
-    } else {
-      console.warn('[Classifier] Classification failed:', err);
-    }
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
+  // Rate limiting — enforce minimum gap between requests
+  const now = Date.now();
+  const elapsed = now - lastClassifierRequestTime;
+  if (elapsed < MIN_REQUEST_GAP_MS) {
+    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_GAP_MS - elapsed));
+    if (signal?.aborted) return null;
   }
+  lastClassifierRequestTime = Date.now();
+
+  const userPrompt = buildUserPrompt(sections, rawMarkdown);
+
+  // Retry loop
+  for (let attempt = 0; attempt <= MAX_CLASSIFIER_RETRIES; attempt++) {
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), CLASSIFIER_TIMEOUT_MS);
+
+    // Combine external signal with our timeout
+    const combinedSignal = signal
+      ? AbortSignal.any([signal, timeoutController.signal])
+      : timeoutController.signal;
+
+    try {
+      const response = await fetch(CLASSIFIER_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: HAIKU_MODEL,
+          max_tokens: 4096,
+          temperature: 0,
+          system: CLASSIFIER_SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: userPrompt }],
+          tools: [CLASSIFY_TOOL],
+          tool_choice: { type: 'tool', name: 'classify_sections' },
+        }),
+        signal: combinedSignal,
+      });
+
+      if (!response.ok) {
+        // Non-retryable HTTP errors: 400, 401, 403
+        if (!isRetryableStatus(response.status)) {
+          console.warn(`[Classifier] Haiku API returned ${response.status} (non-retryable)`);
+          return null;
+        }
+        // Retryable status — consume body and try again if attempts remain
+        await response.text().catch(() => {});
+        if (attempt < MAX_CLASSIFIER_RETRIES) {
+          const delay = retryDelay(attempt);
+          console.debug(`[Classifier] Retryable ${response.status}, retrying in ${Math.round(delay)}ms`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          if (signal?.aborted) return null;
+          continue;
+        }
+        console.warn(`[Classifier] Haiku API returned ${response.status} after ${attempt + 1} attempts`);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Parse tool_use response — structured output guarantees valid JSON
+      const toolUseBlock = data?.content?.find(
+        (block: { type: string }) => block.type === 'tool_use' && block.name === 'classify_sections'
+      );
+
+      if (!toolUseBlock?.input?.sections) {
+        console.warn('[Classifier] No tool_use block in response, falling back to text parsing');
+        // Fallback: try parsing text content (in case model returns text despite tool_choice)
+        const textBlock = data?.content?.find((block: { type: string }) => block.type === 'text');
+        if (textBlock?.text) {
+          const parsed = parseClassificationJSON(textBlock.text);
+          if (parsed) {
+            return {
+              sections: parsed,
+              modelUsed: HAIKU_MODEL,
+              totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+            };
+          }
+        }
+        return null;
+      }
+
+      // Validate and filter tool_use input
+      const validated = validateClassifiedSections(toolUseBlock.input.sections);
+      if (!validated) return null;
+
+      return {
+        sections: validated,
+        modelUsed: HAIKU_MODEL,
+        totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+      };
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.debug('[Classifier] Classification aborted (timeout or phase switch)');
+        return null;
+      }
+
+      // Retryable network error
+      if (isRetryableError(err) && attempt < MAX_CLASSIFIER_RETRIES) {
+        const delay = retryDelay(attempt);
+        console.debug(`[Classifier] Network error, retrying in ${Math.round(delay)}ms:`, err);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        if (signal?.aborted) return null;
+        continue;
+      }
+
+      console.warn('[Classifier] Classification failed:', err);
+      return null;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  return null;
 }
 
-// ── JSON parsing with validation ────────────────────────────────────
+// ── Validation ──────────────────────────────────────────────────────
+
+function validateClassifiedSections(rawSections: unknown): ClassifiedSection[] | null {
+  if (!Array.isArray(rawSections)) {
+    console.warn('[Classifier] Response sections is not an array');
+    return null;
+  }
+
+  const validated: ClassifiedSection[] = [];
+  for (const raw of rawSections) {
+    if (
+      typeof raw !== 'object' || raw === null ||
+      typeof (raw as Record<string, unknown>).sectionIndex !== 'number' ||
+      typeof (raw as Record<string, unknown>).suggestedType !== 'string' ||
+      typeof (raw as Record<string, unknown>).confidence !== 'number'
+    ) {
+      continue; // Skip malformed entries
+    }
+
+    const r = raw as Record<string, unknown>;
+
+    // Validate section type
+    if (!VALID_SECTION_TYPES.includes(r.suggestedType as SectionType)) {
+      console.warn(`[Classifier] Invalid type "${r.suggestedType}", skipping`);
+      continue;
+    }
+
+    validated.push({
+      sectionIndex: r.sectionIndex as number,
+      title: (r.title as string) || '',
+      suggestedType: r.suggestedType as SectionType,
+      confidence: Math.max(0, Math.min(1, r.confidence as number)),
+      reasoning: (r.reasoning as string) || '',
+    });
+  }
+
+  return validated.length > 0 ? validated : null;
+}
+
+// ── JSON fallback parsing (for non-tool_use responses) ──────────────
 
 function parseClassificationJSON(text: string): ClassifiedSection[] | null {
   try {
-    // Handle potential markdown wrapping
     let jsonStr = text.trim();
     if (jsonStr.startsWith('```')) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
 
     const parsed = JSON.parse(jsonStr);
-    const rawSections = parsed?.sections;
-
-    if (!Array.isArray(rawSections)) {
-      console.warn('[Classifier] Response missing sections array');
-      return null;
-    }
-
-    // Validate and filter each section
-    const validated: ClassifiedSection[] = [];
-    for (const raw of rawSections) {
-      if (
-        typeof raw.sectionIndex !== 'number' ||
-        typeof raw.suggestedType !== 'string' ||
-        typeof raw.confidence !== 'number'
-      ) {
-        continue; // Skip malformed entries
-      }
-
-      // Validate section type
-      if (!VALID_SECTION_TYPES.includes(raw.suggestedType as SectionType)) {
-        console.warn(`[Classifier] Invalid type "${raw.suggestedType}", skipping`);
-        continue;
-      }
-
-      validated.push({
-        sectionIndex: raw.sectionIndex,
-        title: raw.title || '',
-        suggestedType: raw.suggestedType as SectionType,
-        confidence: Math.max(0, Math.min(1, raw.confidence)),
-        reasoning: raw.reasoning || '',
-      });
-    }
-
-    return validated.length > 0 ? validated : null;
+    return validateClassifiedSections(parsed?.sections);
   } catch (err) {
     console.warn('[Classifier] JSON parse error:', err);
     return null;
@@ -457,9 +572,9 @@ function reparseSectionData(
       }
       // For types without specific re-parsing (phase_card, resource_split,
       // error_path_grid, viability_score, pain_points, next_step,
-      // risk_dossier_header), only change type if data is already compatible
+      // risk_dossier_header), keep the regex result to avoid type/data mismatches
       default:
-        return base;
+        return null;
     }
   } catch (err) {
     console.warn(`[Classifier] Re-parse failed for ${section.title} (${section.type}→${newType}):`, err);
@@ -467,28 +582,3 @@ function reparseSectionData(
   }
 }
 
-// ── Utility ─────────────────────────────────────────────────────────
-
-/**
- * Combine two AbortSignals — aborts when EITHER signal fires.
- */
-function combineAbortSignals(a: AbortSignal, b: AbortSignal): AbortSignal {
-  const controller = new AbortController();
-  const onAbort = () => controller.abort();
-
-  if (a.aborted || b.aborted) {
-    controller.abort();
-    return controller.signal;
-  }
-
-  a.addEventListener('abort', onAbort, { once: true });
-  b.addEventListener('abort', onAbort, { once: true });
-
-  // Clean up cross-listeners when the combined controller aborts
-  controller.signal.addEventListener('abort', () => {
-    a.removeEventListener('abort', onAbort);
-    b.removeEventListener('abort', onAbort);
-  }, { once: true });
-
-  return controller.signal;
-}

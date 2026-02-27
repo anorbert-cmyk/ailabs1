@@ -1334,8 +1334,8 @@ type DataSource = 'perplexity' | 'mock';
 // Vite exposes env vars via import.meta.env (VITE_ prefix)
 const PERPLEXITY_API_KEY: string =
   (import.meta as any).env?.VITE_PERPLEXITY_API_KEY || '';
-const ANTHROPIC_API_KEY: string =
-  (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || '';
+const CLASSIFIER_ENABLED: boolean =
+  (import.meta as any).env?.VITE_CLASSIFIER_ENABLED === 'true';
 const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
 
 const TIER_LABELS: Record<AnalysisTier, { label: string; parts: number }> = {
@@ -1365,7 +1365,7 @@ export default function App() {
     apiKey: PERPLEXITY_API_KEY,
     enabled: DATA_SOURCE === 'perplexity',
     tier: currentTier,
-    classifierApiKey: ANTHROPIC_API_KEY,
+    classifierEnabled: CLASSIFIER_ENABLED,
   });
 
   // Determine active phaseData (stream vs mock)
