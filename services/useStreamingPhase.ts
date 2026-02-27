@@ -16,6 +16,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { streamPerplexityData } from './perplexityApi';
 import { parseAnalysis, type PhaseData, type AnalysisTier } from './parsers';
+import { classifySections, enhanceWithClassification } from './classifierService';
 
 const DEBOUNCE_MS = 250;
 const MIN_CHARS_FOR_PARSE = 80;
@@ -25,14 +26,17 @@ interface UseStreamingPhaseOptions {
   apiKey: string;
   enabled: boolean;
   tier?: AnalysisTier;
+  /** Anthropic API key for Haiku classifier. If empty, classification is skipped. */
+  classifierApiKey?: string;
 }
 
 export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
-  const { apiKey, enabled, tier = 'syndicate' } = opts;
+  const { apiKey, enabled, tier = 'syndicate', classifierApiKey = '' } = opts;
 
   const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isClassifying, setIsClassifying] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const phaseCache = useRef<Map<string, PhaseData>>(new Map());
@@ -137,8 +141,9 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
           clearDebounce();
           abortRef.current = null;
 
+          let finalData: PhaseData | null = null;
           try {
-            const finalData = parseAnalysis(tier, fullText, phaseIndex, citations);
+            finalData = parseAnalysis(tier, fullText, phaseIndex, citations);
             phaseCache.current.set(`${tier}:${phaseIndex}`, finalData);
             setPhaseData(finalData);
           } catch (err) {
@@ -148,6 +153,37 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
 
           setIsStreaming(false);
           setIsLoading(false);
+
+          // ── Haiku classification (async, non-blocking) ────────
+          if (classifierApiKey && finalData && finalData.sections.length > 0) {
+            setIsClassifying(true);
+            classifySections(
+              finalData.sections,
+              fullText,
+              classifierApiKey,
+              controller.signal
+            )
+              .then(result => {
+                // Guard: phase may have switched while Haiku was running
+                if (requestIdRef.current !== reqId) return;
+                if (!result || !finalData) return;
+
+                const enhanced = enhanceWithClassification(finalData, result);
+                if (enhanced !== finalData) {
+                  // Update cache and state with enhanced data
+                  phaseCache.current.set(`${tier}:${phaseIndex}`, enhanced);
+                  setPhaseData(enhanced);
+                }
+              })
+              .catch(() => {
+                // Classification failed — regex result stands, no action needed
+              })
+              .finally(() => {
+                if (requestIdRef.current === reqId) {
+                  setIsClassifying(false);
+                }
+              });
+          }
         },
 
         onError: (error: Error) => {
@@ -169,7 +205,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       undefined,
       controller.signal
     );
-  }, [apiKey, enabled, tier, clearDebounce, debouncedParse]);
+  }, [apiKey, enabled, tier, classifierApiKey, clearDebounce, debouncedParse]);
 
   const retryPhase = useCallback((phaseIndex: number) => {
     phaseCache.current.delete(`${tier}:${phaseIndex}`);
@@ -191,6 +227,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
     phaseData,
     isLoading,
     isStreaming,
+    isClassifying,
     loadError,
     loadPhase,
     retryPhase,

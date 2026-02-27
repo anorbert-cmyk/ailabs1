@@ -1334,6 +1334,8 @@ type DataSource = 'perplexity' | 'mock';
 // Vite exposes env vars via import.meta.env (VITE_ prefix)
 const PERPLEXITY_API_KEY: string =
   (import.meta as any).env?.VITE_PERPLEXITY_API_KEY || '';
+const ANTHROPIC_API_KEY: string =
+  (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || '';
 const DATA_SOURCE: DataSource = PERPLEXITY_API_KEY ? 'perplexity' : 'mock';
 
 const TIER_LABELS: Record<AnalysisTier, { label: string; parts: number }> = {
@@ -1355,6 +1357,7 @@ export default function App() {
     phaseData: streamPhaseData,
     isLoading,
     isStreaming,
+    isClassifying,
     loadError,
     loadPhase,
     retryPhase,
@@ -1362,6 +1365,7 @@ export default function App() {
     apiKey: PERPLEXITY_API_KEY,
     enabled: DATA_SOURCE === 'perplexity',
     tier: currentTier,
+    classifierApiKey: ANTHROPIC_API_KEY,
   });
 
   // Determine active phaseData (stream vs mock)
@@ -1480,6 +1484,16 @@ export default function App() {
                 <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-200 text-sm font-mono text-blue-700">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                   <span>Streaming analysis...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Classification Indicator — Haiku refining section types */}
+            {isClassifying && effectivePhaseData && !isStreaming && (
+              <div className="max-w-[1320px] mx-auto px-4 lg:px-12 pt-4">
+                <div className="flex items-center gap-3 px-4 py-2 bg-violet-50 border border-violet-200 text-sm font-mono text-violet-700">
+                  <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
+                  <span>Refining content classification...</span>
                 </div>
               </div>
             )}
