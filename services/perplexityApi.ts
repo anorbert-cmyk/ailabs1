@@ -67,6 +67,7 @@ const PERPLEXITY_API_URL = '/api/perplexity';
  */
 const SYSTEM_SUFFIX = `
 Do not include conversational text, preamble, or sign-offs. Return only the structured analysis.
+Begin your response with a "## TL;DR" section containing a 3-5 sentence executive summary of all key findings in the analysis that follows. This summary should highlight the most actionable insights.
 Keep each section concise (150-300 words max). Use ## for section headings.
 Use bullet lists with - for enumerations. Use markdown tables with | for structured data.
 For key findings, use bold **Title**: Description pattern for categorized items.`;
