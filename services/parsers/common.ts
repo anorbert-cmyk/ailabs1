@@ -854,54 +854,6 @@ export function buildSources(citations: string[] | undefined, fallbackLabel: str
   return sources;
 }
 
-// ── TL;DR extraction ────────────────────────────────────────────────
-
-const TLDR_HEADING_RE = /^tl;?\s*dr\b/i;
-
-const MAX_SUMMARY_LENGTH = 1000;
-
-/**
- * Extract a TL;DR/summary section from the parsed blocks.
- * Returns the summary text and the remaining blocks (with TL;DR removed).
- * If no TL;DR heading is found, returns null summary and original blocks.
- *
- * Only checks the first 2 blocks (TL;DR should always be at the top).
- * Requires at least 2 blocks to avoid consuming incomplete streaming content.
- */
-export function extractTLDR(
-  blocks: import('./types').RawBlock[]
-): { summary: string | null; remainingBlocks: import('./types').RawBlock[] } {
-  // Guard: during streaming, a single block means content is still incomplete
-  if (blocks.length < 2) return { summary: null, remainingBlocks: blocks };
-
-  // Only check the first 2 blocks — TL;DR should always be at the top
-  const searchLimit = Math.min(blocks.length, 2);
-  const idx = blocks.slice(0, searchLimit).findIndex(b => TLDR_HEADING_RE.test(b.heading.trim()));
-  if (idx < 0) return { summary: null, remainingBlocks: blocks };
-
-  const tldrBlock = blocks[idx];
-  // Use extractParagraphs for prose, fall back to bullet list join, then cleanText
-  let summaryText = extractParagraphs(tldrBlock.body)
-    || parseBulletList(tldrBlock.body).join('. ')
-    || cleanText(tldrBlock.body);
-
-  if (!summaryText || summaryText.length < 20) {
-    return { summary: null, remainingBlocks: blocks };
-  }
-
-  // Cap length to prevent excessively long summaries
-  if (summaryText.length > MAX_SUMMARY_LENGTH) {
-    const truncateAt = summaryText.lastIndexOf(' ', MAX_SUMMARY_LENGTH);
-    summaryText = summaryText.slice(0, truncateAt > 0 ? truncateAt : MAX_SUMMARY_LENGTH) + '...';
-  }
-
-  // Normalize excessive whitespace/newlines
-  summaryText = summaryText.replace(/\n{3,}/g, '\n\n').trim();
-
-  const remainingBlocks = [...blocks.slice(0, idx), ...blocks.slice(idx + 1)];
-  return { summary: summaryText, remainingBlocks };
-}
-
 // ── Visual Timeline synthesis ────────────────────────────────────────
 
 const MONTH_ABBREV = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
