@@ -3,7 +3,7 @@
  *
  * Manages the full streaming lifecycle:
  *   - Starts an SSE stream via `streamPerplexityData()`
- *   - Accumulates text and debounce-parses it with `parsePerplexityResponse()`
+ *   - Accumulates text and debounce-parses it with `parseAnalysis()`
  *   - Caches completed phases to avoid re-fetching
  *   - Handles abort on phase switch, errors, and fallback
  *
@@ -15,7 +15,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { streamPerplexityData } from './perplexityApi';
-import { parsePerplexityResponse, PhaseData } from './contentParser';
+import { parseAnalysis, type PhaseData, type AnalysisTier } from './parsers';
+import { classifySections, enhanceWithClassification } from './classifierService';
 
 const DEBOUNCE_MS = 250;
 const MIN_CHARS_FOR_PARSE = 80;
@@ -24,24 +25,33 @@ const MIN_NEW_CHARS_FOR_REPARSE = 40;
 interface UseStreamingPhaseOptions {
   apiKey: string;
   enabled: boolean;
+  tier?: AnalysisTier;
+  /** Anthropic API key for Haiku classifier. If empty, classification is skipped. */
+  classifierApiKey?: string;
 }
 
 export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
-  const { apiKey, enabled } = opts;
+  const { apiKey, enabled, tier = 'syndicate', classifierApiKey = '' } = opts;
 
   const [phaseData, setPhaseData] = useState<PhaseData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isClassifying, setIsClassifying] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const phaseCache = useRef<Map<number, PhaseData>>(new Map());
+  const phaseCache = useRef<Map<string, PhaseData>>(new Map());
+  const cachedTierRef = useRef<AnalysisTier>(tier);
   const abortRef = useRef<AbortController | null>(null);
+  /** Separate abort controller for Haiku classification (not cleared by stream completion). */
+  const haikuAbortRef = useRef<AbortController | null>(null);
   const currentPhaseRef = useRef<number>(-1);
   const accumulatedRef = useRef('');
   const lastParsedLengthRef = useRef(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Monotonically increasing ID — guards all callbacks against stale streams. */
   const requestIdRef = useRef(0);
+  /** Prevents setState on unmounted component (Haiku promises may outlive the component). */
+  const isMountedRef = useRef(true);
 
   const clearDebounce = useCallback(() => {
     if (debounceTimerRef.current !== null) {
@@ -61,7 +71,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       if (text.length - lastParsedLengthRef.current < MIN_NEW_CHARS_FOR_REPARSE) return;
 
       try {
-        const parsed = parsePerplexityResponse(text, phaseIndex, []);
+        const parsed = parseAnalysis(tier, text, phaseIndex, []);
         // Re-check after potentially expensive parse
         if (requestIdRef.current !== reqId) return;
         lastParsedLengthRef.current = text.length;
@@ -70,13 +80,17 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
         console.warn('[Streaming] Intermediate parse error:', err);
       }
     }, DEBOUNCE_MS);
-  }, [clearDebounce]);
+  }, [clearDebounce, tier]);
 
   const loadPhase = useCallback((phaseIndex: number) => {
-    // Abort any in-flight stream
+    // Abort any in-flight stream and Haiku classification
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;
+    }
+    if (haikuAbortRef.current) {
+      haikuAbortRef.current.abort();
+      haikuAbortRef.current = null;
     }
     clearDebounce();
 
@@ -88,9 +102,16 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
     accumulatedRef.current = '';
     lastParsedLengthRef.current = 0;
 
-    // Check cache
-    if (phaseCache.current.has(phaseIndex)) {
-      setPhaseData(phaseCache.current.get(phaseIndex)!);
+    // Clear cache if tier changed
+    if (cachedTierRef.current !== tier) {
+      phaseCache.current.clear();
+      cachedTierRef.current = tier;
+    }
+
+    // Check cache (composite key: tier + phaseIndex)
+    const cacheKey = `${tier}:${phaseIndex}`;
+    if (phaseCache.current.has(cacheKey)) {
+      setPhaseData(phaseCache.current.get(cacheKey)!);
       setLoadError(null);
       setIsLoading(false);
       setIsStreaming(false);
@@ -128,9 +149,10 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
           clearDebounce();
           abortRef.current = null;
 
+          let finalData: PhaseData | null = null;
           try {
-            const finalData = parsePerplexityResponse(fullText, phaseIndex, citations);
-            phaseCache.current.set(phaseIndex, finalData);
+            finalData = parseAnalysis(tier, fullText, phaseIndex, citations);
+            phaseCache.current.set(`${tier}:${phaseIndex}`, finalData);
             setPhaseData(finalData);
           } catch (err) {
             console.error('[Streaming] Final parse error:', err);
@@ -139,6 +161,42 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
 
           setIsStreaming(false);
           setIsLoading(false);
+
+          // ── Haiku classification (async, non-blocking) ────────
+          if (classifierApiKey && finalData && finalData.sections.length > 0) {
+            const haikuController = new AbortController();
+            haikuAbortRef.current = haikuController;
+            setIsClassifying(true);
+            classifySections(
+              finalData.sections,
+              fullText,
+              classifierApiKey,
+              haikuController.signal
+            )
+              .then(result => {
+                // Guard: unmount or phase switch while Haiku was running
+                if (!isMountedRef.current) return;
+                if (requestIdRef.current !== reqId) return;
+                if (!result || !finalData) return;
+
+                const enhanced = enhanceWithClassification(finalData, result, fullText);
+                if (enhanced !== finalData) {
+                  phaseCache.current.set(`${tier}:${phaseIndex}`, enhanced);
+                  setPhaseData(enhanced);
+                }
+              })
+              .catch(() => {
+                // Classification failed — regex result stands, no action needed
+              })
+              .finally(() => {
+                if (!isMountedRef.current) return;
+                // Always clear isClassifying — prevents zombie state after retry
+                setIsClassifying(false);
+                if (haikuAbortRef.current === haikuController) {
+                  haikuAbortRef.current = null;
+                }
+              });
+          }
         },
 
         onError: (error: Error) => {
@@ -160,19 +218,25 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
       undefined,
       controller.signal
     );
-  }, [apiKey, enabled, clearDebounce, debouncedParse]);
+  }, [apiKey, enabled, tier, classifierApiKey, clearDebounce, debouncedParse]);
 
   const retryPhase = useCallback((phaseIndex: number) => {
-    phaseCache.current.delete(phaseIndex);
+    phaseCache.current.delete(`${tier}:${phaseIndex}`);
     loadPhase(phaseIndex);
-  }, [loadPhase]);
+  }, [loadPhase, tier]);
 
   // Cleanup on unmount
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (abortRef.current) {
         abortRef.current.abort();
         abortRef.current = null;
+      }
+      if (haikuAbortRef.current) {
+        haikuAbortRef.current.abort();
+        haikuAbortRef.current = null;
       }
       clearDebounce();
     };
@@ -182,6 +246,7 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
     phaseData,
     isLoading,
     isStreaming,
+    isClassifying,
     loadError,
     loadPhase,
     retryPhase,
