@@ -45,6 +45,8 @@ import {
   buildSources,
   synthesizeVisualTimeline,
   extractTLDR,
+  extractStateHandoff,
+  extractHandoff,
 } from './common';
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1299,6 +1301,176 @@ describe('extractTLDR', () => {
     const result = extractTLDR(blocks);
     expect(result.summary).not.toBeNull();
     expect(result.summary!.length).toBeGreaterThan(20);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// extractStateHandoff
+// ═══════════════════════════════════════════════════════════════════════
+describe('extractStateHandoff', () => {
+  it('extracts explicit STATE_HANDOFF JSON block', () => {
+    const content = `## Analysis
+
+Some analysis content here.
+
+\`\`\`json
+// STATE_HANDOFF_PART_1
+{
+  "detected_industry": "SaaS",
+  "core_jtbd": "Help founders validate ideas",
+  "top_3_pain_points": ["No validation", "Slow iteration", "Market blindness"]
+}
+\`\`\``;
+    const result = extractStateHandoff(content, 1);
+    expect(result).toContain('STATE_HANDOFF_PART_1');
+    expect(result).toContain('"detected_industry": "SaaS"');
+  });
+
+  it('falls back to Key Findings Summary section', () => {
+    const content = `## Analysis
+
+Some content.
+
+## Key Findings Summary
+
+The market shows strong potential with 45% growth. Key pain points include lack of validation tools.`;
+    const result = extractStateHandoff(content, 1);
+    expect(result).toContain('STATE_HANDOFF_PART_1');
+    expect(result).toContain('auto-extracted from summary');
+    expect(result).toContain('Key Findings Summary');
+  });
+
+  it('falls back to Summary section heading', () => {
+    const content = `## Analysis
+
+Some content.
+
+## Summary
+
+Overall the analysis indicates moderate viability.`;
+    const result = extractStateHandoff(content, 2);
+    expect(result).toContain('STATE_HANDOFF_PART_2');
+    expect(result).toContain('auto-extracted from summary');
+  });
+
+  it('falls back to first 400 characters when no summary found', () => {
+    const content = 'Short content without headings or JSON blocks.';
+    const result = extractStateHandoff(content, 3);
+    expect(result).toContain('STATE_HANDOFF_PART_3');
+    expect(result).toContain('auto-extracted, no summary found');
+    expect(result).toContain('Short content');
+  });
+
+  it('truncates last-resort extraction to 400 characters', () => {
+    const longContent = 'A'.repeat(600);
+    const result = extractStateHandoff(longContent, 1);
+    // The prefix + 400 chars + '...'
+    expect(result.length).toBeLessThan(500);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// extractHandoff
+// ═══════════════════════════════════════════════════════════════════════
+describe('extractHandoff', () => {
+  it('extracts STATE_HANDOFF JSON block and filters it from remaining blocks', () => {
+    const rawMarkdown = `## Analysis
+
+Content here.
+
+\`\`\`json
+// STATE_HANDOFF_PART_1
+{
+  "detected_industry": "Fintech",
+  "core_jtbd": "Simplify payments"
+}
+\`\`\``;
+    const blocks = [
+      { heading: 'Analysis', body: 'Content here.' },
+      { heading: '', body: '```json\n// STATE_HANDOFF_PART_1\n{\n  "detected_industry": "Fintech"\n}\n```' },
+    ];
+    const result = extractHandoff(blocks, rawMarkdown, 1);
+    expect(result.handoff).toContain('STATE_HANDOFF_PART_1');
+    expect(result.remainingBlocks).toHaveLength(1);
+    expect(result.remainingBlocks[0].heading).toBe('Analysis');
+  });
+
+  it('falls back to TL;DR when no STATE_HANDOFF block exists', () => {
+    const rawMarkdown = `## TL;DR
+
+This is a comprehensive summary of the analysis with enough text to pass the minimum threshold.
+
+## Section One
+
+Content of section one.`;
+    const blocks = [
+      { heading: 'TL;DR', body: 'This is a comprehensive summary of the analysis with enough text to pass the minimum threshold.' },
+      { heading: 'Section One', body: 'Content of section one.' },
+    ];
+    const result = extractHandoff(blocks, rawMarkdown, 1);
+    expect(result.handoff).toContain('comprehensive summary');
+    expect(result.remainingBlocks).toHaveLength(1);
+    expect(result.remainingBlocks[0].heading).toBe('Section One');
+  });
+
+  it('returns null handoff when neither STATE_HANDOFF nor TL;DR exist', () => {
+    const rawMarkdown = `## Analysis
+
+Just regular content without any handoff data.
+
+## Details
+
+More details here.`;
+    const blocks = [
+      { heading: 'Analysis', body: 'Just regular content without any handoff data.' },
+      { heading: 'Details', body: 'More details here.' },
+    ];
+    const result = extractHandoff(blocks, rawMarkdown, 1);
+    expect(result.handoff).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(2);
+  });
+
+  it('preserves all blocks when STATE_HANDOFF filtering would leave empty array', () => {
+    const rawMarkdown = '```json\n// STATE_HANDOFF_PART_1\n{"key": "value"}\n```';
+    const blocks = [
+      { heading: '', body: '```json\n// STATE_HANDOFF_PART_1\n{"key": "value"}\n```' },
+    ];
+    const result = extractHandoff(blocks, rawMarkdown, 1);
+    expect(result.handoff).toContain('STATE_HANDOFF_PART_1');
+    // Should preserve blocks when filtering would leave empty
+    expect(result.remainingBlocks).toHaveLength(1);
+  });
+
+  it('prioritizes STATE_HANDOFF over TL;DR when both exist', () => {
+    const rawMarkdown = `## TL;DR
+
+Summary here that is long enough to pass the minimum threshold for extraction.
+
+## Analysis
+
+Content.
+
+\`\`\`json
+// STATE_HANDOFF_PART_2
+{
+  "competitor_count": 5,
+  "competitor_summary": "Five key competitors identified"
+}
+\`\`\``;
+    const blocks = [
+      { heading: 'TL;DR', body: 'Summary here that is long enough to pass the minimum threshold for extraction.' },
+      { heading: 'Analysis', body: 'Content.' },
+      { heading: '', body: '```json\n// STATE_HANDOFF_PART_2\n{"competitor_count": 5}\n```' },
+    ];
+    const result = extractHandoff(blocks, rawMarkdown, 2);
+    // STATE_HANDOFF should take priority
+    expect(result.handoff).toContain('STATE_HANDOFF_PART_2');
+  });
+
+  it('handles empty blocks array', () => {
+    const result = extractHandoff([], 'some markdown', 1);
+    expect(result.handoff).toBeNull();
+    expect(result.remainingBlocks).toHaveLength(0);
   });
 });
 

@@ -906,6 +906,79 @@ export function extractTLDR(
   return { summary: summaryText, remainingBlocks };
 }
 
+// ── STATE_HANDOFF extraction (ported from production) ────────────────
+
+/**
+ * Extract a STATE_HANDOFF JSON block from raw markdown.
+ *
+ * 3-tier extraction (matches production logic):
+ * 1. Explicit STATE_HANDOFF JSON block: ```json // STATE_HANDOFF_PART_N {...} ```
+ * 2. Key Findings Summary section fallback
+ * 3. Last resort: first 400 characters of content
+ *
+ * @param partContent - Raw markdown content of the part
+ * @param partNum     - Part number (1-based)
+ */
+export function extractStateHandoff(partContent: string, partNum: number): string {
+  // 1. Explicit STATE_HANDOFF JSON block
+  const stateHandoffPattern = /```json\s*\/\/\s*STATE_HANDOFF_PART_\d[\s\S]*?```/i;
+  const match = partContent.match(stateHandoffPattern);
+  if (match) return match[0];
+
+  // 2. Key Findings Summary section fallback
+  const summaryMatch = partContent.match(
+    /## (?:Key Findings Summary|Summary|Roadmap Summary|Competitor Intelligence Summary)[\s\S]*?(?=\n## |\n\[✅|$)/i
+  );
+  if (summaryMatch) {
+    return `// STATE_HANDOFF_PART_${partNum} (auto-extracted from summary)\n${summaryMatch[0].substring(0, 600)}`;
+  }
+
+  // 3. Last resort: first 400 characters
+  return `// STATE_HANDOFF_PART_${partNum} (auto-extracted, no summary found)\n${partContent.substring(0, 400)}...`;
+}
+
+/**
+ * Unified handoff extractor — tries STATE_HANDOFF first, falls back to TL;DR.
+ *
+ * This wrapper ensures compatibility with both the production STATE_HANDOFF
+ * format (structured JSON) and the dev/legacy TL;DR format (markdown heading).
+ *
+ * @param blocks      - Parsed heading blocks from splitByHeadings
+ * @param rawMarkdown - Full raw markdown (needed for STATE_HANDOFF regex)
+ * @param partNum     - Part number (1-based, for STATE_HANDOFF naming)
+ */
+export function extractHandoff(
+  blocks: import('./types').RawBlock[],
+  rawMarkdown: string,
+  _partNum: number,
+): { handoff: string | null; remainingBlocks: import('./types').RawBlock[] } {
+  // 1. Try STATE_HANDOFF JSON block from the raw markdown
+  const stateHandoffPattern = /```json\s*\/\/\s*STATE_HANDOFF_PART_\d[\s\S]*?```/i;
+  const match = rawMarkdown.match(stateHandoffPattern);
+
+  if (match) {
+    const handoffText = match[0];
+    // Remove the block that contains the STATE_HANDOFF from remaining blocks
+    const filtered = blocks.filter(b => !b.body.includes('STATE_HANDOFF_PART_'));
+    return {
+      handoff: handoffText,
+      remainingBlocks: filtered.length > 0 ? filtered : blocks,
+    };
+  }
+
+  // 2. Fallback: extractTLDR (legacy TL;DR format)
+  const tldrResult = extractTLDR(blocks);
+  if (tldrResult.summary) {
+    return {
+      handoff: tldrResult.summary,
+      remainingBlocks: tldrResult.remainingBlocks,
+    };
+  }
+
+  // 3. No handoff data found
+  return { handoff: null, remainingBlocks: blocks };
+}
+
 // ── Visual Timeline synthesis ────────────────────────────────────────
 
 const MONTH_ABBREV = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];

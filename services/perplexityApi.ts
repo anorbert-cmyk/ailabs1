@@ -70,7 +70,17 @@ Do not include conversational text, preamble, or sign-offs. Return only the stru
 Begin your response with a "## TL;DR" section containing a 3-5 sentence executive summary of all key findings in the analysis that follows. This summary should highlight the most actionable insights.
 Keep each section concise (150-300 words max). Use ## for section headings.
 Use bullet lists with - for enumerations. Use markdown tables with | for structured data.
-For key findings, use bold **Title**: Description pattern for categorized items.`;
+For key findings, use bold **Title**: Description pattern for categorized items.
+At the END of your response, include a STATE_HANDOFF JSON block with key findings in this exact format:
+\`\`\`json
+// STATE_HANDOFF_PART_{N}
+{
+  "detected_industry": "[industry]",
+  "core_jtbd": "[1-sentence JTBD]",
+  "top_3_pain_points": ["Pain 1", "Pain 2", "Pain 3"],
+  "key_findings": "[150-word summary of key findings]"
+}
+\`\`\``;
 
 const PHASE_PROMPTS: Record<number, { system: string; user: string }> = {
   0: {

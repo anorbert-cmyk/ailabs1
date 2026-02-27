@@ -14,7 +14,7 @@ import type { PhaseData, ParsedSection, SectionType } from './types';
 import { SYNDICATE_META } from './types';
 import {
   splitByHeadings, classifyAndParse, extractParagraphs, cleanText,
-  buildSources, synthesizeVisualTimeline, extractTLDR,
+  buildSources, synthesizeVisualTimeline, extractHandoff,
 } from './common';
 
 /**
@@ -35,8 +35,9 @@ export function parseSyndicateAnalysis(
   // Filter out entirely empty blocks
   const filteredBlocks = blocks.filter(block => block.heading || block.body.trim().length > 0);
 
-  // Extract TL;DR for inter-part research handoff (NOT user-facing)
-  const { summary: phaseTldr, remainingBlocks } = extractTLDR(filteredBlocks);
+  // Extract handoff data for inter-part research continuity (NOT user-facing)
+  // Tries STATE_HANDOFF JSON first, falls back to TL;DR
+  const { handoff, remainingBlocks } = extractHandoff(filteredBlocks, markdown, phaseIndex + 1);
 
   // Classify and parse each block into a typed section
   const sections: ParsedSection[] = remainingBlocks.map((block, index) => {
@@ -79,6 +80,6 @@ export function parseSyndicateAnalysis(
     sources,
     sections,
     visualTimeline,
-    ...(phaseTldr ? { phaseTldr } : {}),
+    ...(handoff ? { stateHandoff: handoff, phaseTldr: handoff } : {}),
   };
 }

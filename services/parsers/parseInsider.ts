@@ -11,7 +11,7 @@ import type { PhaseData, ParsedSection, SectionType } from './types';
 import { INSIDER_META } from './types';
 import {
   splitByHeadings, classifyAndParse, extractParagraphs, cleanText,
-  buildSources, extractTLDR,
+  buildSources, extractHandoff,
 } from './common';
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -43,8 +43,9 @@ export function parseInsiderAnalysis(
     (b) => b.heading.trim().length > 0 || b.body.trim().length > 0,
   );
 
-  // 2b. Extract TL;DR for inter-part research handoff (NOT user-facing)
-  const { summary: phaseTldr, remainingBlocks } = extractTLDR(blocks);
+  // 2b. Extract handoff data for inter-part research continuity (NOT user-facing)
+  // Tries STATE_HANDOFF JSON first, falls back to TL;DR
+  const { handoff, remainingBlocks } = extractHandoff(blocks, markdown, partIndex + 1);
 
   // 3. Classify and parse each block into a ParsedSection
   const sections: ParsedSection[] = [];
@@ -95,6 +96,6 @@ export function parseInsiderAnalysis(
     metadata: meta.metadata,
     sources,
     sections,
-    ...(phaseTldr ? { phaseTldr } : {}),
+    ...(handoff ? { stateHandoff: handoff, phaseTldr: handoff } : {}),
   };
 }

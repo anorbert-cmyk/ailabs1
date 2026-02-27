@@ -10,7 +10,7 @@ import type { PhaseData, ParsedSection, PainPoint, ViabilityScore, NextStep } fr
 import { OBSERVER_META } from './types';
 import {
   splitByHeadings, classifyAndParse, extractParagraphs, cleanText,
-  pickIcon, parseBulletList, buildSources, extractTLDR,
+  pickIcon, parseBulletList, buildSources, extractHandoff,
 } from './common';
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -238,8 +238,9 @@ export function parseObserverAnalysis(
     b => b.heading.trim().length > 0 || b.body.trim().length > 0,
   );
 
-  // 2b. Extract TL;DR for inter-part research handoff (NOT user-facing)
-  const { summary: phaseTldr, remainingBlocks: blocks } = extractTLDR(filteredBlocks);
+  // 2b. Extract handoff data for inter-part continuity (NOT user-facing)
+  // Tries STATE_HANDOFF JSON first, falls back to TL;DR
+  const { handoff, remainingBlocks: blocks } = extractHandoff(filteredBlocks, markdown, 1);
 
   // 3. Detect sections by heading keywords
   let problemBlock: { heading: string; body: string } | null = null;
@@ -337,6 +338,6 @@ export function parseObserverAnalysis(
     metadata: OBSERVER_META.metadata,
     sources,
     sections,
-    ...(phaseTldr ? { phaseTldr } : {}),
+    ...(handoff ? { stateHandoff: handoff, phaseTldr: handoff } : {}),
   };
 }
