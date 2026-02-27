@@ -11,7 +11,7 @@ import type { PhaseData, ParsedSection, SectionType } from './types';
 import { INSIDER_META } from './types';
 import {
   splitByHeadings, classifyAndParse, extractParagraphs, cleanText,
-  buildSources,
+  buildSources, extractTLDR,
 } from './common';
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -43,11 +43,14 @@ export function parseInsiderAnalysis(
     (b) => b.heading.trim().length > 0 || b.body.trim().length > 0,
   );
 
+  // 2b. Extract TL;DR for inter-part research handoff (NOT user-facing)
+  const { summary: phaseTldr, remainingBlocks } = extractTLDR(blocks);
+
   // 3. Classify and parse each block into a ParsedSection
   const sections: ParsedSection[] = [];
 
-  for (let i = 0; i < blocks.length; i++) {
-    const block = blocks[i];
+  for (let i = 0; i < remainingBlocks.length; i++) {
+    const block = remainingBlocks[i];
 
     // Handle intro block (no heading, first block) as a text overview section
     if (i === 0 && block.heading.trim().length === 0) {
@@ -92,5 +95,6 @@ export function parseInsiderAnalysis(
     metadata: meta.metadata,
     sources,
     sections,
+    ...(phaseTldr ? { phaseTldr } : {}),
   };
 }
