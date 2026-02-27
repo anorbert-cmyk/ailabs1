@@ -42,12 +42,16 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
   const phaseCache = useRef<Map<string, PhaseData>>(new Map());
   const cachedTierRef = useRef<AnalysisTier>(tier);
   const abortRef = useRef<AbortController | null>(null);
+  /** Separate abort controller for Haiku classification (not cleared by stream completion). */
+  const haikuAbortRef = useRef<AbortController | null>(null);
   const currentPhaseRef = useRef<number>(-1);
   const accumulatedRef = useRef('');
   const lastParsedLengthRef = useRef(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Monotonically increasing ID — guards all callbacks against stale streams. */
   const requestIdRef = useRef(0);
+  /** Prevents setState on unmounted component (Haiku promises may outlive the component). */
+  const isMountedRef = useRef(true);
 
   const clearDebounce = useCallback(() => {
     if (debounceTimerRef.current !== null) {
@@ -79,10 +83,14 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
   }, [clearDebounce, tier]);
 
   const loadPhase = useCallback((phaseIndex: number) => {
-    // Abort any in-flight stream
+    // Abort any in-flight stream and Haiku classification
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;
+    }
+    if (haikuAbortRef.current) {
+      haikuAbortRef.current.abort();
+      haikuAbortRef.current = null;
     }
     clearDebounce();
 
@@ -156,21 +164,23 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
 
           // ── Haiku classification (async, non-blocking) ────────
           if (classifierApiKey && finalData && finalData.sections.length > 0) {
+            const haikuController = new AbortController();
+            haikuAbortRef.current = haikuController;
             setIsClassifying(true);
             classifySections(
               finalData.sections,
               fullText,
               classifierApiKey,
-              controller.signal
+              haikuController.signal
             )
               .then(result => {
-                // Guard: phase may have switched while Haiku was running
+                // Guard: unmount or phase switch while Haiku was running
+                if (!isMountedRef.current) return;
                 if (requestIdRef.current !== reqId) return;
                 if (!result || !finalData) return;
 
-                const enhanced = enhanceWithClassification(finalData, result);
+                const enhanced = enhanceWithClassification(finalData, result, fullText);
                 if (enhanced !== finalData) {
-                  // Update cache and state with enhanced data
                   phaseCache.current.set(`${tier}:${phaseIndex}`, enhanced);
                   setPhaseData(enhanced);
                 }
@@ -179,8 +189,11 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
                 // Classification failed — regex result stands, no action needed
               })
               .finally(() => {
-                if (requestIdRef.current === reqId) {
-                  setIsClassifying(false);
+                if (!isMountedRef.current) return;
+                // Always clear isClassifying — prevents zombie state after retry
+                setIsClassifying(false);
+                if (haikuAbortRef.current === haikuController) {
+                  haikuAbortRef.current = null;
                 }
               });
           }
@@ -214,10 +227,16 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
 
   // Cleanup on unmount
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (abortRef.current) {
         abortRef.current.abort();
         abortRef.current = null;
+      }
+      if (haikuAbortRef.current) {
+        haikuAbortRef.current.abort();
+        haikuAbortRef.current = null;
       }
       clearDebounce();
     };

@@ -18,11 +18,17 @@
  *   - Phase switch during classification → requestId guard in caller
  */
 
-import type { SectionType, ParsedSection, PhaseData } from './parsers/types';
+import type { SectionType, ParsedSection, PhaseData, TableColumn } from './parsers/types';
+import {
+  parseCompetitor, parseMetricsTable, parseROIScenarios,
+  parseTaskList, parseCheckboxTaskList, parseCards,
+  parseBlueprints, parseRoadmapPhase, parseStrategyGrid,
+  parseMarkdownTable, parseAllListItems, extractParagraphs,
+} from './parsers/common';
 
 // ── Configuration ───────────────────────────────────────────────────
 
-const CLASSIFIER_TIMEOUT_MS = 5_000;
+const CLASSIFIER_TIMEOUT_MS = 8_000;
 const CONFIDENCE_THRESHOLD = 0.7;
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -86,47 +92,51 @@ Available section types and when to use them:
 - "pain_points": User pain points with severity levels.
 - "next_step": Recommended next actions with "what to do" and "why first" structure.
 
-RULES:
+DISAMBIGUATION RULES:
+- A table comparing companies/products WITH strengths/weaknesses is "competitor", not "table".
+- A table with columns like baseline/target/variance/KPI is "metrics", not "table".
+- A table with investment/MRR/ROI/payback is "roi_analysis", not "table".
+- Bold-title items (**Title**: Description) about strategy are "cards"; about competitors with S/W are "competitor".
+- A list with High/Medium/Low priority markers is "task_list", not "list".
+- A list with [ ] or [x] checkboxes is "task_list_checkbox", not "list".
+
+OBSERVER-SPECIFIC TYPES:
+- "viability_score": Must have a numeric score (0-10, percentage, or labels like "Viable"/"Risky") + interpretation.
+- "pain_points": Must be a list of user problems with explicit severity (High/Critical/Medium/Low/Minor).
+  A generic problem list without severity levels is just a "list".
+- "next_step": Must have two parts: (1) what to do (action) and (2) why first (reasoning).
+  A single action paragraph without reasoning is "text".
+
+CLASSIFICATION RULES:
 1. Choose the MOST SPECIFIC type that fits. "text" is the fallback only when nothing else applies.
 2. Look at BOTH the heading AND the content body to determine the type.
-3. A section with a table about metrics/KPIs is "metrics", not "table".
-4. A section about competitors with strengths/weaknesses is "competitor", not "cards" or "list".
-5. ROI/financial projections with scenarios are "roi_analysis", not "table".
-6. If uncertain, prefer the regex parser's original classification (provided in the input).
+3. When uncertain, classify based on content structure and set a lower confidence score.
+   The system will automatically filter low-confidence changes.
+4. Do NOT default to the regex parser's original classification — your job is to improve it.
 
 Respond with ONLY valid JSON. No markdown, no explanation outside the JSON.`;
 
 // ── User prompt builder ─────────────────────────────────────────────
+
+/** Escape user content to prevent prompt injection via embedded quotes/instructions. */
+function escapeContent(str: string): string {
+  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
 
 function buildUserPrompt(
   sections: ParsedSection[],
   rawMarkdown: string
 ): string {
   const sectionDescriptions = sections.map((s, i) => {
-    // Extract the raw markdown for this section (approximate by heading)
-    const headingPattern = s.title
-      ? new RegExp(`^#{1,2}\\s+${escapeRegex(s.title)}`, 'm')
-      : null;
-    const headingIndex = headingPattern ? rawMarkdown.search(headingPattern) : -1;
+    const rawSnippet = extractRawSnippet(s.title, rawMarkdown);
 
-    let rawSnippet = '';
-    if (headingIndex >= 0) {
-      // Find the next heading or end of text
-      const afterHeading = rawMarkdown.slice(headingIndex);
-      const nextHeading = afterHeading.slice(1).search(/^#{1,2}\s+/m);
-      rawSnippet = nextHeading > 0
-        ? afterHeading.slice(0, nextHeading + 1).trim()
-        : afterHeading.trim();
-      // Limit to 500 chars to save tokens
-      if (rawSnippet.length > 500) {
-        rawSnippet = rawSnippet.slice(0, 500) + '...';
-      }
-    }
+    const safeTitle = escapeContent(s.title.slice(0, 256));
+    const safeContent = escapeContent(s.content.slice(0, 200));
 
     return `[Section ${i}]
-Title: "${s.title}"
+Title: "${safeTitle}"
 Current type (regex): "${s.type}"
-Content preview: "${s.content.slice(0, 200)}"
+Content preview: "${safeContent}"
 ${rawSnippet ? `Raw markdown:\n${rawSnippet}` : ''}`;
   }).join('\n\n---\n\n');
 
@@ -150,6 +160,24 @@ Respond with this exact JSON structure:
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Extract the raw markdown body for a section by heading search. */
+function extractRawSnippet(title: string, rawMarkdown: string): string {
+  if (!title) return '';
+  const headingPattern = new RegExp(`^#{1,2}\\s+${escapeRegex(title.slice(0, 256))}`, 'm');
+  const headingIndex = rawMarkdown.search(headingPattern);
+  if (headingIndex < 0) return '';
+
+  const afterHeading = rawMarkdown.slice(headingIndex);
+  const nextHeading = afterHeading.slice(1).search(/^#{1,2}\s+/m);
+  let snippet = nextHeading > 0
+    ? afterHeading.slice(0, nextHeading + 1).trim()
+    : afterHeading.trim();
+  if (snippet.length > 500) {
+    snippet = snippet.slice(0, 500) + '...';
+  }
+  return snippet;
 }
 
 // ── Main classification function ────────────────────────────────────
@@ -289,21 +317,24 @@ function parseClassificationJSON(text: string): ClassifiedSection[] | null {
 /**
  * Enhance regex-parsed PhaseData with Haiku classification results.
  *
+ * When Haiku changes a section type, the data is RE-PARSED from raw markdown
+ * to match the new type's expected data structure. This prevents:
+ * - Silent rendering failures (garbled/empty sections)
+ * - Runtime errors (calling .map() on wrong data shapes)
+ * - Disappeared sections (renderer guards fail on mismatched data)
+ *
  * Only upgrades section types when:
  * 1. Haiku confidence >= CONFIDENCE_THRESHOLD (0.7)
  * 2. The suggested type differs from the regex type
  * 3. The section index is valid
  *
- * The data/columns fields are NOT changed — only the `type` field is updated.
- * This means the existing regex-extracted data structure must be compatible
- * with the new type, or the renderer may not show it. In practice, this works
- * because the renderer checks for data presence before rendering typed views.
- *
- * @returns A new PhaseData with updated section types, or the original if no changes.
+ * @param rawMarkdown - Original markdown text needed for data re-parsing
+ * @returns A new PhaseData with updated section types + re-parsed data, or the original if no changes.
  */
 export function enhanceWithClassification(
   phaseData: PhaseData,
-  classification: ClassificationResult
+  classification: ClassificationResult,
+  rawMarkdown: string
 ): PhaseData {
   const changes: Array<{ index: number; from: SectionType; to: SectionType; confidence: number }> = [];
 
@@ -317,7 +348,10 @@ export function enhanceWithClassification(
     // Skip if same type (no change needed)
     if (match.suggestedType === section.type) return section;
 
-    // Log the change for debugging
+    // Re-parse data from raw markdown to match new type
+    const reparsed = reparseSectionData(section, match.suggestedType, rawMarkdown);
+    if (!reparsed) return section; // Re-parse failed — keep regex result
+
     changes.push({
       index,
       from: section.type,
@@ -325,10 +359,7 @@ export function enhanceWithClassification(
       confidence: match.confidence,
     });
 
-    return {
-      ...section,
-      type: match.suggestedType,
-    };
+    return reparsed;
   });
 
   if (changes.length === 0) return phaseData;
@@ -342,6 +373,98 @@ export function enhanceWithClassification(
     ...phaseData,
     sections: enhancedSections,
   };
+}
+
+// ── Data re-parsing for type changes ────────────────────────────────
+
+/**
+ * Re-parse a section's data from raw markdown to match a new section type.
+ * Returns a new ParsedSection with the correct type + data shape,
+ * or null if re-parsing fails (caller should keep the regex result).
+ */
+function reparseSectionData(
+  section: ParsedSection,
+  newType: SectionType,
+  rawMarkdown: string
+): ParsedSection | null {
+  const body = extractRawSnippet(section.title, rawMarkdown);
+  // If we can't find the raw markdown, only allow type changes where data is unchanged
+  const hasBody = body.length > 0;
+
+  try {
+    const base = { ...section, type: newType };
+
+    switch (newType) {
+      case 'competitor': {
+        if (!hasBody) return null;
+        const data = parseCompetitor(section.title, body);
+        return data ? { ...base, data } : null;
+      }
+      case 'metrics': {
+        if (!hasBody) return null;
+        const data = parseMetricsTable(body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'roi_analysis': {
+        if (!hasBody) return null;
+        const data = parseROIScenarios(body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'task_list': {
+        if (!hasBody) return null;
+        const data = parseTaskList(body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'task_list_checkbox': {
+        if (!hasBody) return null;
+        const data = parseCheckboxTaskList(body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'cards': {
+        if (!hasBody) return null;
+        const data = parseCards(body);
+        return data ? { ...base, data } : null;
+      }
+      case 'blueprints': {
+        if (!hasBody) return null;
+        const data = parseBlueprints(section.title, body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'roadmap_phase': {
+        if (!hasBody) return null;
+        const data = parseRoadmapPhase(section.title, body);
+        return data ? { ...base, data } : null;
+      }
+      case 'strategy_grid': {
+        if (!hasBody) return null;
+        const data = parseStrategyGrid(body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'table': {
+        if (!hasBody) return null;
+        const { columns, data } = parseMarkdownTable(body);
+        return columns.length > 0 ? { ...base, data, columns } : null;
+      }
+      case 'list': {
+        if (!hasBody) return null;
+        const data = parseAllListItems(body);
+        return data.length > 0 ? { ...base, data } : null;
+      }
+      case 'text': {
+        // Text is always safe — just update content from raw markdown
+        const content = hasBody ? extractParagraphs(body) : section.content;
+        return { ...base, content, data: undefined, columns: undefined };
+      }
+      // For types without specific re-parsing (phase_card, resource_split,
+      // error_path_grid, viability_score, pain_points, next_step,
+      // risk_dossier_header), only change type if data is already compatible
+      default:
+        return base;
+    }
+  } catch (err) {
+    console.warn(`[Classifier] Re-parse failed for ${section.title} (${section.type}→${newType}):`, err);
+    return null;
+  }
 }
 
 // ── Utility ─────────────────────────────────────────────────────────
@@ -360,6 +483,12 @@ function combineAbortSignals(a: AbortSignal, b: AbortSignal): AbortSignal {
 
   a.addEventListener('abort', onAbort, { once: true });
   b.addEventListener('abort', onAbort, { once: true });
+
+  // Clean up cross-listeners when the combined controller aborts
+  controller.signal.addEventListener('abort', () => {
+    a.removeEventListener('abort', onAbort);
+    b.removeEventListener('abort', onAbort);
+  }, { once: true });
 
   return controller.signal;
 }
