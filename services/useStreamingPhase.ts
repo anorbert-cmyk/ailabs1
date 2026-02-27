@@ -176,14 +176,19 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
               haikuController.signal
             )
               .then(result => {
-                // Guard: unmount or phase switch while Haiku was running
+                // Always cache enhanced data (even if user navigated away)
+                // This ensures the summary is available if they come back.
                 if (!isMountedRef.current) return;
-                if (requestIdRef.current !== reqId) return;
                 if (!result || !finalData) return;
 
                 const enhanced = enhanceWithClassification(finalData, result, fullText);
                 if (enhanced !== finalData) {
                   phaseCache.current.set(`${tier}:${phaseIndex}`, enhanced);
+                }
+
+                // Only update React state if this is still the active phase
+                if (requestIdRef.current !== reqId) return;
+                if (enhanced !== finalData) {
                   setPhaseData(enhanced);
                 }
               })
