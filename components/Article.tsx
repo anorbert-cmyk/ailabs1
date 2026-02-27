@@ -73,6 +73,52 @@ interface PhaseData extends BasePhaseData {
   visualTimeline?: VisualTimelineData;
 }
 
+// ── TL;DR Summary Component ──────────────────────────────────────────
+
+const TLDRSummary: React.FC<{ summary: string }> = ({ summary }) => {
+  const [isOpen, setIsOpen] = useState(true);
+
+  return (
+    <div className="border border-border-hairline bg-off-white overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-white/50 transition-colors"
+        aria-expanded={isOpen}
+        aria-controls="tldr-panel"
+      >
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-[18px] text-charcoal-muted">summarize</span>
+          <span className="font-mono text-xs font-bold uppercase tracking-widest text-charcoal" id="tldr-heading">
+            TL;DR
+          </span>
+        </div>
+        <span className={`material-symbols-outlined text-[18px] text-charcoal-muted transition-transform duration-200 ${
+          isOpen ? 'rotate-180' : ''
+        }`}>
+          expand_more
+        </span>
+      </button>
+      <div
+        id="tldr-panel"
+        role="region"
+        aria-labelledby="tldr-heading"
+        aria-hidden={!isOpen}
+        className={`transition-all duration-300 ease-in-out ${
+          isOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'
+        } overflow-hidden`}
+      >
+        <div className="px-6 pb-6 border-t border-border-hairline pt-4">
+          <p className="text-sm text-charcoal-muted font-serif leading-relaxed">
+            {summary}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Article Component ───────────────────────────────────────────────
+
 interface ArticleProps {
   data: PhaseData;
 }
@@ -112,6 +158,13 @@ export const Article: React.FC<ArticleProps> = ({ data }) => {
               </React.Fragment>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* TL;DR Summary (collapsible, appears before all content) */}
+      {data.summary && (
+        <div className="max-w-[1320px] mx-auto px-4 lg:px-12 mb-8 lg:mb-12">
+          <TLDRSummary summary={data.summary} />
         </div>
       )}
 

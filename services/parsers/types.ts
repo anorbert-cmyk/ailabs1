@@ -192,6 +192,8 @@ export interface PhaseData {
   sources?: SourceItem[];
   sections: ParsedSection[];
   visualTimeline?: VisualTimelineData;
+  /** TL;DR summary extracted from the AI response (appears at top of page). */
+  summary?: string;
 }
 
 // ── Phase metadata per tier ─────────────────────────────────────────
