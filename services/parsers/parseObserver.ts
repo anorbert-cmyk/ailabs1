@@ -238,8 +238,8 @@ export function parseObserverAnalysis(
     b => b.heading.trim().length > 0 || b.body.trim().length > 0,
   );
 
-  // 2b. Extract TL;DR summary if present
-  const { summary, remainingBlocks: blocks } = extractTLDR(filteredBlocks);
+  // 2b. Extract TL;DR for inter-part research handoff (NOT user-facing)
+  const { summary: phaseTldr, remainingBlocks: blocks } = extractTLDR(filteredBlocks);
 
   // 3. Detect sections by heading keywords
   let problemBlock: { heading: string; body: string } | null = null;
@@ -337,6 +337,6 @@ export function parseObserverAnalysis(
     metadata: OBSERVER_META.metadata,
     sources,
     sections,
-    ...(summary ? { summary } : {}),
+    ...(phaseTldr ? { phaseTldr } : {}),
   };
 }

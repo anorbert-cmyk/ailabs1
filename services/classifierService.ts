@@ -20,7 +20,7 @@
  *   - Retry logic for transient errors (429, 503, 504, network)
  *   - Rate limiting (min 500ms between requests)
  *   - Structured output via tool_use (guaranteed valid JSON schema)
- *   - 8s timeout per attempt
+ *   - 12s timeout per attempt
  *
  * Error handling:
  *   - Timeout → regex result stands
@@ -39,7 +39,7 @@ import {
 
 // ── Configuration ───────────────────────────────────────────────────
 
-const CLASSIFIER_TIMEOUT_MS = 8_000;
+const CLASSIFIER_TIMEOUT_MS = 12_000;
 const CONFIDENCE_THRESHOLD = 0.7;
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 const CLASSIFIER_PROXY_URL = '/api/anthropic';
@@ -69,6 +69,8 @@ export interface ClassifiedSection {
 
 export interface ClassificationResult {
   sections: ClassifiedSection[];
+  /** Haiku-generated user-friendly Short Summary of the analysis */
+  summary?: string;
   modelUsed: string;
   totalTokens: number;
 }
@@ -87,7 +89,7 @@ const VALID_SECTION_TYPES: SectionType[] = [
 
 const CLASSIFY_TOOL = {
   name: 'classify_sections',
-  description: 'Classify document sections by their content type for rendering.',
+  description: 'Classify document sections by their content type for rendering, and generate a human-friendly Short Summary.',
   input_schema: {
     type: 'object' as const,
     properties: {
@@ -109,8 +111,16 @@ const CLASSIFY_TOOL = {
           required: ['sectionIndex', 'title', 'suggestedType', 'confidence', 'reasoning'] as const,
         },
       },
+      summary: {
+        type: 'string' as const,
+        description: 'A 3-5 sentence human-friendly Short Summary of the entire analysis. '
+          + 'Explain what is happening, what is interesting/important for the reader, '
+          + 'and what they should pay attention to. Write in the SAME LANGUAGE as the content. '
+          + 'Do NOT list raw data points — synthesize them into actionable insights. '
+          + 'Address the reader directly.',
+      },
     },
-    required: ['sections'] as const,
+    required: ['sections', 'summary'] as const,
   },
 };
 
@@ -164,7 +174,16 @@ CLASSIFICATION RULES:
    The system will automatically filter low-confidence changes.
 4. Do NOT default to the regex parser's original classification — your job is to improve it.
 
-Use the classify_sections tool to submit your classifications.`;
+SHORT SUMMARY:
+In addition to classifying sections, you MUST generate a concise 3-5 sentence Short Summary of the entire analysis.
+The summary must be human-friendly and actionable — NOT a list of raw data points. Explain:
+1. What is happening — the core situation or finding
+2. What is interesting or important for the reader
+3. What they should pay attention to or act on next
+Write the summary in the SAME LANGUAGE as the document content. Address the reader directly (use "you/your").
+Submit the summary via the "summary" field in the classify_sections tool.
+
+Use the classify_sections tool to submit your classifications AND the summary.`;
 
 // ── User prompt builder ─────────────────────────────────────────────
 
@@ -328,7 +347,8 @@ export async function classifySections(
           const parsed = parseClassificationJSON(textBlock.text);
           if (parsed) {
             return {
-              sections: parsed,
+              sections: parsed.sections,
+              summary: parsed.summary,
               modelUsed: HAIKU_MODEL,
               totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
             };
@@ -341,8 +361,13 @@ export async function classifySections(
       const validated = validateClassifiedSections(toolUseBlock.input.sections);
       if (!validated) return null;
 
+      // Extract Haiku-generated summary (sanitize control/bidi chars)
+      const rawSummary = toolUseBlock.input.summary;
+      const summary = extractValidSummary(rawSummary);
+
       return {
         sections: validated,
+        summary,
         modelUsed: HAIKU_MODEL,
         totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
       };
@@ -410,9 +435,23 @@ function validateClassifiedSections(rawSections: unknown): ClassifiedSection[] |
   return validated.length > 0 ? validated : null;
 }
 
+// ── Summary sanitization ─────────────────────────────────────────────
+
+/** Strip control characters and Unicode bidirectional overrides, validate length. */
+function extractValidSummary(raw: unknown): string | undefined {
+  if (typeof raw !== 'string' || raw.length < 20) return undefined;
+  // Strip ASCII control chars (except \n and \t) and Unicode bidi overrides
+  const sanitized = raw
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '')
+    .trim();
+  if (sanitized.length < 20) return undefined;
+  return sanitized.slice(0, 1000);
+}
+
 // ── JSON fallback parsing (for non-tool_use responses) ──────────────
 
-function parseClassificationJSON(text: string): ClassifiedSection[] | null {
+function parseClassificationJSON(text: string): { sections: ClassifiedSection[]; summary?: string } | null {
   try {
     let jsonStr = text.trim();
     if (jsonStr.startsWith('```')) {
@@ -420,7 +459,10 @@ function parseClassificationJSON(text: string): ClassifiedSection[] | null {
     }
 
     const parsed = JSON.parse(jsonStr);
-    return validateClassifiedSections(parsed?.sections);
+    const sections = validateClassifiedSections(parsed?.sections);
+    if (!sections) return null;
+    const summary = extractValidSummary(parsed?.summary);
+    return { sections, summary };
   } catch (err) {
     console.warn('[Classifier] JSON parse error:', err);
     return null;
@@ -477,16 +519,25 @@ export function enhanceWithClassification(
     return reparsed;
   });
 
-  if (changes.length === 0) return phaseData;
+  const sectionsChanged = changes.length > 0;
+  const summaryChanged = !!classification.summary;
 
-  console.info(
-    `[Classifier] Enhanced ${changes.length} section(s):`,
-    changes.map(c => `#${c.index} ${c.from}→${c.to} (${(c.confidence * 100).toFixed(0)}%)`).join(', ')
-  );
+  if (!sectionsChanged && !summaryChanged) return phaseData;
+
+  if (sectionsChanged) {
+    console.info(
+      `[Classifier] Enhanced ${changes.length} section(s):`,
+      changes.map(c => `#${c.index} ${c.from}→${c.to} (${(c.confidence * 100).toFixed(0)}%)`).join(', ')
+    );
+  }
+  if (summaryChanged) {
+    console.info('[Classifier] Generated Short Summary via Haiku');
+  }
 
   return {
     ...phaseData,
-    sections: enhancedSections,
+    ...(sectionsChanged ? { sections: enhancedSections } : {}),
+    ...(summaryChanged ? { summary: classification.summary } : {}),
   };
 }
 

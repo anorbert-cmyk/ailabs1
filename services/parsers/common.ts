@@ -865,6 +865,10 @@ const MAX_SUMMARY_LENGTH = 1000;
  * Returns the summary text and the remaining blocks (with TL;DR removed).
  * If no TL;DR heading is found, returns null summary and original blocks.
  *
+ * The extracted TL;DR is used for inter-part research handoff (stored in
+ * PhaseData.phaseTldr), NOT for user-facing display. The user-facing
+ * Short Summary is generated separately by the Haiku classifier.
+ *
  * Only checks the first 2 blocks (TL;DR should always be at the top).
  * Requires at least 2 blocks to avoid consuming incomplete streaming content.
  */

@@ -78,7 +78,7 @@ const generatePhaseData = (phaseIndex: number) => {
       title: titles[0],
       subtitle: subtitles[0],
       metadata: ["Input: PDF Brief", "Status: Exploratory", "Horizon: 3-6 Months"],
-      summary: "This analysis validates a Web2/Web3 AI-native marketing agency concept positioned as a \"systems-first\" growth partner. The opportunity lies at the intersection of AI marketing, Web3, and performance-driven B2B services. Key constraints include a 6-month runway, need for AI/blockchain technical fluency, and regulatory ambiguity in crypto markets. The core JTBD is helping crypto-native and AI-curious B2B clients achieve measurable growth through integrated AI marketing systems and on-chain analytics.",
+      summary: "You're building an AI-native marketing agency at the intersection of Web3 and performance B2B — a genuine market gap. The most compelling finding: no current competitor combines AI automation with on-chain analytics. Watch your 6-month runway constraint and the crypto advertising regulatory uncertainty — these are your biggest execution risks. Your core value proposition (measurable growth through integrated AI systems) is strong, but validating it with 2-3 pilot clients should be your first priority.",
       sources: [
          { source: 'Perplexity', title: 'Syndicate Part 1: Executive Summary', icon: 'description' },
          { source: 'JSEO', title: 'AI Marketing Systems Analysis', url: 'https://jseo.polteksci.ac.id/index.php/Jseo/article/view/28' },
@@ -199,7 +199,7 @@ const generatePhaseData = (phaseIndex: number) => {
       title: titles[1],
       subtitle: subtitles[1],
       metadata: ["Input: Syndicate Part 2", "Status: Analysis", "Market: Web3/AI"],
-      summary: "The Web3 marketing landscape is dominated by 5 key players (RZLT, Coinbound, Lunar Strategy, theKOLLAB, Ninja Promo) with pricing ranging from $5K-$50K/month. The critical gap is AI-native execution — all competitors rely on traditional campaign models. Your differentiation through integrated AI systems, on-chain analytics, and performance attribution represents a defensible moat that none of the incumbents currently address.",
+      summary: "Here's what stands out from the competitive landscape: all 5 major players (RZLT, Coinbound, Lunar Strategy, theKOLLAB, Ninja Promo) are stuck on traditional campaign models with pricing from $5K-$50K/month. None of them offer AI-native execution or on-chain attribution — that's your opening. The interesting part is that this gap isn't just a feature difference, it's a structural moat. Focus your positioning on measurable, AI-driven results vs. their manual approach.",
       sources: [
         { source: 'RZLT', title: 'Competitor Website', url: 'https://www.rzlt.io' },
         { source: 'Coinbound', title: 'Competitor Website', url: 'https://coinbound.io' },
@@ -368,7 +368,7 @@ const generatePhaseData = (phaseIndex: number) => {
        title: titles[2],
        subtitle: subtitles[2],
        metadata: ["Input: Syndicate Part 3", "Status: Execution", "Timeline: 9 Months"],
-       summary: "The 9-month execution roadmap spans three phases: Foundation (months 1-3) focuses on core infrastructure, AI pipeline setup, and first 3 pilot clients. Growth (months 4-6) scales to 10+ clients with automated campaign management and on-chain reporting. Optimization (months 7-9) introduces advanced AI models, self-serve dashboards, and partnership revenue streams. Critical path dependencies include AI model training data availability and blockchain API stability.",
+       summary: "Your 9-month roadmap is structured in three phases, and the critical thing to understand is that Phase 1 (months 1-3) is make-or-break — you need 3 pilot clients and a working AI pipeline before anything else scales. Months 4-6 bring the growth inflection point where automation kicks in. Pay special attention to two dependencies that could derail your timeline: AI training data availability and blockchain API stability. If either slips, your Phase 2 start date moves.",
        sources: [
          { source: 'Syndicate Part 3', title: 'Strategic Roadmap PDF', icon: 'picture_as_pdf' }
        ],
@@ -512,7 +512,7 @@ const generatePhaseData = (phaseIndex: number) => {
       title: "Core Design & UI Prompts",
       subtitle: "Architectural directives for the core application flows, defined as generative prompts.",
       metadata: ["Input: Syndicate Part 4", "Status: Ready for Generation", "Format: Prompt Engineering"],
-      summary: "The core design architecture defines 4 primary application flows: client onboarding (3-step wizard with AI brief analysis), campaign dashboard (real-time metrics with on-chain/off-chain toggle), AI campaign builder (prompt-driven generation with human review gates), and analytics hub (attribution modeling across Web2/Web3 channels). The design system uses a dark-mode-first approach with glassmorphism accents, optimized for data-dense interfaces.",
+      summary: "The design architecture focuses on 4 application flows that you should review carefully — onboarding, dashboard, campaign builder, and analytics. The most important design decision here is the human review gate in the AI campaign builder: this prevents hallucinated content from reaching clients. The dark-mode-first, data-dense approach makes sense for your power-user audience, but make sure the onboarding wizard stays simple enough for non-technical marketing managers.",
       sources: [],
       sections: [
         {
@@ -724,7 +724,7 @@ TAB 5 - NOTIFICATIONS:
       title: "Advanced Screens & Edge Cases",
       subtitle: "Comprehensive system states including error handling, empty states, and loading patterns.",
       metadata: ["Input: Syndicate Part 5", "Status: Specification", "Scope: UX Resilience"],
-      summary: "This specification covers 12 critical edge case categories across error handling (API failures, blockchain RPC timeouts, wallet disconnections), empty states (new user, no campaigns, zero analytics), and loading patterns (skeleton screens, progressive disclosure, optimistic updates). Key architectural decisions include circuit-breaker patterns for external API calls, graceful degradation for blockchain data, and offline-first caching for dashboard views.",
+      summary: "This is your system resilience specification — 12 edge case categories that determine whether users trust your platform or abandon it. The three most critical patterns to implement first: circuit-breaker for external API calls (prevents cascade failures), graceful degradation for blockchain data (your Web3 users expect this), and offline-first dashboard caching. Don't skip the empty states for new users — first impressions during onboarding directly impact retention.",
       sources: [],
       sections: [
         {
@@ -912,7 +912,7 @@ TYPE D: BADGES
       title: "Risk Assessment, Metrics & ROI",
       subtitle: subtitles[5],
       metadata: ["Input: Syndicate Part 6", "Status: Review Pending", "Scope: Validation & Finance"],
-      summary: "The financial model projects 3 scenarios: Conservative ($180K investment, 14-month payback, 127% ROI), Moderate ($250K investment, 9-month payback, 340% ROI), and Aggressive ($400K investment, 6-month payback, 580% ROI). Top 3 risks: regulatory uncertainty in crypto advertising (severity: high), AI model hallucination in client deliverables (severity: critical), and client concentration risk with <5 accounts (severity: medium). Success hinges on achieving $25K MRR within 6 months.",
+      summary: "The financial picture has three paths, and here's what matters: even the conservative scenario ($180K in, 127% ROI) is viable, but the 14-month payback is tight with your 6-month runway — you'll need bridge funding or faster client acquisition. The critical risk isn't financial, it's operational: AI hallucination in client deliverables could destroy trust instantly. Your success metric is clear — hit $25K MRR within 6 months or the unit economics don't work.",
       sources: [
         { source: 'Perplexity', title: 'Syndicate Part 6', icon: 'description' }
       ],

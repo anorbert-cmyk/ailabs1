@@ -43,8 +43,8 @@ export function parseInsiderAnalysis(
     (b) => b.heading.trim().length > 0 || b.body.trim().length > 0,
   );
 
-  // 2b. Extract TL;DR summary if present
-  const { summary, remainingBlocks } = extractTLDR(blocks);
+  // 2b. Extract TL;DR for inter-part research handoff (NOT user-facing)
+  const { summary: phaseTldr, remainingBlocks } = extractTLDR(blocks);
 
   // 3. Classify and parse each block into a ParsedSection
   const sections: ParsedSection[] = [];
@@ -95,6 +95,6 @@ export function parseInsiderAnalysis(
     metadata: meta.metadata,
     sources,
     sections,
-    ...(summary ? { summary } : {}),
+    ...(phaseTldr ? { phaseTldr } : {}),
   };
 }

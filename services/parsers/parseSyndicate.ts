@@ -35,8 +35,8 @@ export function parseSyndicateAnalysis(
   // Filter out entirely empty blocks
   const filteredBlocks = blocks.filter(block => block.heading || block.body.trim().length > 0);
 
-  // Extract TL;DR summary if present (removes it from the section list)
-  const { summary, remainingBlocks } = extractTLDR(filteredBlocks);
+  // Extract TL;DR for inter-part research handoff (NOT user-facing)
+  const { summary: phaseTldr, remainingBlocks } = extractTLDR(filteredBlocks);
 
   // Classify and parse each block into a typed section
   const sections: ParsedSection[] = remainingBlocks.map((block, index) => {
@@ -79,6 +79,6 @@ export function parseSyndicateAnalysis(
     sources,
     sections,
     visualTimeline,
-    ...(summary ? { summary } : {}),
+    ...(phaseTldr ? { phaseTldr } : {}),
   };
 }

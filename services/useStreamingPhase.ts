@@ -192,7 +192,9 @@ export function useStreamingPhase(opts: UseStreamingPhaseOptions) {
               })
               .finally(() => {
                 if (!isMountedRef.current) return;
-                // Always clear isClassifying — prevents zombie state after retry
+                // Guard: only clear if this is still the active classification request
+                // (prevents stale .finally() from clearing isClassifying for a newer phase)
+                if (requestIdRef.current !== reqId) return;
                 setIsClassifying(false);
                 if (haikuAbortRef.current === haikuController) {
                   haikuAbortRef.current = null;
