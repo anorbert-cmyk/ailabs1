@@ -14,7 +14,7 @@ import type { PhaseData, ParsedSection, SectionType } from './types';
 import { SYNDICATE_META } from './types';
 import {
   splitByHeadings, classifyAndParse, extractParagraphs, cleanText,
-  buildSources, synthesizeVisualTimeline, extractTLDR,
+  buildSources, synthesizeVisualTimeline,
 } from './common';
 
 /**
@@ -35,11 +35,8 @@ export function parseSyndicateAnalysis(
   // Filter out entirely empty blocks
   const filteredBlocks = blocks.filter(block => block.heading || block.body.trim().length > 0);
 
-  // Extract TL;DR for inter-part research handoff (NOT user-facing)
-  const { summary: phaseTldr, remainingBlocks } = extractTLDR(filteredBlocks);
-
   // Classify and parse each block into a typed section
-  const sections: ParsedSection[] = remainingBlocks.map((block, index) => {
+  const sections: ParsedSection[] = filteredBlocks.map((block, index) => {
     // Intro block (no heading, first position) becomes a text overview
     if (!block.heading && index === 0) {
       return {
@@ -79,6 +76,5 @@ export function parseSyndicateAnalysis(
     sources,
     sections,
     visualTimeline,
-    ...(phaseTldr ? { phaseTldr } : {}),
   };
 }
